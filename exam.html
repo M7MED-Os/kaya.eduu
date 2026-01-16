@@ -109,7 +109,8 @@
             flex-grow: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding: 1.5rem 0;
+            padding: 2.5rem 0;
+            /* Increased top padding */
         }
 
         .exam-layout {
@@ -298,6 +299,18 @@
             box-shadow: 0 5px 15px rgba(0, 137, 123, 0.3);
         }
 
+        /* --- Mobile Navigator Specifics --- */
+        .drawer .nav-grid {
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+        }
+
+        .drawer .nav-dot {
+            font-size: 0.8rem;
+            border-radius: 12px;
+            aspect-ratio: 1;
+        }
+
         /* --- Mobile Drawer Navigation --- */
         .mobile-nav-toggle {
             display: none;
@@ -381,7 +394,7 @@
             }
 
             .main-wrapper {
-                padding-top: 0;
+                padding-top: 15px;
                 background: white;
             }
 
@@ -425,6 +438,173 @@
             border-radius: var(--radius-md);
             border: 1px solid #e2e8f0;
             text-align: center;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-3 {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* --- Review Mode Styling --- */
+        .review-question {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border-right: 4px solid #cbd5e1;
+        }
+
+        .review-question.correct {
+            border-right-color: #10b981;
+        }
+
+        .review-question.wrong {
+            border-right-color: #ef4444;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .review-status {
+            font-size: 0.85rem;
+            font-weight: 800;
+            padding: 6px 12px;
+            border-radius: 50px;
+        }
+
+        .review-status.correct {
+            background: #f0fdf4;
+            color: #10b981;
+        }
+
+        .review-status.wrong {
+            background: #fef2f2;
+            color: #ef4444;
+        }
+
+        .review-status.unanswered {
+            background: #fffbeb;
+            color: #f59e0b;
+        }
+
+        .review-option {
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .review-option.correct-answer {
+            background: #f0fdf4;
+            border-color: #10b981;
+            color: #065f46;
+        }
+
+        .review-option.user-wrong {
+            background: #fef2f2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .review-explanation {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: #fffbeb;
+            border-radius: 12px;
+            border-right: 4px solid #f59e0b;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* Review Categories */
+        .review-section-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin: 2rem 0 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #1e293b;
+        }
+
+        .review-section-title i {
+            font-size: 1.1rem;
+        }
+
+        /* Scroll Top Button */
+        #scrollTopBtn {
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 99;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #scrollTopBtn:hover {
+            transform: translateY(-5px);
+            background: var(--primary-dark);
+        }
+
+        #scrollTopBtn.show {
+            display: flex;
+            animation: bounceIn 0.5s;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            70% {
+                transform: scale(0.9);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
     </style>
 </head>
@@ -514,10 +694,14 @@
                         </div>
 
                         <div style="display:flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
-                            <button id="reviewBtn" class="btn btn-primary" style="flex: 1; min-width: 150px;">
+                            <button id="reviewBtn" class="btn btn-primary" style="flex: 1; min-width: 140px;">
                                 <i class="fas fa-search"></i> مراجعة الأخطاء
                             </button>
-                            <a href="dashboard.html" class="btn btn-outline" style="flex: 1; min-width: 150px;">
+                            <button onclick="location.reload()" class="btn btn-secondary"
+                                style="flex: 1; min-width: 140px;">
+                                <i class="fas fa-redo"></i> مرة تانية
+                            </button>
+                            <a href="dashboard.html" class="btn btn-outline" style="flex: 1; min-width: 140px;">
                                 <i class="fas fa-home"></i> الرئيسية
                             </a>
                         </div>
@@ -544,7 +728,6 @@
             <button id="prevBtn" class="btn btn-outline" style="flex: 1; max-width: 160px; border-radius: 12px;">
                 <i class="fas fa-chevron-right"></i> السابق
             </button>
-            <div id="qCount" style="font-weight: 900; font-size: 1.15rem; color: #1e293b;">1 / 10</div>
             <button id="nextBtn" class="btn btn-primary" style="flex: 1; max-width: 160px; border-radius: 12px;">
                 التالي <i class="fas fa-chevron-left"></i>
             </button>
@@ -570,6 +753,32 @@
                 style="border-radius: 12px;">إغلاق</button>
         </div>
     </div>
+
+    <!-- Unanswered Warning Modal -->
+    <div class="drawer-overlay" id="warningOverlay" style="z-index: 3000;"></div>
+    <div class="modal-overlay" id="warningModal"
+        style="display: none; z-index: 3001; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%;">
+        <div class="stat-card"
+            style="max-width: 400px; width: 90%; padding: 2.5rem; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+            <div style="font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem;">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <h3 style="margin-bottom: 1rem;">لسه في أسئلة!</h3>
+            <p style="color: #64748b; margin-bottom: 2rem; line-height: 1.6;">
+                إنت لسه مجاوبتش على كل الأسئلة. حابب ترجع تكمل ولا تسلم الامتحان زي ما هو؟
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn btn-primary" id="continueExamBtn" style="border-radius: 12px;">هرجع أكمل</button>
+                <button class="btn btn-outline" id="confirmSubmitAnywayBtn"
+                    style="border-radius: 12px; color: #ef4444; border-color: #ef4444;">تسليم على أي حال</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll to Top Button -->
+    <button id="scrollTopBtn" title="العودة للأعلى">
+        <i class="fas fa-arrow-up"></i>
+    </button>
 
     <script type="module" src="assets/js/exam.js"></script>
 

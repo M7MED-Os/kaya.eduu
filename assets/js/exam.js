@@ -19,7 +19,6 @@ const questionsContainer = document.getElementById("questionsContainer");
 const reviewContainer = document.getElementById("reviewContainer");
 const examTitleMobile = document.getElementById("examTitleMobile");
 const progressBar = document.getElementById("progressBar");
-const qCountEl = document.getElementById("qCount");
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
 const submitBtn = document.getElementById("submitBtn");
@@ -63,7 +62,8 @@ async function initExam() {
             return;
         }
 
-        currentQuestions = questions;
+        // Shuffle questions for randomized order
+        currentQuestions = shuffleArray(questions);
 
         // Smart Timer: 1 minute per question
         totalTime = questions.length * 60; // seconds
@@ -81,6 +81,17 @@ async function initExam() {
         console.error("Error:", err);
         loadingEl.innerHTML = `<p style="color:red">حدث خطأ: ${err.message}</p>`;
     }
+}
+
+// Utility: Fisher-Yates Shuffle
+function shuffleArray(array) {
+    let currentIndex = array.length, randomIndex;
+    while (currentIndex != 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+    }
+    return array;
 }
 
 function renderQuestions() {
@@ -119,8 +130,14 @@ function renderNavigator() {
         currentQuestions.forEach((_, index) => {
             const dot = document.createElement("div");
             dot.className = "nav-dot";
-            dot.id = `nav-dot-${index}`;
+            dot.dataset.qindex = index;
             dot.textContent = index + 1;
+
+            // Restore state if answered
+            if (userAnswers[currentQuestions[index].id]) {
+                dot.classList.add('answered');
+            }
+
             dot.onclick = () => {
                 showQuestion(index);
                 if (window.toggleDrawer && grid === mobileNavGrid) window.toggleDrawer();
@@ -140,8 +157,8 @@ window.handleAnswerChange = (qId, answer, index) => {
         if (label) label.classList.toggle('checked', opt.checked);
     });
 
-    // Update navigator
-    const dots = document.querySelectorAll(`[id^="nav-dot-${index}"]`);
+    // Update navigator across both grids using data attribute
+    const dots = document.querySelectorAll(`.nav-dot[data-qindex="${index}"]`);
     dots.forEach(dot => dot.classList.add('answered'));
 };
 
@@ -159,15 +176,14 @@ function showQuestion(index) {
     if (targetCard) targetCard.classList.add("active");
 
     currentQuestionIndex = index;
-    qCountEl.textContent = `${index + 1} / ${currentQuestions.length}`;
 
     const progress = ((index + 1) / currentQuestions.length) * 100;
     progressBar.style.width = `${progress}%`;
 
-    // Update Navigator Active State
+    // Update Navigator Active State across both grids
     const allDots = document.querySelectorAll(".nav-dot");
     allDots.forEach(d => d.classList.remove("active"));
-    const activeDots = document.querySelectorAll(`#nav-dot-${index}`);
+    const activeDots = document.querySelectorAll(`.nav-dot[data-qindex="${index}"]`);
     activeDots.forEach(d => d.classList.add("active"));
 
     // Nav Buttons
@@ -221,14 +237,41 @@ function formatTime(seconds) {
 prevBtn.addEventListener("click", () => showQuestion(currentQuestionIndex - 1));
 nextBtn.addEventListener("click", () => showQuestion(currentQuestionIndex + 1));
 
-// Submit Directly
+// Submit Logic with Warning
 submitBtn.addEventListener("click", () => {
+    const totalQ = currentQuestions.length;
+    const answeredQ = Object.keys(userAnswers).length;
+
+    if (answeredQ < totalQ) {
+        // Show Warning Modal
+        document.getElementById('warningModal').style.display = 'flex';
+        document.getElementById('warningOverlay').style.display = 'block';
+    } else {
+        calculateResult();
+    }
+});
+
+// Warning Modal Buttons
+document.getElementById('continueExamBtn').addEventListener('click', () => {
+    document.getElementById('warningModal').style.display = 'none';
+    document.getElementById('warningOverlay').style.display = 'none';
+});
+
+document.getElementById('confirmSubmitAnywayBtn').addEventListener('click', () => {
+    document.getElementById('warningModal').style.display = 'none';
+    document.getElementById('warningOverlay').style.display = 'none';
     calculateResult();
 });
 
 function calculateResult() {
     clearInterval(timerInterval);
     if (examFooter) examFooter.style.display = "none";
+    if (timerBox) timerBox.style.display = "none";
+
+    const sidebar = document.querySelector('.nav-sidebar');
+    const mobileToggle = document.querySelector('.mobile-nav-toggle');
+    if (sidebar) sidebar.style.display = "none";
+    if (mobileToggle) mobileToggle.style.display = "none";
 
     let score = 0;
     let correct = 0;
@@ -331,22 +374,60 @@ async function saveResultToDatabase(score, total, timeSpent, answersData) {
 function renderReview() {
     reviewContainer.innerHTML = "";
 
-    currentQuestions.forEach((q, index) => {
+    const wrongQuestions = [];
+    const unansweredQuestions = [];
+    const correctQuestions = [];
+
+    currentQuestions.forEach(q => {
+        const userAnswer = userAnswers[q.id];
+        const isCorrect = userAnswer === q.correct_answer;
+
+        if (!userAnswer) {
+            unansweredQuestions.push(q);
+        } else if (isCorrect) {
+            correctQuestions.push(q);
+        } else {
+            wrongQuestions.push(q);
+        }
+    });
+
+    // 1. Wrong Questions
+    if (wrongQuestions.length > 0) {
+        renderSection("إجابات خاطئة ❌", "wrong", wrongQuestions);
+    }
+
+    // 2. Unanswered Questions
+    if (unansweredQuestions.length > 0) {
+        renderSection("أسئلة لم يتم حلها ⚠️", "unanswered", unansweredQuestions);
+    }
+
+    // 3. Correct Questions
+    if (correctQuestions.length > 0) {
+        renderSection("إجابات صحيحة ✅", "correct", correctQuestions);
+    }
+}
+
+function renderSection(title, type, questions) {
+    const sectionTitle = document.createElement("div");
+    sectionTitle.className = "review-section-title";
+    const icon = type === 'wrong' ? 'fa-times-circle' : (type === 'correct' ? 'fa-check-circle' : 'fa-exclamation-circle');
+    const color = type === 'wrong' ? '#ef4444' : (type === 'correct' ? '#10b981' : '#f59e0b');
+
+    sectionTitle.innerHTML = `<i class="fas ${icon}" style="color: ${color}"></i> ${title}`;
+    reviewContainer.appendChild(sectionTitle);
+
+    questions.forEach((q) => {
+        const index = currentQuestions.findIndex(origQ => origQ.id === q.id);
         const userAnswer = userAnswers[q.id];
         const correctAnswer = q.correct_answer;
         const isCorrect = userAnswer === correctAnswer;
 
         const reviewCard = document.createElement("div");
-        reviewCard.className = `review-question ${isCorrect ? 'correct' : 'wrong'}`;
+        reviewCard.className = `review-question ${isCorrect ? 'correct' : (userAnswer ? 'wrong' : '')}`;
 
         // Build options HTML
         let optionsHTML = '';
-        const choices = {
-            'a': q.choice_a,
-            'b': q.choice_b,
-            'c': q.choice_c,
-            'd': q.choice_d
-        };
+        const choices = { 'a': q.choice_a, 'b': q.choice_b, 'c': q.choice_c, 'd': q.choice_d };
 
         for (const [key, text] of Object.entries(choices)) {
             let optionClass = '';
@@ -355,46 +436,47 @@ function renderReview() {
             if (key === correctAnswer) {
                 optionClass = 'correct-answer';
                 icon = '<i class="fas fa-check-circle" style="color: #10B981; margin-left: 0.5rem;"></i>';
-            }
-
-            if (!isCorrect && key === userAnswer) {
+            } else if (key === userAnswer) {
                 optionClass = 'user-wrong';
                 icon = '<i class="fas fa-times-circle" style="color: #EF4444; margin-left: 0.5rem;"></i>';
             }
 
-            optionsHTML += `
-                <div class="review-option ${optionClass}">
-                    ${text} ${icon}
-                </div>
-            `;
+            optionsHTML += `<div class="review-option ${optionClass}">${text} ${icon}</div>`;
         }
 
-        // Explanation
-        let explanationHTML = '';
-        if (q.explanation) {
-            explanationHTML = `
-                <div class="review-explanation">
-                    <strong><i class="fas fa-lightbulb"></i> الشرح:</strong> ${q.explanation}
-                </div>
-            `;
-        }
+        let explanationHTML = q.explanation ? `<div class="review-explanation"><strong><i class="fas fa-lightbulb"></i> الشرح:</strong> ${q.explanation}</div>` : '';
 
         reviewCard.innerHTML = `
             <div class="review-header">
                 <span style="font-weight: bold; color: var(--text-dark);">سؤال ${index + 1}</span>
-                <span class="review-status ${isCorrect ? 'correct' : 'wrong'}">
-                    ${isCorrect ? '✓ إجابة صحيحة' : '✗ إجابة خاطئة'}
+                <span class="review-status ${isCorrect ? 'correct' : (userAnswer ? 'wrong' : 'unanswered')}">
+                    ${isCorrect ? '✓ إجابة صحيحة' : (userAnswer ? '✗ إجابة خاطئة' : '⚠️ لم يتم الحل')}
                 </span>
             </div>
-            <div class="question-text" style="font-size: clamp(1rem, 3.5vw, 1.2rem); margin-bottom: 1.5rem;">
-                ${q.question_text}
-            </div>
+            <div class="question-text" style="font-size: 1rem; margin-bottom: 1.25rem;">${q.question_text}</div>
             ${optionsHTML}
             ${explanationHTML}
         `;
-
         reviewContainer.appendChild(reviewCard);
     });
+}
+
+// Scroll Top Logic
+const scrollTopBtn = document.getElementById("scrollTopBtn");
+const mainWrapper = document.querySelector('.main-wrapper');
+
+if (mainWrapper && scrollTopBtn) {
+    mainWrapper.onscroll = function () {
+        if (mainWrapper.scrollTop > 500) {
+            scrollTopBtn.classList.add("show");
+        } else {
+            scrollTopBtn.classList.remove("show");
+        }
+    };
+
+    scrollTopBtn.onclick = function () {
+        mainWrapper.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 }
 
 // Event Listeners for Review
