@@ -291,6 +291,12 @@
             color: #166534;
         }
 
+        .nav-dot.flagged {
+            background: #fffbeb;
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+
         .nav-dot.active {
             background: var(--primary-color);
             border-color: var(--primary-color);
@@ -614,6 +620,57 @@
                 opacity: 1;
             }
         }
+
+        /* Save Badge */
+        #saveBadge {
+            position: fixed;
+            top: 85px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: #10b981;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+            z-index: 1001;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+        }
+
+        #saveBadge.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Flag Button */
+        .flag-btn {
+            background: none;
+            border: 1px solid #e2e8f0;
+            color: #94a3b8;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .flag-btn:hover {
+            border-color: #f59e0b;
+            color: #f59e0b;
+        }
+
+        .flag-btn.active {
+            background: #fffbeb;
+            border-color: #f59e0b;
+            color: #f59e0b;
+        }
     </style>
 </head>
 
@@ -683,6 +740,9 @@
 
                     <!-- Result View -->
                     <div id="resultView" style="display: none;">
+                        <div id="examHierarchy"
+                            style="font-size: 0.85rem; color: #64748b; margin-bottom: 1rem; text-align: center; font-weight: 600;">
+                        </div>
                         <div class="score-box">
                             <div style="font-size: 4rem; font-weight: 900;" id="scoreValue">0%</div>
                             <p style="font-size: 1.2rem; opacity: 0.9;">النتيجة النهائية</p>
@@ -794,6 +854,8 @@
     <button id="scrollTopBtn" title="العودة للأعلى">
         <i class="fas fa-arrow-up"></i>
     </button>
+
+    <div id="saveBadge">تم حفظ الإجابة ✓</div>
 
     <script type="module" src="assets/js/exam.js"></script>
 

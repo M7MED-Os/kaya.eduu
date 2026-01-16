@@ -7,6 +7,8 @@ let currentQuestions = [];
 let currentQuestionIndex = 0;
 let userAnswers = {}; // { questionId: 'a' }
 let examTitle = "";
+let hierarchyInfo = { chapter: "", lesson: "" };
+let flaggedQuestions = new Set();
 let timerInterval = null;
 let timeElapsed = 0; // in seconds
 let totalTime = 0; // calculated based on questions
@@ -48,7 +50,20 @@ async function initExam() {
 
         if (examError || !exam) throw new Error("Exam not found");
         examTitle = exam.title;
-        if (examTitleMobile) examTitleMobile.textContent = examTitle;
+        if (examTitleMobile) examTitleMobile.textContent = "الامتحان";
+
+        // Fetch hierarchy: Chapter and Lesson
+        if (exam.lesson_id) {
+            const { data: lesson } = await supabase.from('lessons').select('title, chapter_id').eq('id', exam.lesson_id).single();
+            if (lesson) {
+                hierarchyInfo.lesson = lesson.title;
+                const { data: chapter } = await supabase.from('chapters').select('title').eq('id', lesson.chapter_id).single();
+                if (chapter) hierarchyInfo.chapter = chapter.title;
+            }
+        } else if (exam.chapter_id) {
+            const { data: chapter } = await supabase.from('chapters').select('title').eq('id', exam.chapter_id).single();
+            if (chapter) hierarchyInfo.chapter = chapter.title;
+        }
 
         // 2. Fetch Questions
         const { data: questions, error: qError } = await supabase
@@ -106,7 +121,12 @@ function renderQuestions() {
 
         card.innerHTML = `
             <div class="q-meta">
-                <span class="q-tag">سؤال ${index + 1}</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="q-tag">سؤال ${index + 1}</span>
+                    <button class="flag-btn" onclick="toggleFlag(${index})" id="flag-btn-${index}">
+                        <i class="far fa-bookmark"></i> علم السؤال
+                    </button>
+                </div>
                 <span style="color: #718096; font-size: 0.9rem;">${currentQuestions.length} سؤال كلي</span>
             </div>
             <div class="question-text">${q.question_text}</div>
@@ -161,7 +181,34 @@ window.handleAnswerChange = (qId, answer, index) => {
     // Update navigator across both grids using data attribute
     const dots = document.querySelectorAll(`.nav-dot[data-qindex="${index}"]`);
     dots.forEach(dot => dot.classList.add('answered'));
+
+    // Show Save Feedback
+    showSaveIndicator();
 };
+
+window.toggleFlag = (index) => {
+    const btn = document.getElementById(`flag-btn-${index}`);
+    const dots = document.querySelectorAll(`.nav-dot[data-qindex="${index}"]`);
+
+    if (flaggedQuestions.has(index)) {
+        flaggedQuestions.delete(index);
+        btn.classList.remove('active');
+        btn.innerHTML = '<i class="far fa-bookmark"></i> علم السؤال';
+        dots.forEach(dot => dot.classList.remove('flagged'));
+    } else {
+        flaggedQuestions.add(index);
+        btn.classList.add('active');
+        btn.innerHTML = '<i class="fas fa-bookmark"></i> مُعلّم';
+        dots.forEach(dot => dot.classList.add('flagged'));
+    }
+}
+
+function showSaveIndicator() {
+    const badge = document.getElementById('saveBadge');
+    if (!badge) return;
+    badge.classList.add('show');
+    setTimeout(() => badge.classList.remove('show'), 1500);
+}
 
 window.saveAnswer = (qId, answer) => {
     userAnswers[qId] = answer;
@@ -272,8 +319,10 @@ document.getElementById('confirmSubmitAnywayBtn').addEventListener('click', () =
 function calculateResult() {
     clearInterval(timerInterval);
     if (examFooter) examFooter.style.display = "none";
-    if (timerBox) timerBox.style.display = "none";
     if (headerFinishBtn) headerFinishBtn.style.display = "none";
+
+    const progressWrapper = document.querySelector('.progress-wrapper');
+    if (progressWrapper) progressWrapper.style.display = "none";
 
     const sidebar = document.querySelector('.nav-sidebar');
     const mobileToggle = document.querySelector('.mobile-nav-toggle');
@@ -295,6 +344,27 @@ function calculateResult() {
     });
 
     const percentage = Math.round((score / total) * 100);
+
+    // Show Hierarchy and Original Title
+    const hierarchyEl = document.getElementById("examHierarchy");
+    if (hierarchyEl) {
+        let hText = "";
+        if (hierarchyInfo.chapter) hText += hierarchyInfo.chapter;
+        if (hierarchyInfo.lesson) hText += " ❯ " + hierarchyInfo.lesson;
+        hText += " ❯ " + examTitle;
+        hierarchyEl.textContent = hText;
+    }
+    if (examTitleMobile) {
+        examTitleMobile.innerHTML = `${examTitle} <span style="font-size:0.75rem; color:var(--primary-color); font-weight:normal; margin-right:5px;">(مراجعة)</span>`;
+    }
+
+    if (timerBox) {
+        timerBox.style.display = "flex";
+        timerBox.style.background = "#f0fdf4";
+        timerBox.style.borderColor = "#bcf0da";
+        timerBox.style.color = "#046c4e";
+        timerBox.innerHTML = `<i class="fas fa-chart-line" style="font-size:0.8rem;"></i> <span style="font-weight:900;">${percentage}%</span>`;
+    }
 
     // Save result to database
     saveResultToDatabase(score, total, timeElapsed, userAnswers);
