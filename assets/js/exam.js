@@ -17,7 +17,7 @@ const resultView = document.getElementById("resultView");
 const reviewView = document.getElementById("reviewView");
 const questionsContainer = document.getElementById("questionsContainer");
 const reviewContainer = document.getElementById("reviewContainer");
-const examTitleEl = document.getElementById("examTitle");
+const examTitleMobile = document.getElementById("examTitleMobile");
 const progressBar = document.getElementById("progressBar");
 const qCountEl = document.getElementById("qCount");
 const prevBtn = document.getElementById("prevBtn");
@@ -27,6 +27,9 @@ const timerDisplay = document.getElementById("timerDisplay");
 const timerBox = document.getElementById("timerBox");
 const reviewBtn = document.getElementById("reviewBtn");
 const backToResultBtn = document.getElementById("backToResultBtn");
+const examFooter = document.getElementById("examFooter");
+const desktopNavGrid = document.getElementById("desktopNavGrid");
+const mobileNavGrid = document.getElementById("mobileNavGrid");
 
 // Check Auth & ID
 if (!examId) {
@@ -45,7 +48,7 @@ async function initExam() {
 
         if (examError || !exam) throw new Error("Exam not found");
         examTitle = exam.title;
-        examTitleEl.textContent = examTitle;
+        if (examTitleMobile) examTitleMobile.textContent = examTitle;
 
         // 2. Fetch Questions
         const { data: questions, error: qError } = await supabase
@@ -66,11 +69,13 @@ async function initExam() {
         totalTime = questions.length * 60; // seconds
 
         renderQuestions();
+        renderNavigator();
         showQuestion(0);
         startTimer();
 
         loadingEl.style.display = "none";
         examView.style.display = "block";
+        if (examFooter) examFooter.style.display = "flex";
 
     } catch (err) {
         console.error("Error:", err);
@@ -88,30 +93,57 @@ function renderQuestions() {
         card.id = `q-card-${index}`;
 
         card.innerHTML = `
-            <div class="question-number">سؤال ${index + 1} من ${currentQuestions.length}</div>
+            <div class="q-meta">
+                <span class="q-tag">سؤال ${index + 1}</span>
+                <span style="color: #718096; font-size: 0.9rem;">${currentQuestions.length} سؤال كلي</span>
+            </div>
             <div class="question-text">${q.question_text}</div>
-            <div class="options-grid">
-                <label class="option-label">
-                    <input type="radio" name="q_${q.id}" value="a" class="option-input" onchange="saveAnswer('${q.id}', 'a')">
-                    <span class="option-text">${q.choice_a}</span>
-                </label>
-                <label class="option-label">
-                    <input type="radio" name="q_${q.id}" value="b" class="option-input" onchange="saveAnswer('${q.id}', 'b')">
-                    <span class="option-text">${q.choice_b}</span>
-                </label>
-                <label class="option-label">
-                    <input type="radio" name="q_${q.id}" value="c" class="option-input" onchange="saveAnswer('${q.id}', 'c')">
-                    <span class="option-text">${q.choice_c}</span>
-                </label>
-                <label class="option-label">
-                    <input type="radio" name="q_${q.id}" value="d" class="option-input" onchange="saveAnswer('${q.id}', 'd')">
-                    <span class="option-text">${q.choice_d}</span>
-                </label>
+            <div class="options-list">
+                ${['a', 'b', 'c', 'd'].map(opt => `
+                    <label class="option-label" id="label-${q.id}-${opt}">
+                        <input type="radio" name="q_${q.id}" value="${opt}" class="option-radio" onchange="handleAnswerChange('${q.id}', '${opt}', ${index})">
+                        <span class="option-text">${q[`choice_${opt}`]}</span>
+                    </label>
+                `).join('')}
             </div>
         `;
         questionsContainer.appendChild(card);
     });
 }
+
+function renderNavigator() {
+    const grids = [desktopNavGrid, mobileNavGrid];
+    grids.forEach(grid => {
+        if (!grid) return;
+        grid.innerHTML = "";
+        currentQuestions.forEach((_, index) => {
+            const dot = document.createElement("div");
+            dot.className = "nav-dot";
+            dot.id = `nav-dot-${index}`;
+            dot.textContent = index + 1;
+            dot.onclick = () => {
+                showQuestion(index);
+                if (window.toggleDrawer && grid === mobileNavGrid) window.toggleDrawer();
+            };
+            grid.appendChild(dot);
+        });
+    });
+}
+
+window.handleAnswerChange = (qId, answer, index) => {
+    saveAnswer(qId, answer);
+
+    // UI Update: Highlight option
+    const options = document.querySelectorAll(`input[name="q_${qId}"]`);
+    options.forEach(opt => {
+        const label = document.getElementById(`label-${qId}-${opt.value}`);
+        if (label) label.classList.toggle('checked', opt.checked);
+    });
+
+    // Update navigator
+    const dots = document.querySelectorAll(`[id^="nav-dot-${index}"]`);
+    dots.forEach(dot => dot.classList.add('answered'));
+};
 
 window.saveAnswer = (qId, answer) => {
     userAnswers[qId] = answer;
@@ -132,7 +164,14 @@ function showQuestion(index) {
     const progress = ((index + 1) / currentQuestions.length) * 100;
     progressBar.style.width = `${progress}%`;
 
-    prevBtn.style.opacity = index === 0 ? "0.5" : "1";
+    // Update Navigator Active State
+    const allDots = document.querySelectorAll(".nav-dot");
+    allDots.forEach(d => d.classList.remove("active"));
+    const activeDots = document.querySelectorAll(`#nav-dot-${index}`);
+    activeDots.forEach(d => d.classList.add("active"));
+
+    // Nav Buttons
+    prevBtn.style.opacity = index === 0 ? "0.3" : "1";
     prevBtn.style.pointerEvents = index === 0 ? "none" : "auto";
 
     if (index === currentQuestions.length - 1) {
@@ -142,6 +181,8 @@ function showQuestion(index) {
         nextBtn.style.display = "inline-block";
         submitBtn.style.display = "none";
     }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Timer Functions
@@ -180,22 +221,14 @@ function formatTime(seconds) {
 prevBtn.addEventListener("click", () => showQuestion(currentQuestionIndex - 1));
 nextBtn.addEventListener("click", () => showQuestion(currentQuestionIndex + 1));
 
-// Submit with Modal
+// Submit Directly
 submitBtn.addEventListener("click", () => {
-    document.getElementById('confirmModal').classList.add('show');
-});
-
-window.closeModal = () => {
-    document.getElementById('confirmModal').classList.remove('show');
-};
-
-window.confirmSubmit = () => {
-    closeModal();
     calculateResult();
-};
+});
 
 function calculateResult() {
     clearInterval(timerInterval);
+    if (examFooter) examFooter.style.display = "none";
 
     let score = 0;
     let correct = 0;
@@ -233,11 +266,16 @@ function calculateResult() {
     timeSpentEl.textContent = formatTime(timeElapsed);
 
     // Animate Score
-    let current = 0;
-    const timer = setInterval(() => {
-        current += 1;
-        scoreValEl.textContent = `${current}%`;
-        if (current >= percentage) clearInterval(timer);
+    let currentCountAnim = 0;
+    const animTimer = setInterval(() => {
+        if (percentage === 0) {
+            scoreValEl.textContent = "0%";
+            clearInterval(animTimer);
+            return;
+        }
+        currentCountAnim += 1;
+        scoreValEl.textContent = `${currentCountAnim}%`;
+        if (currentCountAnim >= percentage) clearInterval(animTimer);
     }, 15);
 
     if (percentage >= 85) {
@@ -253,6 +291,7 @@ function calculateResult() {
         resultTitle.style.color = "#EF4444";
         resultMsg.textContent = `جبت ${score} من ${total}. راجع الدرس وحاول تاني.`;
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Save Result to Database
@@ -347,7 +386,7 @@ function renderReview() {
                     ${isCorrect ? '✓ إجابة صحيحة' : '✗ إجابة خاطئة'}
                 </span>
             </div>
-            <div class="question-text" style="font-size: 1.2rem; margin-bottom: 1.5rem;">
+            <div class="question-text" style="font-size: clamp(1rem, 3.5vw, 1.2rem); margin-bottom: 1.5rem;">
                 ${q.question_text}
             </div>
             ${optionsHTML}

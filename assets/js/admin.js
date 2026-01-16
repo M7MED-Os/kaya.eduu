@@ -408,7 +408,12 @@ async function renderExamQuestions(exam) {
         <hr style="margin:1rem 0;">
         
         <div class="form-group" style="background:#f9fafb; padding:1.5rem; border-radius:8px;">
-            <h4>إضافة سؤال جديد</h4>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h4 style="margin:0;">إضافة سؤال جديد</h4>
+                <button class="btn btn-outline btn-sm" onclick="openBulkAddModal('${exam.id}')">
+                    <i class="fas fa-layer-group"></i> إضافة جملة (Bulk Add)
+                </button>
+            </div>
             <textarea id="NewQText" class="form-control" placeholder="نص السؤال..." rows="2"></textarea>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
                 <input id="OptA" class="form-control" placeholder="Option A">
@@ -629,3 +634,63 @@ window.openEditStudent = async (id) => {
         }
     });
 };
+
+// ==========================================
+// 9. BULK ADD QUESTIONS
+// ==========================================
+
+window.openBulkAddModal = (examId) => {
+    openModal({
+        title: 'إضافة مجموعة أسئلة (Bulk Add)',
+        body: `
+            <div class="form-group">
+                <label>انسخ مصفوفة JSON للأسئلة هنا:</label>
+                <textarea id="bulkJsonInput" class="form-control" rows="10" placeholder='[
+  {
+    "question_text": "سؤال 1",
+    "choice_a": "اختيار 1",
+    "choice_b": "اختيار 2",
+    "choice_c": "اختيار 3",
+    "choice_d": "اختيار 4",
+    "correct_answer": "a"
+  }
+]'></textarea>
+                <small style="color:var(--text-light); display:block; margin-top:0.5rem;">
+                    * تأكد أن التنسيق JSON صحيح. <br>
+                    * الحقول المطلوبة: question_text, choice_a, choice_b, choice_c, choice_d, correct_answer
+                </small>
+            </div>
+        `,
+        onSave: async () => {
+            const input = document.getElementById('bulkJsonInput').value.trim();
+            if (!input) return;
+
+            try {
+                const questions = JSON.parse(input);
+                if (!Array.isArray(questions)) throw new Error("يجب أن يكون المدخل مصفوفة [ ]");
+
+                // Add exam_id to each question
+                const preparedQuestions = questions.map(q => ({
+                    ...q,
+                    exam_id: examId
+                }));
+
+                const { error } = await supabase.from('questions').insert(preparedQuestions);
+
+                if (error) throw error;
+
+                alert(`تم إضافة ${questions.length} سؤال بنجاح!`);
+                closeModal();
+
+                // Refresh Current Exam View
+                const { data: exam } = await supabase.from('exams').select('*').eq('id', examId).single();
+                renderExamQuestions(exam);
+
+            } catch (err) {
+                console.error("Bulk Add Error:", err);
+                alert("خطأ في البيانات: " + err.message);
+            }
+        }
+    });
+};
+

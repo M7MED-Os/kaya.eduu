@@ -8,133 +8,354 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .exam-container {
-            max-width: 900px;
-            margin: 0 auto;
+        :root {
+            --header-h: 70px;
+            --footer-h: 80px;
+            --sidebar-w: 300px;
         }
 
+        /* --- Global Layout Stability --- */
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            /* Prevent body scroll, use wrapper scroll */
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            background-color: #f8fafc;
+            color: var(--text-dark);
+            font-family: 'Cairo', sans-serif;
+        }
+
+        /* --- Header --- */
+        .exam-header {
+            flex-shrink: 0;
+            background: white;
+            height: var(--header-h);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            position: relative;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            gap: 1rem;
+        }
+
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 900;
+            color: var(--primary-color);
+            min-width: 0;
+            font-size: 1.25rem;
+        }
+
+        .logo-box span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .timer-badge {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #f1f5f9;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 1rem;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .timer-badge.warning {
+            background: #fef2f2;
+            color: #ef4444;
+            border-color: #fecaca;
+            animation: pulse 1s infinite;
+        }
+
+        .progress-wrapper {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #e2e8f0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-color);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        /* --- Scrollable Main Area --- */
+        .main-wrapper {
+            flex-grow: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 1.5rem 0;
+        }
+
+        .exam-layout {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
+        .questions-area {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .nav-sidebar {
+            width: var(--sidebar-w);
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            position: sticky;
+            top: 0;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid #e2e8f0;
+        }
+
+        /* --- Question Card --- */
         .question-card {
             background: white;
             padding: 2.5rem;
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-md);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
             margin-bottom: 2rem;
             display: none;
-            border: 2px solid #f0f0f0;
+            border: 1px solid #e2e8f0;
         }
 
         .question-card.active {
             display: block;
-            animation: fadeIn 0.4s ease;
+            animation: slideUpFade 0.3s ease-out;
         }
 
-        .question-number {
-            display: inline-block;
-            background: var(--primary-color);
-            color: white;
-            padding: 0.4rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
+        .q-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 1rem;
+        }
+
+        .q-tag {
+            background: #f0fdf4;
+            color: #166534;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 800;
         }
 
         .question-text {
-            font-size: 1.4rem;
+            font-size: clamp(1.15rem, 4vw, 1.35rem);
             font-weight: 700;
-            margin-bottom: 2rem;
-            color: var(--text-dark);
             line-height: 1.8;
+            color: #1e293b;
+            margin-bottom: 2rem;
+            white-space: pre-wrap;
         }
 
-        .options-grid {
-            display: grid;
-            gap: 1rem;
+        /* --- Options --- */
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .option-label {
             display: flex;
             align-items: center;
-            padding: 1.2rem 1.5rem;
-            border: 2px solid #E5E7EB;
-            border-radius: var(--radius-sm);
+            padding: 1.25rem;
+            background: #fff;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            background: white;
+            transition: all 0.2s ease;
         }
 
         .option-label:hover {
-            background-color: #F9FAFB;
             border-color: var(--primary-color);
-            transform: translateX(-3px);
+            background: #f8fafc;
         }
 
-        .option-input {
-            margin-left: 1rem;
+        .option-label.checked {
+            border-color: var(--primary-color);
+            background: #f0fdf4;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .option-radio {
+            appearance: none;
             width: 22px;
             height: 22px;
-            accent-color: var(--primary-color);
-            cursor: pointer;
+            border: 2px solid #cbd5e1;
+            border-radius: 50%;
+            margin-left: 14px;
+            display: grid;
+            place-content: center;
+            flex-shrink: 0;
+            background: white;
+        }
+
+        .option-radio:checked {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+        }
+
+        .option-radio::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: white;
+            transform: scale(0);
+            transition: transform 0.2s;
+        }
+
+        .option-radio:checked::before {
+            transform: scale(1);
         }
 
         .option-text {
             font-size: 1.1rem;
-            color: var(--text-dark);
-        }
-
-        .option-label:has(.option-input:checked) {
-            border-color: var(--primary-color);
-            background: linear-gradient(to left, rgba(0, 137, 123, 0.08), white);
-            border-width: 2px;
-        }
-
-        .option-input:checked+.option-text {
+            color: #334155;
             font-weight: 600;
-            color: var(--primary-color);
         }
 
-        .exam-controls {
+        /* --- Footer --- */
+        .sticky-footer {
+            flex-shrink: 0;
+            height: var(--footer-h);
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .footer-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 2rem;
+            width: 100%;
             gap: 1rem;
         }
 
-        .progress-bar {
-            height: 8px;
-            background: #E5E7EB;
-            border-radius: 10px;
-            margin-bottom: 2rem;
-            overflow: hidden;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        /* --- Navigation Grid --- */
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
         }
 
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-            width: 0%;
-            transition: width 0.4s ease;
+        .nav-dot {
+            aspect-ratio: 1;
+            border: 1px solid #e2e8f0;
             border-radius: 10px;
-        }
-
-        .timer-box {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.8rem 1.5rem;
-            background: white;
-            border: 2px solid #E5E7EB;
-            border-radius: var(--radius-sm);
-            font-weight: bold;
-            color: var(--text-dark);
+            justify-content: center;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #64748b;
+            background: #f8fafc;
         }
 
-        .timer-box.warning {
-            border-color: var(--secondary-color);
-            background: #FFF4E6;
-            color: var(--secondary-color);
-            animation: pulse 1s infinite;
+        .nav-dot.answered {
+            background: #f0fdf4;
+            border-color: #86efac;
+            color: #166534;
+        }
+
+        .nav-dot.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 137, 123, 0.3);
+        }
+
+        /* --- Mobile Drawer Navigation --- */
+        .mobile-nav-toggle {
+            display: none;
+            background: #f1f5f9;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: none;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+        }
+
+        .drawer-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+        }
+
+        .drawer {
+            display: none;
+            position: fixed;
+            bottom: -100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            z-index: 2001;
+            border-radius: 30px 30px 0 0;
+            padding: 2rem 1.5rem;
+            transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .drawer.open {
+            display: block;
+            bottom: 0;
+        }
+
+        /* --- Animations --- */
+        @keyframes slideUpFade {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @keyframes pulse {
@@ -145,360 +366,231 @@
             }
 
             50% {
-                transform: scale(1.05);
+                transform: scale(1.03);
             }
         }
 
-        /* Modal Styles */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.6);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(3px);
-        }
-
-        .modal-overlay.show {
-            display: flex;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 2.5rem;
-            border-radius: var(--radius-lg);
-            max-width: 450px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: slideUp 0.3s ease;
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(50px);
-                opacity: 0;
+        /* --- Responsive Queries --- */
+        @media (max-width: 992px) {
+            .nav-sidebar {
+                display: none;
             }
 
-            to {
-                transform: translateY(0);
-                opacity: 1;
+            .mobile-nav-toggle {
+                display: flex;
+            }
+
+            .main-wrapper {
+                padding-top: 0;
+                background: white;
+            }
+
+            .question-card {
+                padding: 1.5rem;
+                padding-top: 2rem;
+                border: none;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .timer-badge {
+                padding: 6px 12px;
+                font-size: 0.9rem;
             }
         }
 
-        .modal-icon {
-            font-size: 4rem;
-            color: var(--secondary-color);
-            margin-bottom: 1rem;
-        }
+        @media (max-width: 480px) {
+            .footer-content span#qCount {
+                display: none;
+            }
 
-        .modal-title {
-            font-size: 1.8rem;
-            font-weight: 900;
-            margin-bottom: 1rem;
-            color: var(--text-dark);
-        }
-
-        .modal-message {
-            font-size: 1.1rem;
-            color: var(--text-light);
-            margin-bottom: 2rem;
-            line-height: 1.6;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
+            .nav-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
 
         /* Result Styles */
-        .result-card {
-            text-align: center;
-            padding: 3rem;
-        }
-
-        .score-circle {
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        .score-box {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
             color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 2rem auto;
-            font-size: 3rem;
-            font-weight: 900;
-            box-shadow: 0 10px 30px rgba(0, 137, 123, 0.3);
+            padding: 3rem 2rem;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            margin-bottom: 2rem;
         }
 
-        .score-label {
-            font-size: 1rem;
-            font-weight: normal;
-            opacity: 0.95;
-            margin-top: 0.5rem;
-        }
-
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin: 2rem 0;
-        }
-
-        .stat-item {
-            padding: 1.5rem;
-            background: var(--bg-light);
-            border-radius: var(--radius-sm);
-            border: 1px solid #E5E7EB;
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 900;
-            color: var(--primary-color);
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            color: var(--text-light);
-            margin-top: 0.5rem;
-        }
-
-        /* Review Styles */
-        .review-question {
+        .stat-card {
             background: white;
-            padding: 2rem;
+            padding: 1.5rem;
             border-radius: var(--radius-md);
-            margin-bottom: 1.5rem;
-            border: 2px solid #E5E7EB;
-        }
-
-        .review-question.correct {
-            border-left: 5px solid #10B981;
-            background: linear-gradient(to left, rgba(16, 185, 129, 0.05), white);
-        }
-
-        .review-question.wrong {
-            border-left: 5px solid #EF4444;
-            background: linear-gradient(to left, rgba(239, 68, 68, 0.05), white);
-        }
-
-        .review-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
-        .review-status {
-            padding: 0.4rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-        }
-
-        .review-status.correct {
-            background: #D1FAE5;
-            color: #065F46;
-        }
-
-        .review-status.wrong {
-            background: #FEE2E2;
-            color: #991B1B;
-        }
-
-        .review-option {
-            padding: 1rem;
-            margin: 0.5rem 0;
-            border-radius: var(--radius-sm);
-            border: 2px solid #E5E7EB;
-        }
-
-        .review-option.correct-answer {
-            background: #D1FAE5;
-            border-color: #10B981;
-            font-weight: 600;
-        }
-
-        .review-option.user-wrong {
-            background: #FEE2E2;
-            border-color: #EF4444;
-        }
-
-        .review-explanation {
-            background: #F0F9FF;
-            border-right: 3px solid #3B82F6;
-            padding: 1rem;
-            margin-top: 1rem;
-            border-radius: var(--radius-sm);
-        }
-
-        .review-explanation strong {
-            color: #1E40AF;
-        }
-
-        @media (max-width: 768px) {
-            .question-text {
-                font-size: 1.2rem;
-            }
-
-            .exam-controls {
-                flex-wrap: wrap;
-            }
+            border: 1px solid #e2e8f0;
+            text-align: center;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Navbar (Minimal) -->
-    <nav class="navbar" style="padding: 0.5rem 0;">
+    <!-- Header -->
+    <header class="exam-header">
+        <div class="container header-content">
+            <button class="mobile-nav-toggle" onclick="toggleDrawer()">
+                <i class="fas fa-th-large"></i>
+            </button>
+            <div class="logo-box">
+                <i class="fas fa-file-signature"></i>
+                <span id="examTitleMobile">الامتحان</span>
+            </div>
+            <div class="timer-badge" id="timerBox">
+                <i class="fas fa-clock"></i>
+                <span id="timerDisplay">00:00</span>
+            </div>
+        </div>
+        <div class="progress-wrapper">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+    </header>
+
+    <!-- Scrollable Content -->
+    <div class="main-wrapper">
         <div class="container">
-            <span class="logo" style="font-size: 1.5rem;">
-                <i class="fas fa-file-alt"></i>&nbsp;امتحان
-            </span>
-            <a href="dashboard.html" class="btn btn-outline" style="font-size: 0.9rem; padding: 0.4rem 1rem;">
-                <i class="fas fa-times"></i> خروج من الامتحان
-            </a>
-        </div>
-    </nav>
+            <div class="exam-layout">
+                <!-- Sidebar -->
+                <aside class="nav-sidebar">
+                    <h4 style="margin-bottom: 1.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.5rem;">خريطة
+                        الأسئلة</h4>
+                    <div class="nav-grid" id="desktopNavGrid"></div>
 
-    <!-- Content -->
-    <section class="section">
-        <div class="container exam-container">
-
-            <!-- Loading -->
-            <div id="loading" class="text-center">
-                <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary-color);"></i>
-                <p style="margin-top: 1rem;">جاري تحميل الأسئلة...</p>
-            </div>
-
-            <!-- Exam View -->
-            <div id="examView" style="display: none;">
-                <div class="header-info"
-                    style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                    <h2 id="examTitle" style="margin: 0;">عنوان الامتحان</h2>
-                    <div class="timer-box" id="timerBox">
-                        <i class="fas fa-clock"></i>
-                        <span id="timerDisplay">00:00</span>
+                    <div
+                        style="margin-top: 2rem; font-size: 0.85rem; color: #64748b; background: #f8fafc; padding: 1rem; border-radius: 10px;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom: 8px;">
+                            <div style="width:12px; height:12px; background:var(--primary-color); border-radius:3px;">
+                            </div> الحالي
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div
+                                style="width:12px; height:12px; background:#f0fdf4; border:1px solid #86efac; border-radius:3px;">
+                            </div> تم الحل
+                        </div>
                     </div>
-                </div>
+                </aside>
 
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressBar"></div>
-                </div>
-
-                <div id="questionsContainer">
-                    <!-- Questions Inject Here -->
-                </div>
-
-                <div class="exam-controls">
-                    <button id="prevBtn" class="btn btn-secondary" style="opacity: 0.5; pointer-events: none;">
-                        <i class="fas fa-arrow-right"></i> السابق
-                    </button>
-                    <span id="qCount" style="font-weight: bold; font-size: 1.1rem;">1 / 10</span>
-                    <button id="nextBtn" class="btn btn-primary">
-                        التالي <i class="fas fa-arrow-left"></i>
-                    </button>
-                    <button id="submitBtn" class="btn"
-                        style="display: none; background-color: var(--secondary-color); color: white;">
-                        <i class="fas fa-check-circle"></i> إنهاء الامتحان
-                    </button>
-                </div>
-            </div>
-
-            <!-- Result View -->
-            <div id="resultView" class="card result-card" style="display: none;">
-                <div class="score-circle">
-                    <span id="scoreValue">0%</span>
-                    <span class="score-label">النتيجة النهائية</span>
-                </div>
-                <h2 id="resultTitle">ممتاز يا بطل! 🎉</h2>
-                <p id="resultMessage" style="margin-bottom: 2rem; color: var(--text-light); font-size: 1.1rem;">أداء
-                    رائع، استمر في التقدم.</p>
-
-                <div class="stat-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="correctCount">0</div>
-                        <div class="stat-label">إجابات صحيحة</div>
+                <!-- Questions Area -->
+                <main class="questions-area">
+                    <div id="loading" class="text-center" style="padding: 5rem 0;">
+                        <i class="fas fa-circle-notch fa-spin fa-3x" style="color: var(--primary-color);"></i>
+                        <p style="margin-top: 1rem; font-weight: 700; color: #64748b;">جاري تحضير الامتحان...</p>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="wrongCount">0</div>
-                        <div class="stat-label">إجابات خاطئة</div>
+
+                    <div id="examView" style="display: none;">
+                        <div id="questionsContainer"></div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="timeSpent">0:00</div>
-                        <div class="stat-label">الوقت المستغرق</div>
+
+                    <!-- Result View -->
+                    <div id="resultView" style="display: none;">
+                        <div class="score-box">
+                            <div style="font-size: 4rem; font-weight: 900;" id="scoreValue">0%</div>
+                            <p style="font-size: 1.2rem; opacity: 0.9;">النتيجة النهائية</p>
+                        </div>
+
+                        <h2 id="resultTitle" style="text-align: center; margin-bottom: 1rem;">ممتاز!</h2>
+                        <p id="resultMessage" style="text-align: center; color: #64748b; margin-bottom: 2.5rem;"></p>
+
+                        <div class="grid-3" style="margin-bottom: 2.5rem;">
+                            <div class="stat-card">
+                                <div style="font-size: 2rem; font-weight: 800; color: var(--primary-color);"
+                                    id="correctCount">0</div>
+                                <div style="color: #64748b; font-size: 0.9rem;">صح</div>
+                            </div>
+                            <div class="stat-card">
+                                <div style="font-size: 2rem; font-weight: 800; color: #ef4444;" id="wrongCount">0</div>
+                                <div style="color: #64748b; font-size: 0.9rem;">خطأ</div>
+                            </div>
+                            <div class="stat-card">
+                                <div style="font-size: 2rem; font-weight: 800; color: #3b82f6;" id="timeSpent">0:00
+                                </div>
+                                <div style="color: #64748b; font-size: 0.9rem;">الوقت</div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                            <button id="reviewBtn" class="btn btn-primary" style="flex: 1; min-width: 150px;">
+                                <i class="fas fa-search"></i> مراجعة الأخطاء
+                            </button>
+                            <a href="dashboard.html" class="btn btn-outline" style="flex: 1; min-width: 150px;">
+                                <i class="fas fa-home"></i> الرئيسية
+                            </a>
+                        </div>
                     </div>
-                </div>
 
-                <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;">
-                    <button id="reviewBtn" class="btn" style="background: var(--secondary-color); color: white;">
-                        <i class="fas fa-list-check"></i> مراجعة الإجابات
-                    </button>
-                    <a href="dashboard.html" class="btn btn-outline">
-                        <i class="fas fa-home"></i> العودة للرئيسية
-                    </a>
-                    <button onclick="window.location.reload()" class="btn btn-primary">
-                        <i class="fas fa-redo"></i> إعادة المحاولة
-                    </button>
-                </div>
-            </div>
-
-            <!-- Review View -->
-            <div id="reviewView" style="display: none;">
-                <div style="text-align: center; margin-bottom: 2rem;">
-                    <h2 style="font-size: 2rem; color: var(--primary-dark); margin-bottom: 0.5rem;">
-                        <i class="fas fa-clipboard-list"></i> مراجعة الإجابات
-                    </h2>
-                    <p style="color: var(--text-light);">راجع إجاباتك وتعلم من أخطائك</p>
-                </div>
-
-                <div id="reviewContainer">
-                    <!-- Review questions will be injected here -->
-                </div>
-
-                <div style="text-align: center; margin-top: 2rem;">
-                    <button id="backToResultBtn" class="btn btn-outline">
-                        <i class="fas fa-arrow-right"></i> العودة للنتيجة
-                    </button>
-                </div>
-            </div>
-
-        </div>
-    </section>
-
-    <!-- Confirmation Modal -->
-    <div class="modal-overlay" id="confirmModal">
-        <div class="modal-content">
-            <div class="modal-icon">
-                <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <h3 class="modal-title">تأكيد الإنهاء</h3>
-            <p class="modal-message">هل أنت متأكد من إنهاء الامتحان؟<br>لن تتمكن من العودة بعد التأكيد.</p>
-            <div class="modal-actions">
-                <button class="btn btn-outline" onclick="closeModal()">
-                    <i class="fas fa-times"></i> إلغاء
-                </button>
-                <button class="btn" style="background: var(--secondary-color); color: white;" onclick="confirmSubmit()">
-                    <i class="fas fa-check"></i> تأكيد الإنهاء
-                </button>
+                    <!-- Review View -->
+                    <div id="reviewView" style="display: none; padding-bottom: 2rem;">
+                        <div style="margin-bottom: 2.5rem; display: flex; align-items: center; gap: 1rem;">
+                            <button id="backToResultBtn" class="btn btn-outline" style="padding: 10px 15px;">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                            <h2 style="margin: 0; font-size: 1.5rem;">مراجعة الإجابات</h2>
+                        </div>
+                        <div id="reviewContainer"></div>
+                    </div>
+                </main>
             </div>
         </div>
     </div>
 
+    <!-- Footer -->
+    <footer class="sticky-footer" id="examFooter" style="display: none;">
+        <div class="container footer-content">
+            <button id="prevBtn" class="btn btn-outline" style="flex: 1; max-width: 160px; border-radius: 12px;">
+                <i class="fas fa-chevron-right"></i> السابق
+            </button>
+            <div id="qCount" style="font-weight: 900; font-size: 1.15rem; color: #1e293b;">1 / 10</div>
+            <button id="nextBtn" class="btn btn-primary" style="flex: 1; max-width: 160px; border-radius: 12px;">
+                التالي <i class="fas fa-chevron-left"></i>
+            </button>
+            <button id="submitBtn" class="btn"
+                style="display: none; background: var(--secondary-color); color: white; flex: 1; max-width: 160px; border-radius: 12px;">
+                <i class="fas fa-paper-plane"></i> تسليم
+            </button>
+        </div>
+    </footer>
+
+    <!-- Mobile Drawer Navigator -->
+    <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
+    <div class="drawer" id="mobileDrawer">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="margin: 0;">اختر السؤال</h3>
+            <button onclick="toggleDrawer()" style="background:none; border:none; font-size: 1.5rem; color: #94a3b8;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="nav-grid" id="mobileNavGrid"></div>
+        <div style="margin-top: 2rem;">
+            <button class="btn btn-primary full-width" onclick="toggleDrawer()"
+                style="border-radius: 12px;">إغلاق</button>
+        </div>
+    </div>
+
     <script type="module" src="assets/js/exam.js"></script>
+
+    <!-- UI Helpers -->
+    <script>
+        function toggleDrawer() {
+            const drawer = document.getElementById('mobileDrawer');
+            const overlay = document.getElementById('drawerOverlay');
+            if (drawer.style.display === 'block') {
+                drawer.classList.remove('open');
+                setTimeout(() => {
+                    drawer.style.display = 'none';
+                    overlay.style.display = 'none';
+                }, 300);
+            } else {
+                drawer.style.display = 'block';
+                overlay.style.display = 'block';
+                setTimeout(() => drawer.classList.add('open'), 10);
+            }
+        }
+    </script>
 
 </body>
 
