@@ -27,6 +27,7 @@ const timerBox = document.getElementById("timerBox");
 const reviewBtn = document.getElementById("reviewBtn");
 const backToResultBtn = document.getElementById("backToResultBtn");
 const examFooter = document.getElementById("examFooter");
+const headerFinishBtn = document.getElementById("headerFinishBtn");
 const desktopNavGrid = document.getElementById("desktopNavGrid");
 const mobileNavGrid = document.getElementById("mobileNavGrid");
 
@@ -238,7 +239,7 @@ prevBtn.addEventListener("click", () => showQuestion(currentQuestionIndex - 1));
 nextBtn.addEventListener("click", () => showQuestion(currentQuestionIndex + 1));
 
 // Submit Logic with Warning
-submitBtn.addEventListener("click", () => {
+function handleFinishExam() {
     const totalQ = currentQuestions.length;
     const answeredQ = Object.keys(userAnswers).length;
 
@@ -249,7 +250,12 @@ submitBtn.addEventListener("click", () => {
     } else {
         calculateResult();
     }
-});
+}
+
+submitBtn.addEventListener("click", handleFinishExam);
+if (headerFinishBtn) {
+    headerFinishBtn.addEventListener("click", handleFinishExam);
+}
 
 // Warning Modal Buttons
 document.getElementById('continueExamBtn').addEventListener('click', () => {
@@ -267,6 +273,7 @@ function calculateResult() {
     clearInterval(timerInterval);
     if (examFooter) examFooter.style.display = "none";
     if (timerBox) timerBox.style.display = "none";
+    if (headerFinishBtn) headerFinishBtn.style.display = "none";
 
     const sidebar = document.querySelector('.nav-sidebar');
     const mobileToggle = document.querySelector('.mobile-nav-toggle');
@@ -423,7 +430,7 @@ function renderSection(title, type, questions) {
         const isCorrect = userAnswer === correctAnswer;
 
         const reviewCard = document.createElement("div");
-        reviewCard.className = `review-question ${isCorrect ? 'correct' : (userAnswer ? 'wrong' : '')}`;
+        reviewCard.className = `review-question ${isCorrect ? 'correct' : (userAnswer ? 'wrong' : 'unanswered')}`;
 
         // Build options HTML
         let optionsHTML = '';
