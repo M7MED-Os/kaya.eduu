@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الامتحان | ثانوية.كوم</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .exam-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .question-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 2rem;
+            display: none;
+            border: 2px solid #f0f0f0;
+        }
+
+        .question-card.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .question-number {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .question-text {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: var(--text-dark);
+            line-height: 1.8;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 1.2rem 1.5rem;
+            border: 2px solid #E5E7EB;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .option-label:hover {
+            background-color: #F9FAFB;
+            border-color: var(--primary-color);
+            transform: translateX(-3px);
+        }
+
+        .option-input {
+            margin-left: 1rem;
+            width: 22px;
+            height: 22px;
+            accent-color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .option-text {
+            font-size: 1.1rem;
+            color: var(--text-dark);
+        }
+
+        .option-label:has(.option-input:checked) {
+            border-color: var(--primary-color);
+            background: linear-gradient(to left, rgba(0, 137, 123, 0.08), white);
+            border-width: 2px;
+        }
+
+        .option-input:checked+.option-text {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .exam-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            gap: 1rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #E5E7EB;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 0%;
+            transition: width 0.4s ease;
+            border-radius: 10px;
+        }
+
+        .timer-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            background: white;
+            border: 2px solid #E5E7EB;
+            border-radius: var(--radius-sm);
+            font-weight: bold;
+            color: var(--text-dark);
+        }
+
+        .timer-box.warning {
+            border-color: var(--secondary-color);
+            background: #FFF4E6;
+            color: var(--secondary-color);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2.5rem;
+            border-radius: var(--radius-lg);
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-icon {
+            font-size: 4rem;
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .modal-message {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        /* Result Styles */
+        .result-card {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .score-circle {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem auto;
+            font-size: 3rem;
+            font-weight: 900;
+            box-shadow: 0 10px 30px rgba(0, 137, 123, 0.3);
+        }
+
+        .score-label {
+            font-size: 1rem;
+            font-weight: normal;
+            opacity: 0.95;
+            margin-top: 0.5rem;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .stat-item {
+            padding: 1.5rem;
+            background: var(--bg-light);
+            border-radius: var(--radius-sm);
+            border: 1px solid #E5E7EB;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-top: 0.5rem;
+        }
+
+        /* Review Styles */
+        .review-question {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+            border: 2px solid #E5E7EB;
+        }
+
+        .review-question.correct {
+            border-left: 5px solid #10B981;
+            background: linear-gradient(to left, rgba(16, 185, 129, 0.05), white);
+        }
+
+        .review-question.wrong {
+            border-left: 5px solid #EF4444;
+            background: linear-gradient(to left, rgba(239, 68, 68, 0.05), white);
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .review-status {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .review-status.correct {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .review-status.wrong {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .review-option {
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: var(--radius-sm);
+            border: 2px solid #E5E7EB;
+        }
+
+        .review-option.correct-answer {
+            background: #D1FAE5;
+            border-color: #10B981;
+            font-weight: 600;
+        }
+
+        .review-option.user-wrong {
+            background: #FEE2E2;
+            border-color: #EF4444;
+        }
+
+        .review-explanation {
+            background: #F0F9FF;
+            border-right: 3px solid #3B82F6;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .review-explanation strong {
+            color: #1E40AF;
+        }
+
+        @media (max-width: 768px) {
+            .question-text {
+                font-size: 1.2rem;
+            }
+
+            .exam-controls {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar (Minimal) -->
+    <nav class="navbar" style="padding: 0.5rem 0;">
+        <div class="container">
+            <span class="logo" style="font-size: 1.5rem;">
+                <i class="fas fa-file-alt"></i>&nbsp;امتحان
+            </span>
+            <a href="dashboard.html" class="btn btn-outline" style="font-size: 0.9rem; padding: 0.4rem 1rem;">
+                <i class="fas fa-times"></i> خروج من الامتحان
+            </a>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <section class="section">
+        <div class="container exam-container">
+
+            <!-- Loading -->
+            <div id="loading" class="text-center">
+                <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary-color);"></i>
+                <p style="margin-top: 1rem;">جاري تحميل الأسئلة...</p>
+            </div>
+
+            <!-- Exam View -->
+            <div id="examView" style="display: none;">
+                <div class="header-info"
+                    style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <h2 id="examTitle" style="margin: 0;">عنوان الامتحان</h2>
+                    <div class="timer-box" id="timerBox">
+                        <i class="fas fa-clock"></i>
+                        <span id="timerDisplay">00:00</span>
+                    </div>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar"></div>
+                </div>
+
+                <div id="questionsContainer">
+                    <!-- Questions Inject Here -->
+                </div>
+
+                <div class="exam-controls">
+                    <button id="prevBtn" class="btn btn-secondary" style="opacity: 0.5; pointer-events: none;">
+                        <i class="fas fa-arrow-right"></i> السابق
+                    </button>
+                    <span id="qCount" style="font-weight: bold; font-size: 1.1rem;">1 / 10</span>
+                    <button id="nextBtn" class="btn btn-primary">
+                        التالي <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <button id="submitBtn" class="btn"
+                        style="display: none; background-color: var(--secondary-color); color: white;">
+                        <i class="fas fa-check-circle"></i> إنهاء الامتحان
+                    </button>
+                </div>
+            </div>
+
+            <!-- Result View -->
+            <div id="resultView" class="card result-card" style="display: none;">
+                <div class="score-circle">
+                    <span id="scoreValue">0%</span>
+                    <span class="score-label">النتيجة النهائية</span>
+                </div>
+                <h2 id="resultTitle">ممتاز يا بطل! 🎉</h2>
+                <p id="resultMessage" style="margin-bottom: 2rem; color: var(--text-light); font-size: 1.1rem;">أداء
+                    رائع، استمر في التقدم.</p>
+
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="correctCount">0</div>
+                        <div class="stat-label">إجابات صحيحة</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="wrongCount">0</div>
+                        <div class="stat-label">إجابات خاطئة</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="timeSpent">0:00</div>
+                        <div class="stat-label">الوقت المستغرق</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;">
+                    <button id="reviewBtn" class="btn" style="background: var(--secondary-color); color: white;">
+                        <i class="fas fa-list-check"></i> مراجعة الإجابات
+                    </button>
+                    <a href="dashboard.html" class="btn btn-outline">
+                        <i class="fas fa-home"></i> العودة للرئيسية
+                    </a>
+                    <button onclick="window.location.reload()" class="btn btn-primary">
+                        <i class="fas fa-redo"></i> إعادة المحاولة
+                    </button>
+                </div>
+            </div>
+
+            <!-- Review View -->
+            <div id="reviewView" style="display: none;">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <h2 style="font-size: 2rem; color: var(--primary-dark); margin-bottom: 0.5rem;">
+                        <i class="fas fa-clipboard-list"></i> مراجعة الإجابات
+                    </h2>
+                    <p style="color: var(--text-light);">راجع إجاباتك وتعلم من أخطائك</p>
+                </div>
+
+                <div id="reviewContainer">
+                    <!-- Review questions will be injected here -->
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button id="backToResultBtn" class="btn btn-outline">
+                        <i class="fas fa-arrow-right"></i> العودة للنتيجة
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-content">
+            <div class="modal-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="modal-title">تأكيد الإنهاء</h3>
+            <p class="modal-message">هل أنت متأكد من إنهاء الامتحان؟<br>لن تتمكن من العودة بعد التأكيد.</p>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal()">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
+                <button class="btn" style="background: var(--secondary-color); color: white;" onclick="confirmSubmit()">
+                    <i class="fas fa-check"></i> تأكيد الإنهاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="assets/js/exam.js"></script>
+
+</body>
+
+</html>

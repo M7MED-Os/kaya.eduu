@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم | ثانوية.كوم</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .dashboard-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .welcome-text {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            border: 1px solid #E5E7EB;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--secondary-color);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .subject-card {
+            background: white;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            border: 1px solid #E5E7EB;
+            cursor: pointer;
+        }
+
+        .subject-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-color);
+        }
+
+        .subject-header {
+            background-color: var(--bg-light);
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .subject-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .subject-body {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .subject-btn {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--bg-light);
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Loading Screen -->
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>جاري التحميل...</p>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-graduation-cap"></i>&nbsp;ثانوية<span>.كوم</span>
+            </a>
+
+            <!-- Mobile Menu hidden for dashboard simplicity or can be enabled -->
+            <div class="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="dashboard.html">لوحة التحكم</a></li>
+                <li id="adminNavBtn" style="display: none;">
+                    <a href="admin.html" style="color: var(--secondary-color); font-weight: bold;">
+                        <i class="fas fa-shield-alt"></i> Admin
+                    </a>
+                </li>
+                <li><a href="profile.html" id="navUserName"
+                        style="font-weight: bold; color: var(--primary-color); display: inline-block;"></a></li>
+                <li><button id="logoutBtn" class="btn btn-outline" style="padding: 0.5rem 1rem;">خروج</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Welcome Header -->
+    <header class="dashboard-header">
+        <div class="container">
+            <h1 class="welcome-text">أهلاً يا <span id="studentName">...</span> 👋</h1>
+            <p>جاهز تفرم شوية أسئلة النهاردة؟</p>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- Quick Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number">0</span>
+                <span class="stat-label">أسئلة حليتها</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">0</span>
+                <span class="stat-label">امتحانات كاملة</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">%0</span>
+                <span class="stat-label">مستوى الدقة</span>
+            </div>
+        </div>
+
+        <!-- Subjects Section -->
+        <h2 class="section-title" style="font-size: 1.8rem;">المواد الدراسية</h2>
+        <p class="section-subtitle" style="margin-bottom: 2rem;">اختار المادة وابدأ حل فوراً</p>
+
+        <div class="grid-3" id="subjectsGrid">
+            <!-- Subjects will be loaded here -->
+            <p style="grid-column: 1/-1; text-align: center; color: var(--text-light);">جاري تحميل المواد...</p>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" style="margin-top: 4rem; display: none;">
+            <h2 class="section-title" style="font-size: 1.8rem;">📊 آخر الامتحانات</h2>
+            <p class="section-subtitle" style="margin-bottom: 2rem;">آخر 5 امتحانات قمت بحلها</p>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid" id="resultsStatsGrid" style="margin-bottom: 2rem;">
+                <!-- Stats will be injected here -->
+            </div>
+
+            <!-- Results List -->
+            <div id="resultsContainer">
+                <!-- Results will be injected here -->
+            </div>
+        </div>
+
+        <!-- Upcoming Exams / Recent Activity -->
+        <div style="margin-top: 4rem; margin-bottom: 4rem;">
+            <h2 class="section-title" style="font-size: 1.8rem;">امتحاناتك الجاية</h2>
+            <div class="card" style="text-align: center; padding: 3rem;">
+                <i class="fas fa-calendar-check" style="font-size: 3rem; color: #E5E7EB; margin-bottom: 1rem;"></i>
+                <p style="color: var(--text-light); font-size: 1.2rem;">مفيش امتحانات محددة دلوقتي. <br> اعمل لنفسك
+                    امتحان شامل في أي وقت!</p>
+                <button class="btn btn-secondary" style="margin-top: 1.5rem;">انشئ امتحان جديد</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="copyright" style="border: none; padding-top: 0;">
+                <p>&copy; 2026 ثانوية.كوم</p>
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- Authentication Logic -->
+    <script src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/auth.js"></script>
+</body>
+
+</html>

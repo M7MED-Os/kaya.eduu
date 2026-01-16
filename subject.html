@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المادة الدراسية | ثانوية.كوم</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-graduation-cap"></i>&nbsp;ثانوية<span>.كوم</span>
+            </a>
+            <div class="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+            <ul class="nav-links">
+                <li><a href="dashboard.html">لوحة التحكم</a></li>
+                <li><span id="navUserName" style="font-weight: bold; color: var(--primary-color);"></span></li>
+                <li><button id="logoutBtn" class="btn btn-outline" style="padding: 0.5rem 1rem;">خروج</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="page-header" style="padding: 4rem 0 2rem 0;">
+        <div class="container">
+            <h1 id="subjectTitle">جاري التحميل...</h1>
+            <p>اختار الدرس أو الامتحان اللي عاوز تحله</p>
+        </div>
+    </header>
+
+    <!-- Exams Grid -->
+    <section class="section">
+        <div class="container">
+            <div id="loading" class="text-center">
+                <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary-color);"></i>
+                <p style="margin-top: 1rem;">بيحمل الامتحانات...</p>
+            </div>
+
+            <div class="grid-3" id="examsGrid">
+                <!-- Exams will be loaded here -->
+            </div>
+
+            <div id="noExamsMessage" class="text-center" style="display: none; padding: 2rem;">
+                <i class="fas fa-folder-open fa-3x" style="color: #ccc; margin-bottom: 1rem;"></i>
+                <h3>مفيش امتحانات متاحة حالياً للمادة دي</h3>
+                <p>ارجع تاني وقت لاحق أو جرب مادة تانية.</p>
+                <a href="dashboard.html" class="btn btn-primary" style="margin-top: 1rem;">الرجوع للوحة التحكم</a>
+            </div>
+
+            <!-- Subject Results Section -->
+            <div id="subjectResultsSection" style="margin-top: 4rem; display: none;">
+                <h2 class="section-title" style="font-size: 1.8rem;">📊 نتائجي في هذه المادة</h2>
+                <p class="section-subtitle" style="margin-bottom: 2rem;">تابع تقدمك في كل امتحان</p>
+
+                <div id="subjectResultsContainer">
+                    <!-- Results will be injected here -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="copyright">
+                <p>&copy; 2026 ثانوية.كوم - جميع الحقوق محفوظة</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/auth.js"></script>
+    <script type="module" src="assets/js/subject.js"></script>
+
+</body>
+
+</html>

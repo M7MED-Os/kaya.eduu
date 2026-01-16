@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المحتوى | ثانوية.كوم</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --bg-body: #f3f4f6;
+            --border-color: #e5e7eb;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 1rem;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.25rem;
+            color: var(--primary-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 0;
+        }
+
+        .nav-group-title {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: #6b7280;
+            font-weight: 700;
+            margin-top: 1rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-right: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background-color: #f9fafb;
+            color: var(--primary-color);
+        }
+
+        .nav-item.active {
+            background-color: #eff6ff;
+            color: var(--primary-color);
+            border-right-color: var(--primary-color);
+        }
+
+        .nav-item i {
+            width: 24px;
+            text-align: center;
+            margin-left: 10px;
+        }
+
+        /* --- Main Content --- */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .top-header {
+            height: var(--header-height);
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+        }
+
+        .breadcrumbs {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        /* --- Views --- */
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        /* --- Subject List --- */
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .subject-card {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid transparent;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .subject-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .subject-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--bg-light);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .subject-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .subject-meta {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .card-actions {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .subject-card:hover .card-actions {
+            opacity: 1;
+        }
+
+        .action-btn-sm {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        /* --- Subject Manager (Tree Layout) --- */
+        .manager-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+            height: calc(100vh - var(--header-height) - 4rem);
+        }
+
+        .tree-panel {
+            background: white;
+            border-radius: var(--radius-md);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tree-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            background: #f9fafb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tree-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .tree-node {
+            padding: 0.75rem 0.5rem;
+            border-radius: 6px;
+            margin-bottom: 2px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .tree-node:hover {
+            background: #f3f4f6;
+        }
+
+        .tree-node.active {
+            background: #eff6ff;
+            color: var(--primary-color);
+        }
+
+        .node-icon {
+            margin-left: 8px;
+            width: 20px;
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        .tree-node.active .node-icon {
+            color: var(--primary-color);
+        }
+
+        .node-text {
+            flex: 1;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        /* Indentation */
+        .indent-0 {
+            padding-right: 0.5rem;
+        }
+
+        .indent-1 {
+            padding-right: 1.5rem;
+            border-right: 2px solid #e5e7eb;
+        }
+
+        .indent-2 {
+            padding-right: 2.5rem;
+            border-right: 2px solid #e5e7eb;
+            margin-right: 2px;
+        }
+
+        .editor-panel {
+            background: white;
+            border-radius: var(--radius-md);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        /* --- Modal --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-container {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            transform: scale(0.95);
+            transition: transform 0.2s;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-overlay.open .modal-container {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: 1.25rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: #f9fafb;
+            border-bottom-left-radius: var(--radius-lg);
+            border-bottom-right-radius: var(--radius-lg);
+        }
+
+        /* Utils */
+        .btn-plus {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .btn-plus:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Responsive Admin Panel */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+                height: auto;
+                overflow: auto;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-left: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .sidebar-header {
+                height: 60px;
+            }
+
+            .sidebar-content {
+                height: auto;
+                max-height: 250px;
+            }
+
+            .main-wrapper {
+                height: auto;
+                overflow: visible;
+            }
+
+            .top-header {
+                padding: 0 1rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .manager-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+                gap: 1rem;
+            }
+
+            .tree-panel {
+                height: 300px;
+            }
+
+            .editor-panel {
+                height: auto;
+                min-height: 400px;
+            }
+
+            /* Fix Table Overflow */
+            .view-section div[style*="overflow:hidden"] {
+                overflow-x: auto !important;
+            }
+
+            table {
+                min-width: 600px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Auth Loading -->
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-shield-alt"></i> ثانوية.كوم</h2>
+        </div>
+        <div class="sidebar-content">
+            <div class="nav-group-title">الصف الثالث الثانوي</div>
+            <div class="nav-item" onclick="selectContext('3', 'languages')">
+                <i class="fas fa-globe"></i> اللغات (مشترك)
+            </div>
+            <div class="nav-item" onclick="selectContext('3', 'science_bio')">
+                <i class="fas fa-dna"></i> علمي علوم
+            </div>
+            <div class="nav-item" onclick="selectContext('3', 'science_math')">
+                <i class="fas fa-calculator"></i> علمي رياضة
+            </div>
+            <div class="nav-item" onclick="selectContext('3', 'literature')">
+                <i class="fas fa-book-reader"></i> أدبي
+            </div>
+            <div class="nav-item" onclick="selectContext('3', 'non_scoring')">
+                <i class="fas fa-balance-scale"></i> خارج المجموع
+            </div>
+
+            <div class="nav-group-title">الصف الثاني الثانوي</div>
+            <div class="nav-item" onclick="selectContext('2', '1')">
+                <i class="fas fa-1"></i> الترم الأول
+            </div>
+            <div class="nav-item" onclick="selectContext('2', '2')">
+                <i class="fas fa-2"></i> الترم الثاني
+            </div>
+
+            <div class="nav-group-title">الصف الأول الثانوي</div>
+            <div class="nav-item" onclick="selectContext('1', '1')">
+                <i class="fas fa-1"></i> الترم الأول
+            </div>
+            <div class="nav-item" onclick="selectContext('1', '2')">
+                <i class="fas fa-2"></i> الترم الثاني
+            </div>
+
+            <div class="nav-group-title">الإدارة</div>
+            <div class="nav-item" onclick="showStudentsView()">
+                <i class="fas fa-users"></i> الطلاب
+            </div>
+
+            <div class="nav-group-title">حسابي</div>
+            <div class="nav-item" style="color:red;" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-wrapper">
+        <header class="top-header">
+            <div class="breadcrumbs" id="pageTitle">مرحباً بك في لوحة التحكم</div>
+            <div>
+                <a href="dashboard.html" class="btn btn-outline btn-sm">
+                    <i class="fas fa-external-link-alt"></i> عرض الموقع
+                </a>
+            </div>
+        </header>
+
+        <div class="main-content">
+
+            <!-- 1. Subject List View -->
+            <div id="subjectListView" class="view-section">
+                <!-- Injected via JS -->
+                <div class="empty-state">
+                    <i class="fas fa-mouse-pointer"></i>
+                    <p>اختر قسماً من القائمة الجانبية للبدء</p>
+                </div>
+            </div>
+
+            <!-- 2. Subject Manager View -->
+            <div id="subjectManagerView" class="view-section">
+                <div class="manager-layout">
+                    <!-- Tree -->
+                    <div class="tree-panel">
+                        <div class="tree-header">
+                            <span style="font-weight:bold;">هيكل المادة</span>
+                            <button class="btn-plus" onclick="openAddChapterModal()" title="إضافة باب">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div id="contentTree" class="tree-body">
+                            <!-- Tree Injected Here -->
+                        </div>
+                    </div>
+
+                    <!-- Editor -->
+                    <div id="editorPanel" class="editor-panel">
+                        <div class="empty-state">
+                            <i class="fas fa-edit"></i>
+                            <p>اختر عنصراً من الشجرة للتعديل أو أضف عنصر جديد</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Students View -->
+            <div id="studentsView" class="view-section">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+                    <h2>إدارة الطلاب</h2>
+                    <input type="text" id="studentSearch" placeholder="بحث بالاسم..." class="form-control"
+                        style="width:250px; padding:0.5rem;">
+                </div>
+
+                <div
+                    style="background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); overflow:hidden;">
+                    <table style="width:100%; border-collapse: collapse; text-align:right;">
+                        <thead style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
+                            <tr>
+                                <th style="padding:1rem;">الاسم</th>
+                                <th style="padding:1rem;">السنة</th>
+                                <th style="padding:1rem;">الشعبة/الترم</th>
+                                <th style="padding:1rem;">الدور</th>
+                                <th style="padding:1rem;">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                            <!-- JS Looped -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Universal Modal -->
+    <div id="universalModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">عنوان النافذة</h3>
+                <button onclick="closeModal()"
+                    style="background:none; border:none; font-size:1.2rem; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Dynamic Form injected here -->
+            </div>
+            <div class="modal-footer" id="modalFooter">
+                <!-- Dynamic Buttons -->
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/auth.js"></script>
+    <script type="module" src="assets/js/admin.js"></script>
+</body>
+
+</html>

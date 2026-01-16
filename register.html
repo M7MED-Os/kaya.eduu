@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنشاء حساب جديد | ثانوية.كوم</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .auth-card {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-graduation-cap"></i>&nbsp;ثانوية<span>.كوم</span>
+            </a>
+            <div class="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">الرئيسية</a></li>
+                <li><a href="about.html">عن المنصة</a></li>
+                <li><a href="pricing.html">الأسعار</a></li>
+                <li><a href="contact.html">تواصل معنا</a></li>
+                <li><a href="login.html" class="btn btn-primary">تسجيل الدخول</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <div class="container">
+            <h1>إنشاء حساب جديد</h1>
+            <p>انضم لينا النهاردة وابدأ رحلة التفوق</p>
+        </div>
+    </header>
+
+    <!-- Auth Section -->
+    <section class="section">
+        <div class="container">
+            <div class="card auth-card">
+                <form id="registerForm" novalidate>
+                    <div class="form-group">
+                        <label for="fullname">الاسم بالكامل</label>
+                        <input type="text" id="fullname" class="form-control" placeholder="الاسم ثلاثي" required>
+                    </div>
+
+                    <div class="row" style="display: flex; gap: 1rem;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="grade">السنة الدراسية</label>
+                            <select id="grade" class="form-control" required>
+                                <option value="" disabled selected>اختر السنة</option>
+                                <option value="1" disabled>أولى ثانوي</option>
+                                <option value="2" disabled>تانية ثانوي</option>
+                                <option value="3">تالتة ثانوي</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="termGroup" style="display: none;">
+                        <label for="term">الترم</label>
+                        <select id="term" class="form-control">
+                            <option value="" disabled selected>اختر الترم</option>
+                            <option value="1" disabled>الترم الأول</option>
+                            <option value="2" disabled>الترم الثاني</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="streamGroup" style="display: none;">
+                        <label for="stream">الشعبة</label>
+                        <select id="stream" class="form-control">
+                            <option value="" disabled selected>اختر الشعبة</option>
+                            <option value="science_bio">علمي علوم</option>
+                            <option value="science_math">علمي رياضة</option>
+                            <option value="literature">أدبي</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">البريد الإلكتروني</label>
+                        <input type="email" id="email" class="form-control" placeholder="example@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">كلمة المرور</label>
+                        <input type="password" id="password" class="form-control" placeholder="******" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">تأكيد كلمة المرور</label>
+                        <input type="password" id="confirmPassword" class="form-control" placeholder="******" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary full-width">إنشاء الحساب</button>
+                    <div class="text-center mt-3" style="margin-top: 1rem;">
+                        <p style="color: var(--text-light);">عندك حساب؟ <a href="login.html" class="text-primary"
+                                style="font-weight: 700;">سجل دخول</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h3>عن ثانوية.كوم</h3>
+                    <p>منصة تعليمية للامتحانات متكاملة تهدف لتطوير مستوى طلاب الثانوية العامة في مصر وتقديم تجربة
+                        تعليمية فريدة.
+                    </p>
+                </div>
+                <div class="footer-col">
+                    <h3>روابط سريعة</h3>
+                    <ul class="footer-links">
+                        <li><a href="about.html">من نحن</a></li>
+                        <li><a href="pricing.html">خطط الاشتراك</a></li>
+                        <li><a href="contact.html">اتصل بنا</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h3>تواصل معنا</h3>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-phone"></i> 01000000000</li>
+                        <li><i class="fas fa-envelope"></i> thanaweya@gmail.com</li>
+                        <li><i class="fas fa-map-marker-alt"></i> القليوبية، مصر</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2026 ثانوية.كوم - جميع الحقوق محفوظة</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/auth.js"></script>
+
+</body>
+
+</html>
