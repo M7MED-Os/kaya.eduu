@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة المتصدرين | ثانوية.كوم</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .leaderboard-hero {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+            margin-bottom: -3rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .leaderboard-hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .leaderboard-container {
+            max-width: 800px;
+            margin: 0 auto 4rem auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .full-leaderboard-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            border: 1px solid #E5E7EB;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .leaderboard-table th {
+            background: #f8fafc;
+            padding: 1.25rem 1rem;
+            text-align: right;
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .leaderboard-table td {
+            padding: 1.25rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        .rank-cell {
+            width: 80px;
+            text-align: center;
+            font-weight: 900;
+            font-size: 1.2rem;
+            color: #94a3b8;
+        }
+
+        .rank-1 {
+            color: #d97706;
+        }
+
+        .rank-2 {
+            color: #475569;
+        }
+
+        .rank-3 {
+            color: #9a3412;
+        }
+
+        .medal-icon {
+            font-size: 1.5rem;
+            margin-left: 5px;
+        }
+
+        .user-info-cell {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            background: #f1f5f9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            border: 2px solid white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .user-name-box b {
+            display: block;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+        }
+
+        .user-name-box span {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .points-cell {
+            text-align: center;
+            font-weight: 900;
+            font-size: 1.3rem;
+            color: var(--primary-color);
+        }
+
+        .points-label {
+            display: block;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .admin-badge {
+            background: #fefce8;
+            color: #a16207;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            border: 1px solid #fef08a;
+            margin-right: 8px;
+        }
+
+        @media (max-width: 600px) {
+            .leaderboard-hero h1 {
+                font-size: 2rem;
+            }
+
+            .rank-cell {
+                width: 50px;
+            }
+
+            .points-cell {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="dashboard.html" class="logo">
+                <i class="fas fa-graduation-cap"></i>&nbsp;ثانوية<span>.كوم</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="dashboard.html">لوحة التحكم</a></li>
+                <li><a href="leaderboard.html" class="active">المتصدرين</a></li>
+                <li><button id="logoutBtn" class="btn btn-outline" style="padding: 0.5rem 1rem;">خروج</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Header Section -->
+    <header class="leaderboard-hero">
+        <div class="container">
+            <h1>🏆 لوحة الشرف</h1>
+            <p>أفضل الطلاب على مستوى المنصة كفاحاً وتقديراً</p>
+        </div>
+    </header>
+
+    <!-- Leaderboard Table -->
+    <div class="container leaderboard-container">
+        <div class="full-leaderboard-card">
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th style="text-align: center;">الترتيب</th>
+                        <th>الطالب</th>
+                        <th style="text-align: center;">النقاط</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody">
+                    <!-- Loaded via JS -->
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 4rem;">
+                            <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--primary-color);"></i>
+                            <p style="margin-top: 1rem; color: var(--text-light);">جاري ترتيب الأبطال...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="copyright" style="border: none; padding-top: 0;">
+                <p>&copy; 2026 ثانوية.كوم</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/auth.js"></script>
+    <script type="module">
+        import { supabase } from "./assets/js/supabaseClient.js";
+
+        async function loadLeaderboardPage() {
+            const body = document.getElementById('leaderboardBody');
+
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('full_name, points, grade, role')
+                    .order('points', { ascending: false })
+                    .limit(50); // Show top 50 in the full page
+
+                if (error) throw error;
+
+                const gradeMap = { "1": "أولى ثانوي", "2": "تانية ثانوي", "3": "تالتة ثانوي" };
+
+                body.innerHTML = data.map((s, i) => {
+                    const rank = i + 1;
+                    let rankDisplay = rank;
+                    let rankClass = `rank-${rank}`;
+
+                    if (rank === 1) rankDisplay = '<i class="fas fa-crown medal-icon"></i>';
+                    else if (rank === 2) rankDisplay = '<i class="fas fa-medal medal-icon" style="color:#94a3b8"></i>';
+                    else if (rank === 3) rankDisplay = '<i class="fas fa-medal medal-icon" style="color:#cd7f32"></i>';
+                    else rankClass = '';
+
+                    const isAdmin = s.role === 'admin';
+
+                    return `
+                        <tr>
+                            <td class="rank-cell ${rankClass}">${rankDisplay}</td>
+                            <td>
+                                <div class="user-info-cell">
+                                    <div class="user-avatar">${s.full_name[0]}</div>
+                                    <div class="user-name-box">
+                                        <b>${s.full_name} ${isAdmin ? '<span class="admin-badge">أدمن</span>' : ''}</b>
+                                        <span>${gradeMap[s.grade] || '-'}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="points-cell">
+                                ${s.points || 0}
+                                <span class="points-label">نقطة</span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                console.error(err);
+                body.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red; padding: 2rem;">فشل في تحميل البيانات</td></tr>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadLeaderboardPage);
+    </script>
+
+</body>
+
+</html>

@@ -371,9 +371,6 @@ async function loadUserProfile() {
         // Load user results and stats
         await loadUserDashboardData(user.id);
 
-        // Fetch Leaderboard
-        await fetchLeaderboard();
-
         // Try to fetch from profiles table
         const { data: profile, error } = await supabase
             .from("profiles")
@@ -396,15 +393,15 @@ async function loadUserProfile() {
             });
 
             if (!insertError) updateNameUI(fullName);
-        } else {
-            // Profile exists, display it normally
+        }
+
+        if (profile) {
             updateNameUI(profile.full_name);
 
             // Update Points Stat Card
             const pointsEl = document.getElementById('stats-points');
             if (pointsEl) pointsEl.textContent = profile.points || 0;
 
-            // Check if user is admin and show admin button
             if (profile.role === 'admin') {
                 const adminBtn = document.getElementById('adminNavBtn');
                 if (adminBtn) adminBtn.style.display = 'block';
@@ -422,54 +419,8 @@ async function loadUserProfile() {
     }
 }
 
-async function fetchLeaderboard() {
-    const listContainer = document.getElementById('leaderboardList');
-    if (!listContainer) return;
+// fetchLeaderboard is now handled in leaderboard.html via direct script
 
-    try {
-        // Fetch Top 10 from profiles (optimized)
-        const { data: topStudents, error } = await supabase
-            .from('profiles')
-            .select('full_name, points, grade, stream')
-            .filter('role', 'neq', 'admin') // Exclude admins
-            .order('points', { ascending: false })
-            .limit(10);
-
-        if (error) throw error;
-
-        if (!topStudents || topStudents.length === 0) {
-            listContainer.innerHTML = '<p style="text-align:center; padding:1rem; color:#64748b;">لا يوجد متصدرين بعد.</p>';
-            return;
-        }
-
-        const gradeMap = { "1": "أولى", "2": "تانية", "3": "تالتة" };
-
-        listContainer.innerHTML = topStudents.map((s, i) => {
-            const rank = i + 1;
-            const topClass = rank <= 3 ? `top-${rank}` : '';
-            const firstName = s.full_name.split(' ')[0];
-            const lastName = s.full_name.split(' ').slice(1).join(' ');
-
-            return `
-                <div class="leader-item ${topClass}">
-                    <div class="leader-rank">${rank}</div>
-                    <div class="leader-info">
-                        <span class="leader-name">${firstName} ${lastName ? lastName[0] + '.' : ''}</span>
-                        <span class="leader-meta">${gradeMap[s.grade] || '-'} ثانوي</span>
-                    </div>
-                    <div class="leader-points">
-                        <span class="points-val">${s.points || 0}</span>
-                        <span class="points-label">نقطة</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-    } catch (err) {
-        console.error("Leaderboard Error:", err);
-        listContainer.innerHTML = '<p style="text-align:center; color:red; font-size:0.8rem;">خطأ في تحميل اللوحة</p>';
-    }
-}
 
 async function loadUserDashboardData(userId) {
     try {
