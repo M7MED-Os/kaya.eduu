@@ -79,41 +79,42 @@ async function loadProfile() {
     const gradeField = document.getElementById("grade");
     const streamField = document.getElementById("stream");
     const emailField = document.getElementById("email");
+    const adminFields = document.getElementById("adminAcademicFields");
+    const studentInfo = document.getElementById("studentAcademicInfo");
+    const academicLabels = document.getElementById("academicLabels");
 
-    gradeField.value = grade;
+    // Permissions UI Logic
+    if (isAdmin) {
+        adminFields.style.display = "block";
+        studentInfo.style.display = "none";
 
-    // Trigger change to show/hide fields
-    handleGradeChange(grade);
-
-    if (term) document.getElementById("term").value = term;
-    if (stream) streamField.value = stream;
-
-    // Permissions Logic: Lock fields for students
-    if (!isAdmin) {
-        gradeField.disabled = true;
-        gradeField.style.background = "#f3f4f6";
-        gradeField.style.cursor = "not-allowed";
-
-        streamField.disabled = true;
-        streamField.style.background = "#f3f4f6";
-        streamField.style.cursor = "not-allowed";
-
-        // Bonus: Personal Note
-        const hint = document.createElement("small");
-        hint.style.color = "var(--primary-color)";
-        hint.style.display = "block";
-        hint.style.marginTop = "5px";
-        hint.innerText = "* لتغيير السنة الدراسية أو الشعبة، برجاء التواصل مع الإدارة.";
-        gradeField.parentNode.appendChild(hint);
-    } else {
-        // Administrative privileges
-        console.log("Welcome Admin - You can edit anything.");
         emailField.disabled = false;
         emailField.style.background = "white";
         emailField.style.cursor = "text";
 
-        // Show all grades for Admin to toggle
+        gradeField.value = grade;
+        handleGradeChange(grade);
+        if (term) document.getElementById("term").value = term;
+        if (stream) streamField.value = stream;
+
+        // Ensure all options are enabled for admin
         Array.from(gradeField.options).forEach(opt => opt.disabled = false);
+    } else {
+        adminFields.style.display = "none";
+        studentInfo.style.display = "block";
+
+        // Map values to Arabic labels
+        const gradeMap = { "1": "أولى ثانوي", "2": "تانية ثانوي", "3": "تالتة ثانوي" };
+        const termMap = { "1": "الترم الأول", "2": "الترم الثاني" };
+        const streamMap = { "science_bio": "علمي علوم", "science_math": "علمي رياضة", "literature": "أدبي" };
+
+        let infoHtml = `<div><strong>السنة الدراسية:</strong> ${gradeMap[grade] || grade || '-'}</div>`;
+        if (grade === "1" || grade === "2") {
+            infoHtml += `<div><strong>الترم:</strong> ${termMap[term] || term || '-'}</div>`;
+        } else if (grade === "3") {
+            infoHtml += `<div><strong>الشعبة:</strong> ${streamMap[stream] || stream || '-'}</div>`;
+        }
+        academicLabels.innerHTML = infoHtml;
     }
 }
 

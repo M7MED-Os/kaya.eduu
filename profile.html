@@ -58,32 +58,47 @@
                         <small style="color: var(--text-light);">لا يمكن تغيير البريد الإلكتروني.</small>
                     </div>
 
-                    <div class="row" style="display: flex; gap: 1rem;">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="grade">السنة الدراسية</label>
-                            <select id="grade" class="form-control" required>
-                                <option value="1">أولى ثانوي</option>
-                                <option value="2">تانية ثانوي</option>
-                                <option value="3">تالتة ثانوي</option>
+                    <!-- Academic Info Display (For Students) -->
+                    <div id="studentAcademicInfo"
+                        style="display: none; background: #f8fafc; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #e2e8f0;">
+                        <h4 style="margin-bottom: 0.5rem; color: var(--primary-color); font-size: 0.9rem;">البيانات
+                            الدراسية</h4>
+                        <div id="academicLabels" style="font-size: 0.95rem; color: #1e293b; line-height: 1.8;">
+                            <!-- Will be filled by JS -->
+                        </div>
+                        <small style="color: #64748b; display: block; margin-top: 0.5rem; font-size: 0.8rem;">
+                            * لتغيير السنة الدراسية أو الشعبة، برجاء التواصل مع الإدارة.
+                        </small>
+                    </div>
+
+                    <div id="adminAcademicFields">
+                        <div class="row" style="display: flex; gap: 1rem;">
+                            <div class="form-group" style="flex: 1;">
+                                <label for="grade">السنة الدراسية</label>
+                                <select id="grade" class="form-control" required>
+                                    <option value="1">أولى ثانوي</option>
+                                    <option value="2">تانية ثانوي</option>
+                                    <option value="3">تالتة ثانوي</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="termGroup" style="display: none;">
+                            <label for="term">الترم</label>
+                            <select id="term" class="form-control">
+                                <option value="1">الترم الأول</option>
+                                <option value="2">الترم الثاني</option>
                             </select>
                         </div>
-                    </div>
 
-                    <div class="form-group" id="termGroup" style="display: none;">
-                        <label for="term">الترم</label>
-                        <select id="term" class="form-control">
-                            <option value="1">الترم الأول</option>
-                            <option value="2">الترم الثاني</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="streamGroup" style="display: none;">
-                        <label for="stream">الشعبة</label>
-                        <select id="stream" class="form-control">
-                            <option value="science_bio">علمي علوم</option>
-                            <option value="science_math">علمي رياضة</option>
-                            <option value="literature">أدبي</option>
-                        </select>
+                        <div class="form-group" id="streamGroup" style="display: none;">
+                            <label for="stream">الشعبة</label>
+                            <select id="stream" class="form-control">
+                                <option value="science_bio">علمي علوم</option>
+                                <option value="science_math">علمي رياضة</option>
+                                <option value="literature">أدبي</option>
+                            </select>
+                        </div>
                     </div>
 
                     <button type="submit" class="btn btn-primary full-width">حفظ التعديلات</button>
@@ -91,7 +106,8 @@
                     <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #eee;">
 
                     <div class="text-center">
-                        <a href="reset-password.html" class="btn btn-outline">تغيير كلمة المرور</a>
+                        <a href="reset-password.html" class="btn btn-outline" style="margin-top: 1rem;">تغيير كلمة
+                            المرور</a>
                     </div>
                 </form>
             </div>
