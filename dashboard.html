@@ -121,6 +121,156 @@
                 transform: rotate(360deg);
             }
         }
+
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 992px) {
+            .dashboard-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-sidebar {
+                order: -1;
+                /* Show leaderboard on top for mobile */
+            }
+        }
+
+        /* Leaderboard Sleek Design */
+        .leaderboard-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid #E5E7EB;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 2rem;
+        }
+
+        .leaderboard-header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .leaderboard-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .leaderboard-header span {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .leaderboard-list {
+            padding: 0.5rem;
+        }
+
+        .leader-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+        }
+
+        .leader-item:hover {
+            background: #f8fafc;
+        }
+
+        .leader-rank {
+            width: 30px;
+            height: 30px;
+            background: #f1f5f9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .leader-item.top-1 .leader-rank {
+            background: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fbbf24;
+        }
+
+        .leader-item.top-2 .leader-rank {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+
+        .leader-item.top-3 .leader-rank {
+            background: #fff7ed;
+            color: #9a3412;
+            border: 1px solid #fdba74;
+        }
+
+        .leader-info {
+            flex: 1;
+        }
+
+        .leader-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #1e293b;
+            display: block;
+        }
+
+        .leader-meta {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .leader-points {
+            text-align: right;
+        }
+
+        .points-val {
+            font-weight: 900;
+            color: var(--primary-color);
+            display: block;
+            font-size: 1rem;
+        }
+
+        .points-label {
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+
+        .leaderboard-footer {
+            padding: 1rem;
+            background: #f8fafc;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #64748b;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .spinner-sm {
+            width: 25px;
+            height: 25px;
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
     </style>
 </head>
 
@@ -171,54 +321,61 @@
         <!-- Quick Stats -->
         <div class="stats-grid">
             <div class="stat-card">
-                <span class="stat-number">0</span>
+                <span class="stat-number" id="stats-questions">0</span>
                 <span class="stat-label">أسئلة حليتها</span>
             </div>
             <div class="stat-card">
-                <span class="stat-number">0</span>
+                <span class="stat-number" id="stats-exams">0</span>
                 <span class="stat-label">امتحانات كاملة</span>
             </div>
+            <div class="stat-card" style="border-bottom: 3px solid var(--secondary-color);">
+                <span class="stat-number" id="stats-points">0</span>
+                <span class="stat-label">مجموع النقاط ✨</span>
+            </div>
             <div class="stat-card">
-                <span class="stat-number">%0</span>
+                <span class="stat-number" id="stats-accuracy">%0</span>
                 <span class="stat-label">مستوى الدقة</span>
             </div>
         </div>
 
-        <!-- Subjects Section -->
-        <h2 class="section-title" style="font-size: 1.8rem;">المواد الدراسية</h2>
-        <p class="section-subtitle" style="margin-bottom: 2rem;">اختار المادة وابدأ حل فوراً</p>
+        <!-- Main Content Layout -->
+        <div class="dashboard-layout">
+            <!-- Left Side: Subjects & History -->
+            <div class="dashboard-main">
+                <h2 class="section-title" style="font-size: 1.5rem;">المواد الدراسية</h2>
+                <p class="section-subtitle" style="margin-bottom: 2rem;">اختار المادة وابدأ حل فوراً</p>
 
-        <div class="grid-3" id="subjectsGrid">
-            <!-- Subjects will be loaded here -->
-            <p style="grid-column: 1/-1; text-align: center; color: var(--text-light);">جاري تحميل المواد...</p>
-        </div>
+                <div class="grid-2" id="subjectsGrid">
+                    <!-- Subjects will be loaded here -->
+                    <p style="grid-column: 1/-1; text-align: center; color: var(--text-light);">جاري تحميل المواد...</p>
+                </div>
 
-        <!-- Results Section -->
-        <div id="resultsSection" style="margin-top: 4rem; display: none;">
-            <h2 class="section-title" style="font-size: 1.8rem;">📊 آخر الامتحانات</h2>
-            <p class="section-subtitle" style="margin-bottom: 2rem;">آخر 5 امتحانات قمت بحلها</p>
-
-            <!-- Stats Cards -->
-            <div class="stats-grid" id="resultsStatsGrid" style="margin-bottom: 2rem;">
-                <!-- Stats will be injected here -->
+                <!-- Results Section -->
+                <div id="resultsSection" style="margin-top: 4rem; display: none;">
+                    <h2 class="section-title" style="font-size: 1.5rem;">📊 آخر الامتحانات</h2>
+                    <p class="section-subtitle" style="margin-bottom: 2rem;">أدائك في آخر 5 امتحانات</p>
+                    <div id="resultsContainer"></div>
+                </div>
             </div>
 
-            <!-- Results List -->
-            <div id="resultsContainer">
-                <!-- Results will be injected here -->
+            <!-- Right Side: Leaderboard -->
+            <div class="dashboard-sidebar">
+                <div class="leaderboard-card">
+                    <div class="leaderboard-header">
+                        <h3><i class="fas fa-trophy" style="color: #fbbf24;"></i> لوحة المتصدرين</h3>
+                        <span>أفضل 10 طلاب</span>
+                    </div>
+                    <div id="leaderboardList" class="leaderboard-list">
+                        <!-- Leaderboard items will be loaded here -->
+                        <div class="spinner-sm" style="margin: 2rem auto;"></div>
+                    </div>
+                    <div class="leaderboard-footer">
+                        حققتُه اليوم؟ شد حيلك وادخل القائمة! 🚀
+                    </div>
+                </div>
             </div>
         </div>
-
-        <!-- Upcoming Exams / Recent Activity -->
-        <div style="margin-top: 4rem; margin-bottom: 4rem;">
-            <h2 class="section-title" style="font-size: 1.8rem;">امتحاناتك الجاية</h2>
-            <div class="card" style="text-align: center; padding: 3rem;">
-                <i class="fas fa-calendar-check" style="font-size: 3rem; color: #E5E7EB; margin-bottom: 1rem;"></i>
-                <p style="color: var(--text-light); font-size: 1.2rem;">مفيش امتحانات محددة دلوقتي. <br> اعمل لنفسك
-                    امتحان شامل في أي وقت!</p>
-                <button class="btn btn-secondary" style="margin-top: 1.5rem;">انشئ امتحان جديد</button>
-            </div>
-        </div>
+    </div>
 
     </div>
 
