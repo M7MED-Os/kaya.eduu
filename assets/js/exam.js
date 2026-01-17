@@ -316,151 +316,104 @@ document.getElementById('confirmSubmitAnywayBtn').addEventListener('click', () =
     calculateResult();
 });
 
-function calculateResult() {
+async function calculateResult() {
     clearInterval(timerInterval);
+
+    // UI Cleanup
     if (examFooter) examFooter.style.display = "none";
     if (headerFinishBtn) headerFinishBtn.style.display = "none";
-
     const progressWrapper = document.querySelector('.progress-wrapper');
     if (progressWrapper) progressWrapper.style.display = "none";
-
     const sidebar = document.querySelector('.nav-sidebar');
     const mobileToggle = document.querySelector('.mobile-nav-toggle');
     if (sidebar) sidebar.style.display = "none";
     if (mobileToggle) mobileToggle.style.display = "none";
 
-    let score = 0;
-    let correct = 0;
-    let wrong = 0;
-    let total = currentQuestions.length;
-
-    currentQuestions.forEach(q => {
-        if (userAnswers[q.id] === q.correct_answer) {
-            score++;
-            correct++;
-        } else {
-            wrong++;
-        }
-    });
-
-    const percentage = Math.round((score / total) * 100);
-
-    // Show Hierarchy and Original Title
-    const hierarchyEl = document.getElementById("examHierarchy");
-    if (hierarchyEl) {
-        let hText = "";
-        if (hierarchyInfo.chapter) hText += hierarchyInfo.chapter;
-        if (hierarchyInfo.lesson) hText += " ❯ " + hierarchyInfo.lesson;
-        hText += " ❯ " + examTitle;
-        hierarchyEl.textContent = hText;
-    }
-    if (examTitleMobile) {
-        examTitleMobile.innerHTML = `${examTitle} <span style="font-size:0.75rem; color:var(--primary-color); font-weight:normal; margin-right:5px;">(مراجعة)</span>`;
-    }
-
-    if (timerBox) {
-        timerBox.style.display = "flex";
-        timerBox.style.background = "#f0fdf4";
-        timerBox.style.borderColor = "#bcf0da";
-        timerBox.style.color = "#046c4e";
-        timerBox.innerHTML = `<i class="fas fa-chart-line" style="font-size:0.8rem;"></i> <span style="font-weight:900;">${percentage}%</span>`;
-    }
-
-    // Save result to database
-    saveResultToDatabase(score, total, timeElapsed, userAnswers);
-
-    // Show Result UI
+    // Show Loading inside result view
     examView.style.display = "none";
     resultView.style.display = "block";
-
     const scoreValEl = document.getElementById("scoreValue");
-    const resultTitle = document.getElementById("resultTitle");
-    const resultMsg = document.getElementById("resultMessage");
-    const correctCountEl = document.getElementById("correctCount");
-    const wrongCountEl = document.getElementById("wrongCount");
-    const timeSpentEl = document.getElementById("timeSpent");
+    scoreValEl.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i>';
 
-    // Populate Stats
-    correctCountEl.textContent = correct;
-    wrongCountEl.textContent = wrong;
-    timeSpentEl.textContent = formatTime(timeElapsed);
+    try {
+        // CALL SERVER-SIDE SCORING (The Secure Way)
+        const { data, error } = await supabase.rpc('submit_exam', {
+            p_exam_id: examId,
+            p_answers: userAnswers,
+            p_time_spent: timeElapsed
+        });
 
-    // Animate Score
-    let currentCountAnim = 0;
-    const animTimer = setInterval(() => {
-        if (percentage === 0) {
-            scoreValEl.textContent = "0%";
-            clearInterval(animTimer);
-            return;
+        if (error) throw error;
+
+        // Data from server
+        const { final_score, final_total } = data[0];
+        const percentage = Math.round((final_score / final_total) * 100);
+
+        // Update Statistics UI
+        document.getElementById("correctCount").textContent = final_score;
+        document.getElementById("wrongCount").textContent = final_total - final_score;
+        document.getElementById("timeSpent").textContent = formatTime(timeElapsed);
+
+        // Show Hierarchy and Original Title
+        const hierarchyEl = document.getElementById("examHierarchy");
+        if (hierarchyEl) {
+            let hText = "";
+            if (hierarchyInfo.chapter) hText += hierarchyInfo.chapter;
+            if (hierarchyInfo.lesson) hText += " ❯ " + hierarchyInfo.lesson;
+            hText += " ❯ " + examTitle;
+            hierarchyEl.textContent = hText;
         }
-        currentCountAnim += 1;
-        scoreValEl.textContent = `${currentCountAnim}%`;
-        if (currentCountAnim >= percentage) clearInterval(animTimer);
-    }, 15);
 
-    if (percentage >= 85) {
-        resultTitle.textContent = "ممتاز يا بطل! 🥇";
-        resultTitle.style.color = "var(--primary-color)";
-        resultMsg.textContent = `جبت ${score} من ${total}. أداء رائع، كمل بنفس المستوى!`;
-    } else if (percentage >= 50) {
-        resultTitle.textContent = "جيد جداً 👍";
-        resultTitle.style.color = "var(--secondary-color)";
-        resultMsg.textContent = `جبت ${score} من ${total}. محتاج شوية تركيز المرة الجاية.`;
-    } else {
-        resultTitle.textContent = "محتاج تذاكر تاني 📚";
-        resultTitle.style.color = "#EF4444";
-        resultMsg.textContent = `جبت ${score} من ${total}. راجع الدرس وحاول تاني.`;
+        if (examTitleMobile) {
+            examTitleMobile.innerHTML = `${examTitle} <span style="font-size:0.75rem; color:var(--primary-color); font-weight:normal; margin-right:5px;">(مراجعة)</span>`;
+        }
+
+        if (timerBox) {
+            timerBox.style.display = "flex";
+            timerBox.innerHTML = `<i class="fas fa-chart-line" style="font-size:0.8rem;"></i> <span style="font-weight:900;">${percentage}%</span>`;
+        }
+
+        // Animate Score
+        let currentCountAnim = 0;
+        scoreValEl.textContent = "0%";
+        const animTimer = setInterval(() => {
+            if (percentage === 0) {
+                scoreValEl.textContent = "0%";
+                clearInterval(animTimer);
+                return;
+            }
+            currentCountAnim += 1;
+            scoreValEl.textContent = `${currentCountAnim}%`;
+            if (currentCountAnim >= percentage) clearInterval(animTimer);
+        }, 15);
+
+        const resultTitle = document.getElementById("resultTitle");
+        const resultMsg = document.getElementById("resultMessage");
+
+        if (percentage >= 85) {
+            resultTitle.textContent = "ممتاز يا بطل! 🥇";
+            resultTitle.style.color = "var(--primary-color)";
+            resultMsg.textContent = `جبت ${final_score} من ${final_total}. أداء رائع، كمل بنفس المستوى!`;
+        } else if (percentage >= 50) {
+            resultTitle.textContent = "جيد جداً 👍";
+            resultTitle.style.color = "var(--secondary-color)";
+            resultMsg.textContent = `جبت ${final_score} من ${final_total}. محتاج شوية تركيز المرة الجاية.`;
+        } else {
+            resultTitle.textContent = "محتاج تذاكر تاني 📚";
+            resultTitle.style.color = "#EF4444";
+            resultMsg.textContent = `جبت ${final_score} من ${final_total}. راجع الدرس وحاول تاني.`;
+        }
+
+    } catch (err) {
+        console.error("Submission Error:", err);
+        scoreValEl.innerHTML = '<span style="color:red; font-size:1rem;">فشل في إرسال النتيجة. تأكد من اتصال الإنترنت.</span>';
     }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Save Result to Database
-async function saveResultToDatabase(score, total, timeSpent, answersData) {
-    try {
-        // Get current user
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+// Note: saveResultToDatabase is now handled server-side via RPC submit_exam
 
-        if (userError || !user) {
-            console.error("User not authenticated, cannot save result");
-            return;
-        }
-
-        // inser logic for "Latest 2 Attempts":
-        // 1. Fetch current attempts
-        const { data: existingResults } = await supabase
-            .from('results')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('exam_id', examId)
-            .order('created_at', { ascending: false });
-
-        if (existingResults && existingResults.length >= 2) {
-            // Keep only the most recent one (index 0), delete the rest
-            const idsToDelete = existingResults.slice(1).map(r => r.id);
-            await supabase.from('results').delete().in('id', idsToDelete);
-        }
-
-        // 2. Insert new result
-        const { data, error } = await supabase
-            .from('results')
-            .insert({
-                user_id: user.id,
-                exam_id: examId,
-                score: score,
-                total_questions: total,
-                time_spent: timeSpent,
-                answers: answersData
-            });
-
-        if (error) {
-            console.error("Error saving result:", error);
-        } else {
-            console.log("✅ Result saved & Old attempts cleaned!");
-        }
-    } catch (err) {
-        console.error("Exception while saving result:", err);
-    }
-}
 
 // Review Functions
 function renderReview() {
