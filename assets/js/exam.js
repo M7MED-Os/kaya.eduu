@@ -425,7 +425,22 @@ async function saveResultToDatabase(score, total, timeSpent, answersData) {
             return;
         }
 
-        // Insert result
+        // inser logic for "Latest 2 Attempts":
+        // 1. Fetch current attempts
+        const { data: existingResults } = await supabase
+            .from('results')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('exam_id', examId)
+            .order('created_at', { ascending: false });
+
+        if (existingResults && existingResults.length >= 2) {
+            // Keep only the most recent one (index 0), delete the rest
+            const idsToDelete = existingResults.slice(1).map(r => r.id);
+            await supabase.from('results').delete().in('id', idsToDelete);
+        }
+
+        // 2. Insert new result
         const { data, error } = await supabase
             .from('results')
             .insert({
@@ -440,7 +455,7 @@ async function saveResultToDatabase(score, total, timeSpent, answersData) {
         if (error) {
             console.error("Error saving result:", error);
         } else {
-            console.log("✅ Result saved successfully!");
+            console.log("✅ Result saved & Old attempts cleaned!");
         }
     } catch (err) {
         console.error("Exception while saving result:", err);

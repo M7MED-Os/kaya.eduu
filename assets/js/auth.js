@@ -319,16 +319,27 @@ if (resetPasswordForm) {
     resetPasswordForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const password_input = document.getElementById("new_password");
-        const password = password_input.value;
+        const password_input = document.getElementById("newPassword");
+        const confirm_input = document.getElementById("confirmPassword");
 
+        const password = password_input.value;
+        const confirmResult = confirm_input.value;
+
+        let isValid = true;
         if (!password) {
             showInputError(password_input, "اكتب كلمة السر الجديدة");
-            return;
+            isValid = false;
         } else if (password.length < 6) {
             showInputError(password_input, "كلمة السر لازم تكون 6 حروف على الأقل");
-            return;
+            isValid = false;
         }
+
+        if (password !== confirmResult) {
+            showInputError(confirm_input, "كلمة السر مش متطابقة");
+            isValid = false;
+        }
+
+        if (!isValid) return;
 
         const submitBtn = resetPasswordForm.querySelector('button[type="submit"]');
         submitBtn.disabled = true;
@@ -589,7 +600,14 @@ async function loadUserResults(userId) {
                 *,
                 exams (
                     title,
-                    subject_id
+                    subject_id,
+                    chapter_id,
+                    lesson_id,
+                    chapters:chapter_id (title),
+                    lessons:lesson_id (
+                        title,
+                        chapters:chapter_id (title)
+                    )
                 )
             `)
             .eq('user_id', userId)
@@ -680,44 +698,116 @@ async function renderResultsList(examGroups) {
     }
 
     recentFive.forEach(result => {
-        const examTitle = result.exams?.title || 'امتحان';
-        const subjectId = result.exams?.subject_id || '';
+        const examData = result.exams || {};
+        const examTitle = examData.title || 'امتحان';
+        const subjectId = examData.subject_id || '';
         const subjectName = subjectsMap[subjectId]?.name_ar || 'مادة';
+
+        // Hierarchy logic: Check exam's direct chapter, then lesson's chapter
+        const chapterTitle = examData.chapters?.title || examData.lessons?.chapters?.title || "";
+        const lessonTitle = examData.lessons?.title || "";
+
+        // Final Hierarchy: Chapter - Lesson - Exam
+        let hierarchyParts = [];
+        if (chapterTitle) hierarchyParts.push(chapterTitle);
+        if (lessonTitle) hierarchyParts.push(lessonTitle);
+        hierarchyParts.push(examTitle);
+        const hierarchyText = hierarchyParts.join(" - ");
+
+        const attempts = examGroups[result.exam_id] || [];
+        attempts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        let comparisonHTML = '';
+        let datesHTML = `<div style="font-size: 0.75rem; color: var(--text-light);"><i class="far fa-calendar-alt"></i> ${new Date(result.created_at).toLocaleDateString('ar-EG')}</div>`;
+
+        if (attempts.length >= 2) {
+            const current = attempts[0].percentage;
+            const previous = attempts[1].percentage;
+            const diff = current - previous;
+
+            const icon = diff > 0 ? '📈' : diff < 0 ? '📉' : '➖';
+            const color = diff > 0 ? '#10B981' : diff < 0 ? '#EF4444' : '#94A3B8';
+            const sign = diff > 0 ? '+' : '';
+
+            comparisonHTML = `<div style="font-size: 0.85rem; font-weight: bold; color: ${color}; margin-top: 4px;">${icon} ${sign}${diff}%</div>`;
+
+            datesHTML = `
+                <div style="font-size: 0.7rem; color: var(--text-light); text-align: left;">
+                    <div title="آخر محاولة">🆕 ${new Date(attempts[0].created_at).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })}</div>
+                    <div title="المحاولة السابقة" style="opacity: 0.7;">🕒 ${new Date(attempts[1].created_at).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })}</div>
+                </div>
+            `;
+        }
 
         const card = document.createElement('div');
         card.className = 'card';
-        card.style.cssText = 'margin-bottom: 1rem; padding: 1.2rem; border-left: 4px solid var(--primary-color);';
+        card.style.cssText = 'margin-bottom: 1rem; padding: 1.2rem; border-right: 4px solid var(--primary-color);';
 
         const percentageColor = result.percentage >= 85 ? '#10B981' : result.percentage >= 50 ? 'var(--secondary-color)' : '#EF4444';
 
-        card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <div style="flex: 1; min-width: 200px;">
-                    <div style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 0.3rem;">
+        if (attempts.length === 1) {
+            // Single attempt
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <div style="font-size: 0.95rem; font-weight: bold; color: var(--primary-color); margin-bottom: 0.2rem;">
+                            <i class="fas fa-book"></i> ${subjectName}
+                        </div>
+                        <h4 style="font-size: 0.8rem; margin: 0; color: var(--text-light); font-weight: normal; line-height: 1.4;">
+                            ${hierarchyText}
+                        </h4>
+                    </div>
+                    <div style="text-align: center; min-width: 80px;">
+                        <div style="font-size: 1.8rem; font-weight: 900; color: ${percentageColor}; line-height: 1;">
+                            ${result.percentage}%
+                        </div>
+                    </div>
+                    <div style="min-width: 100px;">
+                        ${datesHTML}
+                    </div>
+                </div>
+            `;
+        } else {
+            // Multiple attempts - Unified Grid Layout matching subject page
+            const current = attempts[0];
+            const previous = attempts[1];
+            const diff = current.percentage - previous.percentage;
+            const icon = diff > 0 ? '📈' : diff < 0 ? '📉' : '➖';
+            const color = diff > 0 ? '#10B981' : diff < 0 ? '#EF4444' : '#94A3B8';
+            const sign = diff > 0 ? '+' : '';
+
+            card.innerHTML = `
+                <div style="margin-bottom: 1rem;">
+                    <div style="font-size: 0.95rem; font-weight: bold; color: var(--primary-color); margin-bottom: 0.2rem;">
                         <i class="fas fa-book"></i> ${subjectName}
                     </div>
-                    <h4 style="font-size: 1.1rem; margin: 0; color: var(--text-dark);">
-                        ${examTitle}
+                    <h4 style="font-size: 0.8rem; margin: 0; color: var(--text-light); font-weight: normal; line-height: 1.4;">
+                        ${hierarchyText}
                     </h4>
                 </div>
-                <div style="text-align: center;">
-                    <div style="font-size: 2rem; font-weight: 900; color: ${percentageColor};">
-                        ${result.percentage}%
+                <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; align-items: center;">
+                    <!-- Previous Attempt -->
+                    <div style="text-align: center; padding: 0.8rem; background: var(--bg-light); border-radius: var(--radius-sm);">
+                        <div style="font-size: 0.7rem; color: var(--text-light); margin-bottom: 0.3rem;">المرة السابقة</div>
+                        <div style="font-size: 1.5rem; font-weight: 900; color: var(--text-dark);">${previous.percentage}%</div>
+                        <div style="font-size: 0.65rem; color: var(--text-light); margin-top: 0.2rem;">🕒 ${new Date(previous.created_at).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })}</div>
                     </div>
-                    <div style="font-size: 0.8rem; color: var(--text-light);">
-                        ${result.score} من ${result.total_questions}
+
+                    <!-- Trend Column -->
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem;">${icon}</div>
+                        <div style="font-size: 0.8rem; font-weight: bold; color: ${color};">${sign}${diff}%</div>
+                    </div>
+
+                    <!-- Current Attempt -->
+                    <div style="text-align: center; padding: 0.8rem; background: #f0fdf4; border-radius: var(--radius-sm); border: 2px solid var(--primary-color);">
+                        <div style="font-size: 0.7rem; color: var(--text-light); margin-bottom: 0.3rem;">آخر محاولة</div>
+                        <div style="font-size: 1.5rem; font-weight: 900; color: var(--primary-color);">${current.percentage}%</div>
+                        <div style="font-size: 0.65rem; color: var(--text-light); margin-top: 0.2rem;">🆕 ${new Date(current.created_at).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })}</div>
                     </div>
                 </div>
-                <div style="text-align: left; min-width: 100px;">
-                    <div style="font-size: 0.8rem; color: var(--text-light);">
-                        <i class="fas fa-calendar"></i> ${new Date(result.created_at).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' })}
-                    </div>
-                    <div style="font-size: 0.75rem; color: var(--text-light); margin-top: 0.2rem;">
-                        ${new Date(result.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                </div>
-            </div>
-        `;
+            `;
+        }
 
         container.appendChild(card);
     });

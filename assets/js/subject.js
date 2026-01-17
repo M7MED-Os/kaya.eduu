@@ -267,7 +267,14 @@ async function loadSubjectResults() {
                 exams!inner (
                     id,
                     title,
-                    subject_id
+                    subject_id,
+                    chapter_id,
+                    lesson_id,
+                    chapters:chapter_id (title),
+                    lessons:lesson_id (
+                        title,
+                        chapters:chapter_id (title)
+                    )
                 )
             `)
             .eq('user_id', user.id)
@@ -309,75 +316,81 @@ function renderSubjectResults(examGroups) {
     container.innerHTML = '';
 
     Object.values(examGroups).forEach(attempts => {
-        // Sort by date
-        attempts.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        // Sort by date: Newest first
+        attempts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-        const firstAttempt = attempts[0];
-        const lastAttempt = attempts[attempts.length - 1];
-        const examTitle = firstAttempt.exams?.title || 'امتحان';
+        const currentAttempt = attempts[0];
+        const previousAttempt = attempts[1] || null;
+
+        const examData = currentAttempt.exams || {};
+        const examTitle = examData.title || 'امتحان';
+        const chapterTitle = examData.chapters?.title || examData.lessons?.chapters?.title || "بدون باب";
+        const lessonTitle = examData.lessons?.title || "";
 
         const card = document.createElement('div');
         card.className = 'card';
-        card.style.cssText = 'margin-bottom: 1.5rem; padding: 1.5rem;';
+        card.style.cssText = 'margin-bottom: 1.5rem; padding: 1.5rem; border-right: 4px solid var(--primary-color);';
 
-        if (attempts.length === 1) {
+        if (!previousAttempt) {
             // Single attempt
             card.innerHTML = `
-                <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-dark);">
-                    ${examTitle}
-                </h3>
+                <div style="font-size: 0.95rem; font-weight: bold; color: var(--primary-color); margin-bottom: 0.2rem;">
+                    <i class="fas fa-folder-open"></i> ${chapterTitle}
+                </div>
+                <h4 style="font-size: 0.85rem; margin: 0 0 1rem 0; color: var(--text-light); font-weight: normal; line-height: 1.4;">
+                    ${lessonTitle ? lessonTitle + ' - ' : ''}${examTitle}
+                </h4>
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                     <div>
                         <span style="font-size: 2rem; font-weight: 900; color: var(--primary-color);">
-                            ${firstAttempt.percentage}%
+                            ${currentAttempt.percentage}%
                         </span>
                         <span style="display: block; font-size: 0.9rem; color: var(--text-light); margin-top: 0.3rem;">
-                            ${firstAttempt.score} من ${firstAttempt.total_questions} صح
+                            الدرجة: ${currentAttempt.score} من ${currentAttempt.total_questions} صح
                         </span>
                     </div>
                     <div style="text-align: left;">
                         <span style="font-size: 0.85rem; color: var(--text-light);">
-                            ${new Date(firstAttempt.created_at).toLocaleDateString('ar-EG')}
+                            <i class="far fa-calendar-alt"></i> ${new Date(currentAttempt.created_at).toLocaleDateString('ar-EG')}
                         </span>
                     </div>
                 </div>
             `;
         } else {
-            // Multiple attempts - show comparison
-            const improvement = lastAttempt.percentage - firstAttempt.percentage;
-            const improvementIcon = improvement > 0 ? '📈' : improvement < 0 ? '📉' : '➡️';
-            const improvementColor = improvement > 0 ? '#10B981' : improvement < 0 ? '#EF4444' : '#6B7280';
+            // Multiple attempts (Latest 2)
+            const diff = currentAttempt.percentage - previousAttempt.percentage;
+            const icon = diff > 0 ? '📈' : diff < 0 ? '📉' : '➖';
+            const color = diff > 0 ? '#10B981' : diff < 0 ? '#EF4444' : '#94A3B8';
+            const sign = diff > 0 ? '+' : '';
 
             card.innerHTML = `
-                <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-dark);">
-                    ${examTitle}
-                    <span style="font-size: 0.9rem; color: var(--text-light);"> (${attempts.length} محاولات)</span>
-                </h3>
+                <div style="font-size: 0.95rem; font-weight: bold; color: var(--primary-color); margin-bottom: 0.2rem;">
+                    <i class="fas fa-folder-open"></i> ${chapterTitle}
+                </div>
+                <h4 style="font-size: 0.85rem; margin: 0 0 1rem 0; color: var(--text-light); font-weight: normal; line-height: 1.4;">
+                    ${lessonTitle ? lessonTitle + ' - ' : ''}${examTitle}
+                </h4>
                 <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; align-items: center;">
-                    <!-- First Attempt -->
+                    <!-- Previous Attempt -->
                     <div style="text-align: center; padding: 1rem; background: var(--bg-light); border-radius: var(--radius-sm);">
-                        <div style="font-size: 0.8rem; color: var(--text-light); margin-bottom: 0.5rem;">أول محاولة</div>
-                        <div style="font-size: 1.8rem; font-weight: 900; color: var(--text-dark);">${firstAttempt.percentage}%</div>
-                        <div style="font-size: 0.75rem; color: var(--text-light); margin-top: 0.3rem;">
-                            ${new Date(firstAttempt.created_at).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' })}
-                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-light); margin-bottom: 0.5rem;">المرة السابقة</div>
+                        <div style="font-size: 1.8rem; font-weight: 900; color: var(--text-dark);">${previousAttempt.percentage}%</div>
+                        <div style="font-size: 0.7rem; color: var(--text-light); margin-top: 0.3rem;">🕒 ${new Date(previousAttempt.created_at).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })}</div>
                     </div>
 
                     <!-- Improvement Arrow -->
                     <div style="text-align: center; font-size: 2rem;">
-                        ${improvementIcon}
-                        <div style="font-size: 0.9rem; font-weight: bold; color: ${improvementColor}; margin-top: 0.3rem;">
-                            ${improvement > 0 ? '+' : ''}${improvement}%
+                        ${icon}
+                        <div style="font-size: 0.9rem; font-weight: bold; color: ${color}; margin-top: 0.3rem;">
+                            ${sign}${diff}%
                         </div>
                     </div>
 
-                    <!-- Last Attempt -->
-                    <div style="text-align: center; padding: 1rem; background: linear-gradient(135deg, rgba(0, 137, 123, 0.1), rgba(255, 152, 0, 0.1)); border-radius: var(--radius-sm); border: 2px solid var(--primary-color);">
-                        <div style="font-size: 0.8rem; color: var(--text-light); margin-bottom: 0.5rem;">آخر محاولة</div>
-                        <div style="font-size: 1.8rem; font-weight: 900; color: var(--primary-color);">${lastAttempt.percentage}%</div>
-                        <div style="font-size: 0.75rem; color: var(--text-light); margin-top: 0.3rem;">
-                            ${new Date(lastAttempt.created_at).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' })}
-                        </div>
+                    <!-- Current Attempt -->
+                    <div style="text-align: center; padding: 1rem; background: #f0fdf4; border-radius: var(--radius-sm); border: 2px solid var(--primary-color);">
+                        <div style="font-size: 0.75rem; color: var(--text-light); margin-bottom: 0.5rem;">آخر محاولة</div>
+                        <div style="font-size: 1.8rem; font-weight: 900; color: var(--primary-color);">${currentAttempt.percentage}%</div>
+                        <div style="font-size: 0.7rem; color: var(--text-light); margin-top: 0.3rem;">🆕 ${new Date(currentAttempt.created_at).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })}</div>
                     </div>
                 </div>
             `;
