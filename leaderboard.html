@@ -253,7 +253,7 @@
                     .from('profiles')
                     .select('full_name, points, grade, role')
                     .order('points', { ascending: false })
-                    .limit(50);
+                    .limit(10);
 
                 if (error) throw error;
 

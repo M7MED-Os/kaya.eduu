@@ -121,156 +121,6 @@
                 transform: rotate(360deg);
             }
         }
-
-        .dashboard-layout {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 2rem;
-            align-items: start;
-        }
-
-        @media (max-width: 992px) {
-            .dashboard-layout {
-                grid-template-columns: 1fr;
-            }
-
-            .dashboard-sidebar {
-                order: -1;
-                /* Show leaderboard on top for mobile */
-            }
-        }
-
-        /* Leaderboard Sleek Design */
-        .leaderboard-card {
-            background: white;
-            border-radius: var(--radius-lg);
-            border: 1px solid #E5E7EB;
-            overflow: hidden;
-            box-shadow: var(--shadow-md);
-            position: sticky;
-            top: 2rem;
-        }
-
-        .leaderboard-header {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            color: white;
-            padding: 1.5rem;
-            text-align: center;
-        }
-
-        .leaderboard-header h3 {
-            margin: 0;
-            font-size: 1.25rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .leaderboard-header span {
-            font-size: 0.8rem;
-            opacity: 0.8;
-            margin-top: 5px;
-            display: block;
-        }
-
-        .leaderboard-list {
-            padding: 0.5rem;
-        }
-
-        .leader-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 0.75rem 1rem;
-            border-radius: var(--radius-sm);
-            transition: var(--transition);
-        }
-
-        .leader-item:hover {
-            background: #f8fafc;
-        }
-
-        .leader-rank {
-            width: 30px;
-            height: 30px;
-            background: #f1f5f9;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            font-size: 0.8rem;
-            color: #64748b;
-        }
-
-        .leader-item.top-1 .leader-rank {
-            background: #fef3c7;
-            color: #d97706;
-            border: 1px solid #fbbf24;
-        }
-
-        .leader-item.top-2 .leader-rank {
-            background: #f1f5f9;
-            color: #475569;
-            border: 1px solid #cbd5e1;
-        }
-
-        .leader-item.top-3 .leader-rank {
-            background: #fff7ed;
-            color: #9a3412;
-            border: 1px solid #fdba74;
-        }
-
-        .leader-info {
-            flex: 1;
-        }
-
-        .leader-name {
-            font-weight: 700;
-            font-size: 0.95rem;
-            color: #1e293b;
-            display: block;
-        }
-
-        .leader-meta {
-            font-size: 0.75rem;
-            color: #64748b;
-        }
-
-        .leader-points {
-            text-align: right;
-        }
-
-        .points-val {
-            font-weight: 900;
-            color: var(--primary-color);
-            display: block;
-            font-size: 1rem;
-        }
-
-        .points-label {
-            font-size: 0.7rem;
-            color: #94a3b8;
-        }
-
-        .leaderboard-footer {
-            padding: 1rem;
-            background: #f8fafc;
-            text-align: center;
-            font-size: 0.85rem;
-            color: #64748b;
-            border-top: 1px solid #f1f5f9;
-        }
-
-        .spinner-sm {
-            width: 25px;
-            height: 25px;
-            border: 3px solid #f3f4f6;
-            border-top: 3px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
     </style>
 </head>
 
@@ -285,11 +135,10 @@
     <!-- Navbar -->
     <nav class="navbar">
         <div class="container">
-            <a href="index.html" class="logo">
+            <a href="dashboard.html" class="logo">
                 <i class="fas fa-graduation-cap"></i>&nbsp;ثانوية<span>.كوم</span>
             </a>
 
-            <!-- Mobile Menu hidden for dashboard simplicity or can be enabled -->
             <div class="menu-toggle">
                 <i class="fas fa-bars"></i>
             </div>
@@ -338,6 +187,8 @@
             </div>
         </div>
 
+
+
         <div style="text-align: center; margin-bottom: 3rem;">
             <a href="leaderboard.html" class="btn btn-secondary"
                 style="background: linear-gradient(135deg, #FF6F00 0%, #FF8F00 100%); padding: 1rem 2rem; border-radius: 50px; box-shadow: 0 4px 15px rgba(255, 111, 0, 0.3);">
@@ -372,8 +223,7 @@
         </div>
     </footer>
 
-
-    <!-- Authentication Logic -->
+    <!-- Scripts -->
     <script src="assets/js/main.js"></script>
     <script type="module" src="assets/js/auth.js"></script>
 </body>
