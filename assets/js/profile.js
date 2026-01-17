@@ -69,17 +69,52 @@ async function loadProfile() {
     const term = profile?.term || meta.term || "";
     const stream = profile?.stream || meta.stream || "";
 
+    // Check if Admin
+    const isAdmin = meta.role === "admin" || meta.is_admin === true;
+
     // 3. Populate Form
     document.getElementById("fullname").value = fullName;
     document.getElementById("email").value = email;
-    document.getElementById("grade").value = grade;
+
+    const gradeField = document.getElementById("grade");
+    const streamField = document.getElementById("stream");
+    const emailField = document.getElementById("email");
+
+    gradeField.value = grade;
 
     // Trigger change to show/hide fields
     handleGradeChange(grade);
 
-    // Set other values after fields are visible
     if (term) document.getElementById("term").value = term;
-    if (stream) document.getElementById("stream").value = stream;
+    if (stream) streamField.value = stream;
+
+    // Permissions Logic: Lock fields for students
+    if (!isAdmin) {
+        gradeField.disabled = true;
+        gradeField.style.background = "#f3f4f6";
+        gradeField.style.cursor = "not-allowed";
+
+        streamField.disabled = true;
+        streamField.style.background = "#f3f4f6";
+        streamField.style.cursor = "not-allowed";
+
+        // Bonus: Personal Note
+        const hint = document.createElement("small");
+        hint.style.color = "var(--primary-color)";
+        hint.style.display = "block";
+        hint.style.marginTop = "5px";
+        hint.innerText = "* لتغيير السنة الدراسية أو الشعبة، برجاء التواصل مع الإدارة.";
+        gradeField.parentNode.appendChild(hint);
+    } else {
+        // Administrative privileges
+        console.log("Welcome Admin - You can edit anything.");
+        emailField.disabled = false;
+        emailField.style.background = "white";
+        emailField.style.cursor = "text";
+
+        // Show all grades for Admin to toggle
+        Array.from(gradeField.options).forEach(opt => opt.disabled = false);
+    }
 }
 
 // ==========================
@@ -127,19 +162,29 @@ if (profileForm) {
 
             // Prepare Data
             const updates = {
-                id: currentUser.id, // Ensure ID is present for upsert
+                id: currentUser.id,
                 full_name,
-                grade,
                 updated_at: new Date()
             };
 
-            // Add conditional fields
-            if (grade === "1" || grade === "2") {
-                updates.term = term;
-                updates.stream = null;
-            } else if (grade === "3") {
-                updates.term = null;
-                updates.stream = stream;
+            // Double Check Admin Status before allowing sensitive field updates
+            const meta = currentUser.user_metadata || {};
+            const isAdmin = meta.role === "admin" || meta.is_admin === true;
+
+            if (isAdmin) {
+                // Admin can update everything
+                if (grade === "1" || grade === "2") {
+                    updates.grade = grade;
+                    updates.term = term;
+                    updates.stream = null;
+                } else if (grade === "3") {
+                    updates.grade = grade;
+                    updates.term = null;
+                    updates.stream = stream;
+                }
+            } else {
+                // Student cannot change grade or stream - these fields are ignored or kept from original profile
+                console.warn("Security Check: Student attempt to bypass field lock. Ignoring sensitive changes.");
             }
 
             // 1. Update 'profiles' table

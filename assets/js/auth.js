@@ -271,97 +271,84 @@ if (loginForm) {
 }
 
 // ==========================
-// 7. Forgot Password Form
+// 7. Forgot Password (طلب استعادة)
 // ==========================
-
-const forgotPasswordForm = document.getElementById("forgotPasswordForm");
-if (forgotPasswordForm) {
-    forgotPasswordForm.addEventListener("submit", async (e) => {
+const forgotForm = document.getElementById("forgotPasswordForm");
+if (forgotForm) {
+    forgotForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-
-        const email_input = document.getElementById("email");
-        const email = email_input.value.trim();
+        const emailInput = document.getElementById("email");
+        const email = emailInput.value.trim();
 
         if (!email) {
-            showInputError(email_input, "اكتب إيميلك");
+            showInputError(emailInput, "برجاء كتابة البريد الإلكتروني");
             return;
         }
 
-        const submitBtn = forgotPasswordForm.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.textContent = "جاري الإرسال...";
+        const btn = forgotForm.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
         try {
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/reset-password.html`,
+                redirectTo: 'https://kaya-eduu.vercel.app/reset-password.html',
             });
 
             if (error) throw error;
 
-            showToast("تم إرسال رابط استعادة كلمة السر لإيميلك!", "success");
-            email_input.value = "";
-        } catch (error) {
-            console.error("Password reset error:", error);
-            showToast(error.message || "حدث خطأ", "error");
+            showToast("تم إرسال رابط الاستعادة لإيميلك بنجاح!", "success");
+            emailInput.value = "";
+        } catch (err) {
+            console.error("Reset request error:", err);
+            showToast(err.message || "حدث خطأ أثناء الإرسال", "error");
         } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = "إرسال رابط الاستعادة";
+            btn.disabled = false;
+            btn.textContent = "إرسال رابط إعادة التعيين";
         }
     });
 }
 
 // ==========================
-// 8. Reset Password Form
+// 8. Reset Password (تعيين الكلمة الجديدة)
 // ==========================
-
-const resetPasswordForm = document.getElementById("resetPasswordForm");
-if (resetPasswordForm) {
-    resetPasswordForm.addEventListener("submit", async (e) => {
+const resetForm = document.getElementById("resetPasswordForm");
+if (resetForm) {
+    resetForm.addEventListener("submit", async (e) => {
         e.preventDefault();
+        const passInput = document.getElementById("newPassword");
+        const confirmInput = document.getElementById("confirmPassword");
 
-        const password_input = document.getElementById("newPassword");
-        const confirm_input = document.getElementById("confirmPassword");
-
-        const password = password_input.value;
-        const confirmResult = confirm_input.value;
+        const password = passInput.value;
+        const confirm = confirmInput.value;
 
         let isValid = true;
-        if (!password) {
-            showInputError(password_input, "اكتب كلمة السر الجديدة");
-            isValid = false;
-        } else if (password.length < 6) {
-            showInputError(password_input, "كلمة السر لازم تكون 6 حروف على الأقل");
+        if (password.length < 6) {
+            showInputError(passInput, "كلمة السر يجب أن تكون 6 أحرف على الأقل");
             isValid = false;
         }
-
-        if (password !== confirmResult) {
-            showInputError(confirm_input, "كلمة السر مش متطابقة");
+        if (password !== confirm) {
+            showInputError(confirmInput, "كلمات السر غير متطابقة");
             isValid = false;
         }
 
         if (!isValid) return;
 
-        const submitBtn = resetPasswordForm.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.textContent = "جاري التحديث...";
+        const btn = resetForm.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
 
         try {
-            const { error } = await supabase.auth.updateUser({
-                password: password,
-            });
-
+            const { error } = await supabase.auth.updateUser({ password });
             if (error) throw error;
 
-            showToast("تم تغيير كلمة السر بنجاح!", "success");
-            setTimeout(() => {
-                window.location.href = "login.html";
-            }, 2000);
-        } catch (error) {
-            console.error("Password update error:", error);
-            showToast(error.message || "حدث خطأ", "error");
+            showToast("تم تحديث كلمة السر بنجاح!", "success");
+            setTimeout(() => window.location.href = "login.html", 2000);
+        } catch (err) {
+            console.error("Update password error:", err);
+            showToast(err.message || "فشل تحديث كلمة السر", "error");
         } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = "تحديث كلمة السر";
+            btn.disabled = false;
+            btn.textContent = "تأكيد كلمة المرور";
         }
     });
 }
