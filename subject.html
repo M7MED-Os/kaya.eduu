@@ -14,15 +14,23 @@
     <!-- Navbar -->
     <nav class="navbar">
         <div class="container">
-            <a href="index.html" class="logo">
+            <a href="dashboard.html" class="logo">
                 <i class="fas fa-graduation-cap"></i>&nbsp;ثانوية<span>.كوم</span>
             </a>
+
             <div class="menu-toggle">
                 <i class="fas fa-bars"></i>
             </div>
+
             <ul class="nav-links">
-                <li><a href="dashboard.html">لوحة التحكم</a></li>
-                <li><span id="navUserName" style="font-weight: bold; color: var(--primary-color);"></span></li>
+                <li><a href="dashboard.html">الرئيسية</a></li>
+                <li id="adminNavBtn" style="display: none;">
+                    <a href="admin.html" style="color: var(--secondary-color); font-weight: bold;">
+                        <i class="fas fa-shield-alt"></i> Admin
+                    </a>
+                </li>
+                <li><a href="profile.html" id="navUserName" style="font-weight: bold; color: var(--primary-color);"></a>
+                </li>
                 <li><button id="logoutBtn" class="btn btn-outline" style="padding: 0.5rem 1rem;">خروج</button></li>
             </ul>
         </div>
@@ -52,7 +60,7 @@
                 <i class="fas fa-folder-open fa-3x" style="color: #ccc; margin-bottom: 1rem;"></i>
                 <h3>مفيش امتحانات متاحة حالياً للمادة دي</h3>
                 <p>ارجع تاني وقت لاحق أو جرب مادة تانية.</p>
-                <a href="dashboard.html" class="btn btn-primary" style="margin-top: 1rem;">الرجوع للوحة التحكم</a>
+                <a href="dashboard.html" class="btn btn-primary" style="margin-top: 1rem;">الرجوع للرئيسية</a>
             </div>
 
             <!-- Subject Results Section -->

@@ -853,7 +853,10 @@ async function renderResultsList(examGroups) {
 // 12. Initialize
 // ==========================
 
-if (window.location.pathname.includes("dashboard")) {
+const protectedPages = ["dashboard.html", "subject.html", "leaderboard.html", "profile.html"];
+const currentPageName = window.location.pathname.split("/").pop();
+
+if (protectedPages.includes(currentPageName)) {
     loadUserProfile();
 } else {
     checkAuth();
