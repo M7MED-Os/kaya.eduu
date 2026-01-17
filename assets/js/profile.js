@@ -72,49 +72,62 @@ async function loadProfile() {
     // Check if Admin
     const isAdmin = meta.role === "admin" || meta.is_admin === true;
 
-    // 3. Populate Form
+    // 3. Populate Form Inputs (Hidden or editable)
     document.getElementById("fullname").value = fullName;
-    document.getElementById("email").value = email;
 
+    // Background inputs (keep synced for logic if needed)
+    const emailField = document.getElementById("email");
     const gradeField = document.getElementById("grade");
     const streamField = document.getElementById("stream");
-    const emailField = document.getElementById("email");
-    const adminFields = document.getElementById("adminAcademicFields");
-    const studentInfo = document.getElementById("studentAcademicInfo");
-    const academicLabels = document.getElementById("academicLabels");
+    const termField = document.getElementById("term");
 
-    // Permissions UI Logic
-    if (isAdmin) {
-        adminFields.style.display = "block";
-        studentInfo.style.display = "none";
-
-        emailField.disabled = false;
-        emailField.style.background = "white";
-        emailField.style.cursor = "text";
-
+    if (emailField) emailField.value = email;
+    if (gradeField) {
         gradeField.value = grade;
         handleGradeChange(grade);
-        if (term) document.getElementById("term").value = term;
-        if (stream) streamField.value = stream;
+    }
+    if (termField) termField.value = term;
+    if (streamField) streamField.value = stream;
 
-        // Ensure all options are enabled for admin
-        Array.from(gradeField.options).forEach(opt => opt.disabled = false);
-    } else {
-        adminFields.style.display = "none";
-        studentInfo.style.display = "block";
-
-        // Map values to Arabic labels
+    // 4. Populate Info Display (The plain text view)
+    const infoRows = document.getElementById("infoRows");
+    if (infoRows) {
         const gradeMap = { "1": "أولى ثانوي", "2": "تانية ثانوي", "3": "تالتة ثانوي" };
         const termMap = { "1": "الترم الأول", "2": "الترم الثاني" };
         const streamMap = { "science_bio": "علمي علوم", "science_math": "علمي رياضة", "literature": "أدبي" };
 
-        let infoHtml = `<div><strong>السنة الدراسية:</strong> ${gradeMap[grade] || grade || '-'}</div>`;
+        let infoHtml = `
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem;">
+                <span style="color: #64748b;">البريد الإلكتروني:</span>
+                <span style="font-weight: 500;">${email}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem;">
+                <span style="color: #64748b;">السنة الدراسية:</span>
+                <span style="font-weight: 500;">${gradeMap[grade] || grade || '-'}</span>
+            </div>
+        `;
+
         if (grade === "1" || grade === "2") {
-            infoHtml += `<div><strong>الترم:</strong> ${termMap[term] || term || '-'}</div>`;
+            infoHtml += `
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: #64748b;">الترم:</span>
+                <span style="font-weight: 500;">${termMap[term] || term || '-'}</span>
+            </div>`;
         } else if (grade === "3") {
-            infoHtml += `<div><strong>الشعبة:</strong> ${streamMap[stream] || stream || '-'}</div>`;
+            infoHtml += `
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: #64748b;">الشعبة:</span>
+                <span style="font-weight: 500;">${streamMap[stream] || stream || '-'}</span>
+            </div>`;
         }
-        academicLabels.innerHTML = infoHtml;
+        infoRows.innerHTML = infoHtml;
+    }
+
+    // Special Admin UI override (Optional: could show a button to reveal fields)
+    if (isAdmin) {
+        console.log("Admin logged in. All background fields are synced.");
+        const adminNotice = document.getElementById("adminNotice");
+        if (adminNotice) adminNotice.innerHTML = "<i class='fas fa-info-circle'></i> أنت تمتلك صلاحيات أدمن. الحقول مخفية للتبسيط.";
     }
 }
 

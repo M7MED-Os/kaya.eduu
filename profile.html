@@ -46,52 +46,53 @@
         <div class="container">
             <div class="card auth-card">
                 <form id="profileForm">
-                    <div class="form-group">
-                        <label for="fullname">الاسم بالكامل</label>
-                        <input type="text" id="fullname" class="form-control" required>
+                    <div class="form-group" style="margin-bottom: 2rem;">
+                        <label for="fullname" style="font-weight: 700;">الاسم بالكامل</label>
+                        <input type="text" id="fullname" class="form-control" placeholder="اكتب اسمك هنا..." required>
+                        <small style="color: #64748b; margin-top: 0.5rem; display: block;">هذا هو الاسم الذي سيظهر في
+                            شهاداتك وتقاريرك.</small>
                     </div>
 
-                    <div class="form-group">
-                        <label>البريد الإلكتروني</label>
-                        <input type="email" id="email" class="form-control" disabled
-                            style="background: #f3f4f6; cursor: not-allowed;">
-                        <small style="color: var(--text-light);">لا يمكن تغيير البريد الإلكتروني.</small>
-                    </div>
-
-                    <!-- Academic Info Display (For Students) -->
-                    <div id="studentAcademicInfo"
-                        style="display: none; background: #f8fafc; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #e2e8f0;">
-                        <h4 style="margin-bottom: 0.5rem; color: var(--primary-color); font-size: 0.9rem;">البيانات
-                            الدراسية</h4>
-                        <div id="academicLabels" style="font-size: 0.95rem; color: #1e293b; line-height: 1.8;">
-                            <!-- Will be filled by JS -->
+                    <!-- Info Display Container (Common for everyone) -->
+                    <div id="userInfoDisplay"
+                        style="background: #f8fafc; padding: 1.25rem; border-radius: 12px; margin-bottom: 2rem; border: 1px solid #e2e8f0;">
+                        <h4
+                            style="margin-bottom: 1rem; color: var(--primary-color); font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-user-shield"></i> بيانات الحساب الرسمية
+                        </h4>
+                        <div id="infoRows" style="font-size: 0.95rem; color: #1e293b; display: grid; gap: 0.75rem;">
+                            <!-- Filled by JS -->
                         </div>
-                        <small style="color: #64748b; display: block; margin-top: 0.5rem; font-size: 0.8rem;">
-                            * لتغيير السنة الدراسية أو الشعبة، برجاء التواصل مع الإدارة.
-                        </small>
+                        <div id="adminNotice"
+                            style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #cbd5e1; font-size: 0.85rem; color: #64748b;">
+                            * لتعديل هذه البيانات، يرجى التواصل مع الدعم الفني.
+                        </div>
                     </div>
 
-                    <div id="adminAcademicFields">
+                    <!-- Hidden Admin Fields (Keep for logic/admin override if needed later, but hidden now) -->
+                    <div id="adminAcademicFields" style="display: none;">
+                        <div class="form-group">
+                            <label>البريد الإلكتروني (أدمن)</label>
+                            <input type="email" id="email" class="form-control">
+                        </div>
                         <div class="row" style="display: flex; gap: 1rem;">
                             <div class="form-group" style="flex: 1;">
                                 <label for="grade">السنة الدراسية</label>
-                                <select id="grade" class="form-control" required>
+                                <select id="grade" class="form-control">
                                     <option value="1">أولى ثانوي</option>
                                     <option value="2">تانية ثانوي</option>
                                     <option value="3">تالتة ثانوي</option>
                                 </select>
                             </div>
                         </div>
-
-                        <div class="form-group" id="termGroup" style="display: none;">
+                        <div class="form-group" id="termGroup">
                             <label for="term">الترم</label>
                             <select id="term" class="form-control">
                                 <option value="1">الترم الأول</option>
                                 <option value="2">الترم الثاني</option>
                             </select>
                         </div>
-
-                        <div class="form-group" id="streamGroup" style="display: none;">
+                        <div class="form-group" id="streamGroup">
                             <label for="stream">الشعبة</label>
                             <select id="stream" class="form-control">
                                 <option value="science_bio">علمي علوم</option>
