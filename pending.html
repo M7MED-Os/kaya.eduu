@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفعيل الحساب | ثانوية.كوم</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .pending-card {
+            background: white;
+            max-width: 500px;
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            text-align: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .icon-wrapper {
+            width: 80px;
+            height: 80px;
+            background: #fffbeb;
+            color: #d97706;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: 0 auto 1.5rem auto;
+            border: 4px solid #fef3c7;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 900;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .payment-info {
+            background: #f9fafb;
+            border: 1px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: right;
+        }
+
+        .payment-method {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .payment-method:last-child {
+            margin-bottom: 0;
+        }
+
+        .payment-method i {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+
+        .payment-method span {
+            font-weight: 700;
+            color: #374151;
+        }
+
+        .phone-number {
+            font-family: monospace;
+            background: #e5e7eb;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        .btn-whatsapp {
+            background-color: #25d366;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 1rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-decoration: none;
+            transition: transform 0.2s, background 0.2s;
+            margin-bottom: 1rem;
+        }
+
+        .btn-whatsapp:hover {
+            background-color: #128c7e;
+            transform: translateY(-2px);
+        }
+
+        .logout-link {
+            color: #ef4444;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="pending-card">
+        <div class="icon-wrapper">
+            <i class="fas fa-clock"></i>
+        </div>
+        <h1>حسابك قيد المراجعة</h1>
+        <p>مرحباً بك! حسابك مفعل جزئياً، لتتمكن من الوصول للمواد الدراسية والامتحانات يرجى إتمام عملية الاشتراك.</p>
+
+        <div class="payment-info">
+            <div class="payment-method">
+                <i class="fas fa-mobile-alt"></i>
+                <span>فودافون كاش: <span class="phone-number">01117691093</span></span>
+            </div>
+            <div class="payment-method">
+                <i class="fas fa-university"></i>
+                <span>انستا باي: <span class="phone-number">01117691093</span></span>
+            </div>
+        </div>
+
+        <a href="https://wa.me/201117691093?text=تم%20التحويل%20لتفعيل%20حسابي%20باسم:" target="_blank"
+            class="btn-whatsapp">
+            <i class="fab fa-whatsapp"></i>
+            أرسل صورة الوصل لتفعيل الحساب
+        </a>
+
+        <a href="#" id="logoutBtn" class="logout-link">تسجيل الخروج</a>
+    </div>
+
+    <script type="module">
+        import { supabase } from "./assets/js/supabaseClient.js";
+
+        document.getElementById('logoutBtn').onclick = async (e) => {
+            e.preventDefault();
+            await supabase.auth.signOut();
+            window.location.href = 'login.html';
+        };
+
+        // فحص مستمر: إذا قام الأدمن بالتفعيل، يتم تحويل الطالب تلقائياً
+        async function checkActivation() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const { data: profile } = await supabase.from('profiles')
+                .select('is_active')
+                .eq('id', user.id)
+                .single();
+
+            if (profile && profile.is_active) {
+                window.location.href = 'dashboard.html';
+            }
+        }
+
+        // افحص كل 10 ثواني (Realtime check)
+        setInterval(checkActivation, 10000);
+        checkActivation();
+    </script>
+</body>
+
+</html>

@@ -19,10 +19,26 @@ async function checkAuth() {
     }
 
     // User is logged in
-    // If on auth pages (login/register), redirect to dashboard
-    const authPages = ["login.html", "register.html"];
+    const { data: profile } = await supabase.from('profiles').select('role, is_active').eq('id', session.user.id).single();
+
+    const protectedPages = ["dashboard.html", "subject.html", "leaderboard.html", "profile.html"];
     const currentPage = window.location.pathname.split("/").pop();
+
+    // 1. Check Activation
+    if (profile && !profile.is_active && profile.role !== 'admin') {
+        if (protectedPages.includes(currentPage)) {
+            window.location.href = "pending.html";
+            return null;
+        }
+    }
+
+    // 2. If on auth pages (login/register) or pending (if active), redirect to dashboard
+    const authPages = ["login.html", "register.html"];
     if (authPages.includes(currentPage)) {
+        window.location.href = "dashboard.html";
+    }
+
+    if (currentPage === "pending.html" && profile && profile.is_active) {
         window.location.href = "dashboard.html";
     }
 

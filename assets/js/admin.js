@@ -696,6 +696,16 @@ window.loadStudents = async () => {
             <td style="padding:1rem;">${s.points || 0}</td>
             <td style="padding:1rem;">${roleMap[s.role] || s.role || 'طالب'}</td>
             <td style="padding:1rem;">
+                ${s.is_active
+                ? `<span style="color:green; font-weight:bold;"><i class="fas fa-check-circle"></i> مفعل</span>`
+                : `<span style="color:#d97706; font-weight:bold;"><i class="fas fa-clock"></i> معلق</span>`}
+            </td>
+            <td style="padding:1rem;">
+                <button class="btn btn-sm" 
+                    style="background:${s.is_active ? '#f3f4f6' : '#dcfce7'}; color:${s.is_active ? '#374151' : '#15803d'}; margin-right:5px;" 
+                    onclick="toggleStudentStatus('${s.id}', ${s.is_active})" title="${s.is_active ? 'تعطيل' : 'تفعيل'}">
+                    <i class="fas ${s.is_active ? 'fa-user-slash' : 'fa-user-check'}"></i>
+                </button>
                 <button class="btn btn-primary btn-sm" onclick="openEditStudent('${s.id}')" title="تعديل">
                     <i class="fas fa-edit"></i>
                 </button>
@@ -742,13 +752,19 @@ window.openEditStudent = async (id) => {
                     <option value="literature" ${student.stream === 'literature' ? 'selected' : ''}>أدبي</option>
                 </select>
             </div>
-             <div class="form-group">
+            <div class="form-group">
                 <label>الترم (Term)</label>
                 <select id="editTerm" class="form-control">
                     <option value="" ${!student.term ? 'selected' : ''}>--</option>
                     <option value="1" ${student.term === '1' ? 'selected' : ''}>الترم الأول</option>
                     <option value="2" ${student.term === '2' ? 'selected' : ''}>الترم الثاني</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                    <input type="checkbox" id="editIsActive" style="width:20px; height:20px;" ${student.is_active ? 'checked' : ''}>
+                    <span>تفعيل الحساب (يسمح للطالب بدخول المنصة)</span>
+                </label>
             </div>
         `,
         onSave: async () => {
@@ -759,6 +775,7 @@ window.openEditStudent = async (id) => {
                 grade: document.getElementById('editGrade').value,
                 stream: document.getElementById('editStream').value || null,
                 term: document.getElementById('editTerm').value || null,
+                is_active: document.getElementById('editIsActive').checked,
             };
 
             const { error } = await supabase.from('profiles').update(updates).eq('id', id);
@@ -845,6 +862,23 @@ window.deleteStudent = async (id, name) => {
     } catch (err) {
         console.error("Delete Fail", err);
         alert("فشل الحذف: " + err.message);
+    }
+};
+
+window.toggleStudentStatus = async (id, currentStatus) => {
+    const newStatus = !currentStatus;
+    const confirmMsg = newStatus
+        ? "هل تريد تفعيل حساب هذا الطالب ليتمكن من دخول المنصة؟"
+        : "هل تريد تعطيل حساب هذا الطالب ومنعه من دخول المنصة؟";
+
+    if (!confirm(confirmMsg)) return;
+
+    const { error } = await supabase.from('profiles').update({ is_active: newStatus }).eq('id', id);
+
+    if (error) {
+        alert("فشل التحديث: " + error.message);
+    } else {
+        loadStudents();
     }
 };
 
