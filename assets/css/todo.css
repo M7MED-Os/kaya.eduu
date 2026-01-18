@@ -234,8 +234,8 @@
 /* Custom Checkbox */
 .task-checkbox-wrapper {
     position: relative;
-    width: 32px;
-    height: 32px;
+    width: 25px;
+    height: 25px;
     flex-shrink: 0;
 }
 
@@ -346,8 +346,8 @@
 
 /* Circular Subtask Checkbox - Matches main task style */
 .sub-checkbox {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     /* Made circular */
     border: 2px solid #CBD5E1;
