@@ -529,7 +529,7 @@ window.showStudentsView = async () => {
 
 window.loadStudents = async () => {
     const tableBody = document.getElementById('studentsTableBody');
-    tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem;"><div class="spinner"></div></td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem;"><div class="spinner"></div></td></tr>';
 
     const searchStr = document.getElementById('studentSearch').value.trim();
 
@@ -542,12 +542,12 @@ window.loadStudents = async () => {
     const { data: students, error } = await query;
 
     if (error) {
-        tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">خطأ في التحميل: ${error.message}</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">خطأ في التحميل: ${error.message}</td></tr>`;
         return;
     }
 
     if (!students || students.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem;">لا يوجد طلاب</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem;">لا يوجد طلاب</td></tr>';
         return;
     }
 
@@ -562,14 +562,19 @@ window.loadStudents = async () => {
                 <div style="font-weight:bold;">${s.full_name || 'بدون اسم'} ${roleBadge}</div>
                 <div style="font-size:0.8rem; color:#666;">ID: ${s.id.substr(0, 8)}...</div>
             </td>
+            <td style="padding:1rem;">${s.email || '-'}</td>
             <td style="padding:1rem;">${s.grade || '-'}</td>
             <td style="padding:1rem;">
                 ${s.grade === '3' ? (s.stream || '-') : (s.term || '-')}
             </td>
+            <td style="padding:1rem;">${s.points || 0}</td>
             <td style="padding:1rem;">${s.role || 'student'}</td>
             <td style="padding:1rem;">
-                <button class="btn btn-primary btn-sm" onclick="openEditStudent('${s.id}')">
+                <button class="btn btn-primary btn-sm" onclick="openEditStudent('${s.id}')" title="تعديل">
                     <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm" onclick="deleteStudent('${s.id}', '${s.full_name}')" style="background:#fee2e2; color:#b91c1c; margin-right:5px;" title="حذف">
+                    <i class="fas fa-trash"></i>
                 </button>
             </td>
         </tr>
@@ -586,6 +591,10 @@ window.openEditStudent = async (id) => {
             <div class="form-group">
                 <label>الاسم</label>
                 <input id="editName" class="form-control" value="${student.full_name || ''}">
+            </div>
+            <div class="form-group">
+                <label>النقاط</label>
+                <input type="number" id="editPoints" class="form-control" value="${student.points || 0}">
             </div>
             <div class="form-group">
                 <label>الدور (Role)</label>
@@ -619,6 +628,7 @@ window.openEditStudent = async (id) => {
         onSave: async () => {
             const updates = {
                 full_name: document.getElementById('editName').value,
+                points: parseInt(document.getElementById('editPoints').value) || 0,
                 role: document.getElementById('editRole').value,
                 grade: document.getElementById('editGrade').value,
                 stream: document.getElementById('editStream').value || null,
@@ -694,4 +704,19 @@ window.openBulkAddModal = (examId) => {
         }
     });
 };
+
+window.deleteStudent = async (id, name) => {
+    if (!confirm(`هل أنت متأكد من حذف الطالب "${name}" نهائياً من الموقع؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
+
+    try {
+        const { error } = await supabase.from('profiles').delete().eq('id', id);
+        if (error) throw error;
+
+        alert('تم حذف الطالب بنجاح');
+        loadStudents();
+    } catch (err) {
+        console.error("Delete Student Error:", err);
+        alert("فشل الحذف: " + err.message);
+    }
+}
 

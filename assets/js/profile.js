@@ -183,6 +183,7 @@ if (profileForm) {
             const updates = {
                 id: currentUser.id,
                 full_name,
+                email: currentUser.email,
                 updated_at: new Date()
             };
 

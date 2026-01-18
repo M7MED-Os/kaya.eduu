@@ -389,6 +389,7 @@ async function loadUserProfile() {
             const { error: insertError } = await supabase.from("profiles").insert({
                 id: user.id,
                 full_name: fullName,
+                email: user.email,
                 grade: userMetadata?.grade || null,
                 term: userMetadata?.term || null,
                 stream: userMetadata?.stream || null,
