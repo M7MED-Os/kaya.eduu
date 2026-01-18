@@ -381,64 +381,159 @@
         }
 
         /* Responsive Admin Panel */
-        @media (max-width: 768px) {
+        @media (max-width: 992px) {
+            :root {
+                --sidebar-width: 280px;
+            }
+
             body {
-                flex-direction: column;
-                height: auto;
-                overflow: auto;
+                overflow: hidden;
             }
 
             .sidebar {
-                width: 100%;
-                height: auto;
-                border-left: none;
-                border-bottom: 1px solid var(--border-color);
+                position: fixed;
+                right: calc(-1 * var(--sidebar-width));
+                top: 0;
+                bottom: 0;
+                transition: right 0.3s ease;
+                box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+                z-index: 5000;
             }
 
-            .sidebar-header {
-                height: 60px;
-            }
-
-            .sidebar-content {
-                height: auto;
-                max-height: 250px;
+            .sidebar.mobile-open {
+                right: 0;
             }
 
             .main-wrapper {
-                height: auto;
-                overflow: visible;
+                margin-right: 0 !important;
+                height: 100vh;
             }
 
             .top-header {
                 padding: 0 1rem;
+                position: sticky;
+                top: 0;
+                z-index: 1000;
+                height: 60px;
             }
 
             .main-content {
                 padding: 1rem;
+                height: calc(100vh - 60px);
+                overflow-y: auto;
             }
 
-            .manager-layout {
-                grid-template-columns: 1fr;
-                height: auto;
-                gap: 1rem;
+            #mobileToggle {
+                display: flex !important;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .top-header {
+                justify-content: space-between;
+                padding: 0 0.75rem;
             }
 
-            .tree-panel {
-                height: 300px;
+            .breadcrumbs {
+                font-size: 0.9rem;
+                max-width: 140px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
-            .editor-panel {
-                height: auto;
-                min-height: 400px;
+            .main-content {
+                padding: 0.75rem;
             }
 
-            /* Fix Table Overflow */
+            .view-section h2 {
+                font-size: 1.1rem;
+                margin-bottom: 0.5rem;
+            }
+
+            #studentsView>div:first-child {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 10px;
+            }
+
+            #studentSearch {
+                width: 100% !important;
+            }
+
+            /* Enhanced Table Scroll */
             .view-section div[style*="overflow:hidden"] {
                 overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
             }
 
             table {
-                min-width: 600px;
+                min-width: 800px;
+                font-size: 0.85rem;
+            }
+        }
+
+        #mobileToggle {
+            display: none;
+            width: 45px;
+            height: 45px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--primary-color);
+            font-size: 1.4rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #374151;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.1);
+        }
+
+        /* Modal fixes for mobile */
+        @media (max-width: 600px) {
+            .modal-container {
+                width: 95%;
+                margin: 10px;
+            }
+
+            .modal-body {
+                padding: 1rem;
+            }
+
+            .modal-footer {
+                padding: 1rem;
+                flex-direction: column-reverse;
+            }
+
+            .modal-footer .btn {
+                width: 100%;
             }
         }
     </style>
@@ -507,7 +602,12 @@
     <!-- Main Content -->
     <main class="main-wrapper">
         <header class="top-header">
-            <div class="breadcrumbs" id="pageTitle">مرحباً بك في الرئيسية</div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button id="mobileToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="breadcrumbs" id="pageTitle">مرحباً بك في الرئيسية</div>
+            </div>
             <div>
                 <a href="dashboard.html" class="btn btn-outline btn-sm">
                     <i class="fas fa-external-link-alt"></i> عرض الموقع

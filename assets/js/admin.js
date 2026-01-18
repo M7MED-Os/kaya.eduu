@@ -13,6 +13,45 @@ let currentContext = {
 document.addEventListener('DOMContentLoaded', async () => {
     await checkAdminAuth();
     setupModalListeners();
+
+    // Responsive Sidebar Toggle
+    const mobileToggle = document.getElementById('mobileToggle');
+    const sidebar = document.querySelector('.sidebar');
+
+    if (mobileToggle) {
+        mobileToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sidebar.classList.toggle('mobile-open');
+        });
+    }
+
+    // Close sidebar when clicking navigation items on mobile
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            if (window.innerWidth <= 992) {
+                sidebar.classList.remove('mobile-open');
+            }
+        });
+    });
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 992 &&
+            sidebar.classList.contains('mobile-open') &&
+            !sidebar.contains(e.target) &&
+            e.target !== mobileToggle) {
+            sidebar.classList.remove('mobile-open');
+        }
+    });
+
+    // Handle Logout
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.onclick = async () => {
+            await supabase.auth.signOut();
+            window.location.href = 'login.html';
+        };
+    }
 });
 
 async function checkAdminAuth() {
@@ -32,12 +71,6 @@ async function checkAdminAuth() {
 
         currentUser = user;
         document.getElementById('loading').style.display = 'none';
-
-        // Handle Logout
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-            await supabase.auth.signOut();
-            window.location.href = 'login.html';
-        });
 
     } catch (err) {
         console.error("Auth Fail", err);
@@ -123,6 +156,10 @@ async function loadSubjects() {
             html += `
                 <div class="subject-card" onclick="openSubjectManager('${sub.id}')">
                     <div class="card-actions">
+                         <button class="action-btn-sm" style="background:#e0f2fe; color:#0369a1;" 
+                            onclick="event.stopPropagation(); window.openEditSubjectModal(${JSON.stringify(sub).replace(/"/g, '&quot;')})">
+                            <i class="fas fa-edit"></i>
+                        </button>
                          <button class="action-btn-sm" style="background:#fee2e2; color:#b91c1c;" 
                             onclick="event.stopPropagation(); deleteSubject('${sub.id}')">
                             <i class="fas fa-trash"></i>
@@ -170,6 +207,35 @@ window.openAddSubjectModal = () => {
             else payload.term = currentContext.termOrStream;
 
             const { error } = await supabase.from('subjects').insert(payload);
+            if (error) alert(error.message);
+            else { closeModal(); loadSubjects(); }
+        }
+    });
+};
+
+window.openEditSubjectModal = (sub) => {
+    openModal({
+        title: 'تعديل بيانات المادة',
+        body: `
+            <div class="form-group">
+                <label>اسم المادة (بالعربية)</label>
+                <input type="text" id="editSubName" class="form-control" value="${sub.name_ar}">
+            </div>
+            <div class="form-group">
+                <label>الترتيب</label>
+                <input type="number" id="editSubOrder" class="form-control" value="${sub.order_index || 0}">
+            </div>
+        `,
+        onSave: async () => {
+            const name = document.getElementById('editSubName').value;
+            const order = document.getElementById('editSubOrder').value;
+            if (!name) return alert('الاسم مطلوب');
+
+            const { error } = await supabase.from('subjects').update({
+                name_ar: name,
+                order_index: order
+            }).eq('id', sub.id);
+
             if (error) alert(error.message);
             else { closeModal(); loadSubjects(); }
         }
@@ -262,8 +328,14 @@ function createTreeNode({ type, data, label, icon, indent = 0, color = '' }) {
     if (color) div.style.color = color;
 
     div.innerHTML = `
-        <i class="fas ${icon} node-icon"></i>
-        <span class="node-text">${label}</span>
+        <div style="display:flex; align-items:center; flex:1;">
+            <i class="fas ${icon} node-icon"></i>
+            <span class="node-text">${label}</span>
+        </div>
+        <button class="action-btn-sm" style="background:transparent; color:#6b7280; opacity:0.5;" 
+            onclick="event.stopPropagation(); window.openEditNodeModal('${type}', ${JSON.stringify(data).replace(/"/g, '&quot;')})">
+            <i class="fas fa-pen" style="font-size:0.7rem;"></i>
+        </button>
     `;
 
     div.onclick = () => {
@@ -389,7 +461,42 @@ window.deleteItem = async (table, id) => {
     await supabase.from(table).delete().eq('id', id);
     loadContentTree();
     document.getElementById('editorPanel').innerHTML = ''; // Clear editor
-}
+};
+
+window.openEditNodeModal = (type, data) => {
+    const labels = { 'chapter': 'الباب', 'lesson': 'الدرس', 'exam': 'الامتحان' };
+    const tables = { 'chapter': 'chapters', 'lesson': 'lessons', 'exam': 'exams' };
+
+    openModal({
+        title: `تعديل اسم ${labels[type]}`,
+        body: `
+            <div class="form-group">
+                <label>العنوان الجديد</label>
+                <input type="text" id="editNodeTitle" class="form-control" value="${data.title}">
+            </div>
+            <div class="form-group">
+                <label>الترتيب</label>
+                <input type="number" id="editNodeOrder" class="form-control" value="${data.order_index || 0}">
+            </div>
+        `,
+        onSave: async () => {
+            const newTitle = document.getElementById('editNodeTitle').value;
+            const newOrder = document.getElementById('editNodeOrder').value;
+            if (!newTitle) return alert('العنوان مطلوب');
+
+            const { error } = await supabase.from(tables[type]).update({
+                title: newTitle,
+                order_index: newOrder
+            }).eq('id', data.id);
+
+            if (error) alert(error.message);
+            else {
+                closeModal();
+                loadContentTree();
+            }
+        }
+    });
+};
 
 // ==========================================
 // 6. QUESTION MANAGER (Inside Editor Panel)
@@ -556,6 +663,25 @@ window.loadStudents = async () => {
             ? `<span style="background:#def7ec; color:#03543f; padding:2px 6px; border-radius:4px; font-size:0.8rem;">Admin</span>`
             : ``;
 
+        // Translation Mapping
+        const streamMap = {
+            'science_bio': 'علمي علوم',
+            'science_math': 'علمي رياضة',
+            'literature': 'أدبي'
+        };
+        const termMap = {
+            '1': 'الترم الأول',
+            '2': 'الترم الثاني'
+        };
+        const roleMap = {
+            'admin': 'آدمن',
+            'student': 'طالب'
+        };
+
+        const displayStreamOrTerm = s.grade === '3'
+            ? (streamMap[s.stream] || s.stream || '-')
+            : (termMap[s.term] || s.term || '-');
+
         return `
         <tr>
             <td style="padding:1rem;">
@@ -565,10 +691,10 @@ window.loadStudents = async () => {
             <td style="padding:1rem;">${s.email || '-'}</td>
             <td style="padding:1rem;">${s.grade || '-'}</td>
             <td style="padding:1rem;">
-                ${s.grade === '3' ? (s.stream || '-') : (s.term || '-')}
+                ${displayStreamOrTerm}
             </td>
             <td style="padding:1rem;">${s.points || 0}</td>
-            <td style="padding:1rem;">${s.role || 'student'}</td>
+            <td style="padding:1rem;">${roleMap[s.role] || s.role || 'طالب'}</td>
             <td style="padding:1rem;">
                 <button class="btn btn-primary btn-sm" onclick="openEditStudent('${s.id}')" title="تعديل">
                     <i class="fas fa-edit"></i>
