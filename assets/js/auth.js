@@ -466,10 +466,9 @@ async function loadUserDashboardData(userId) {
 function updateNameUI(name) {
     const firstName = name.split(" ")[0];
     const studentNameEl = document.getElementById("studentName");
-    const navUserNameEl = document.getElementById("navUserName");
 
     if (studentNameEl) studentNameEl.textContent = firstName;
-    if (navUserNameEl) navUserNameEl.textContent = name;
+    // navUserName text is now static "البروفايل" as per user request
 }
 
 // ==========================
@@ -857,8 +856,13 @@ async function renderResultsList(examGroups) {
 // 12. Initialize
 // ==========================
 
-const protectedPages = ["dashboard.html", "subject.html", "leaderboard.html", "profile.html"];
-const currentPageName = window.location.pathname.split("/").pop();
+const protectedPages = ["dashboard.html", "subject.html", "leaderboard.html", "profile.html", "todo.html"];
+let currentPageName = window.location.pathname.split("/").pop();
+
+// Handle empty path (which usually loads dashboard.html)
+if (!currentPageName || currentPageName === "") {
+    currentPageName = "dashboard.html";
+}
 
 if (protectedPages.includes(currentPageName)) {
     loadUserProfile();

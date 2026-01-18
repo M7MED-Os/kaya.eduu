@@ -28,11 +28,14 @@
 
             <ul class="nav-links">
                 <li><a href="dashboard.html">الرئيسية</a></li>
-                <li><a href="todo.html" class="active"
-                        style="font-weight: bold; color: var(--secondary-color);">المهام</a></li>
+                <li><a href="todo.html" class="active">المهام</a></li>
                 <li><a href="leaderboard.html">المتصدرين</a></li>
-                <li><a href="profile.html" id="navUserName" style="font-weight: bold; color: var(--primary-color);"></a>
+                <li id="adminNavBtn" style="display: none;">
+                    <a href="admin.html" style="color: var(--secondary-color); font-weight: bold;">
+                        <i class="fas fa-shield-alt"></i> Admin
+                    </a>
                 </li>
+                <li><a href="profile.html" id="navUserName">البروفايل</a></li>
                 <li><button id="logoutBtn" class="btn btn-outline" style="padding: 0.5rem 1rem;">خروج</button></li>
             </ul>
         </div>
@@ -77,11 +80,25 @@
 
             <!-- Empty State -->
             <div id="emptyState" class="empty-state">
-                <div class="empty-icon">
-                    <i class="fas fa-clipboard-list"></i>
-                </div>
-                <h3>قائمة المهام فارغة</h3>
+                <h3><i class="fas fa-clipboard-list"
+                        style="display: block; margin-bottom: 1rem; font-size: 3rem; color: #E2E8F0;"></i>قائمة المهام
+                    فارغة</h3>
                 <p>ابدأ بإضافة أول هدف لك لهذا اليوم ودعنا نحتفل بإنجازك!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3>هل أنت متأكد؟</h3>
+            <p>سيتم حذف هذه المهمة نهائياً من قائمتك.</p>
+            <div class="modal-buttons">
+                <button id="confirmDelete" class="btn-modal confirm">حذف</button>
+                <button id="cancelDelete" class="btn-modal cancel">إلغاء</button>
             </div>
         </div>
     </div>

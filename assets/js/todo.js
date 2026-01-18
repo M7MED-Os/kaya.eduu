@@ -139,9 +139,44 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTasks();
     };
 
-    window.deleteTask = (index) => { if (confirm('متأكد؟')) { tasks.splice(index, 1); renderTasks(); } };
+    // --- Deletion Logic with Custom Modal ---
+    let deletionTarget = null; // { tIdx, sIdx }
 
-    // --- Editing Logic ---
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDeleteBtn = document.getElementById('confirmDelete');
+    const cancelDeleteBtn = document.getElementById('cancelDelete');
+
+    const showDeleteModal = (tIdx, sIdx = null) => {
+        deletionTarget = { tIdx, sIdx };
+        deleteModal.style.display = 'flex';
+    };
+
+    const hideDeleteModal = () => {
+        deletionTarget = null;
+        deleteModal.style.display = 'none';
+    };
+
+    confirmDeleteBtn.addEventListener('click', () => {
+        if (!deletionTarget) return;
+        const { tIdx, sIdx } = deletionTarget;
+
+        if (sIdx === null) {
+            tasks.splice(tIdx, 1);
+        } else {
+            tasks[tIdx].subtasks.splice(sIdx, 1);
+        }
+
+        hideDeleteModal();
+        renderTasks();
+    });
+
+    cancelDeleteBtn.addEventListener('click', hideDeleteModal);
+    deleteModal.addEventListener('click', (e) => {
+        if (e.target === deleteModal) hideDeleteModal();
+    });
+
+    window.deleteTask = (index) => showDeleteModal(index);
+    window.deleteSubtask = (tIdx, sIdx) => showDeleteModal(tIdx, sIdx);
     window.startEdit = (taskIdx, subIdx) => { editingState = { taskIdx, subIdx }; renderTasks(); };
 
     window.saveEdit = (taskIdx, subIdx) => {
