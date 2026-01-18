@@ -407,6 +407,9 @@ async function loadUserProfile() {
             if (profile.role === 'admin') {
                 const adminBtn = document.getElementById('adminNavBtn');
                 if (adminBtn) adminBtn.style.display = 'block';
+            } else {
+                const adminBtn = document.getElementById('adminNavBtn');
+                if (adminBtn) adminBtn.remove();
             }
         }
 

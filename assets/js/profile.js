@@ -124,10 +124,15 @@ async function loadProfile() {
     }
 
     // Special Admin UI override (Optional: could show a button to reveal fields)
+    const adminBtn = document.getElementById("adminNavBtn");
     if (isAdmin) {
         console.log("Admin logged in. All background fields are synced.");
         const adminNotice = document.getElementById("adminNotice");
         if (adminNotice) adminNotice.innerHTML = "<i class='fas fa-info-circle'></i> أنت تمتلك صلاحيات أدمن. الحقول مخفية للتبسيط.";
+
+        if (adminBtn) adminBtn.style.display = 'block';
+    } else {
+        if (adminBtn) adminBtn.remove();
     }
 }
 

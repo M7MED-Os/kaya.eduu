@@ -75,6 +75,7 @@ function getContextLabel(grade, val) {
     const vals = {
         '1': 'الترم الأول', '2': 'الترم الثاني',
         'science_bio': 'علمي علوم', 'science_math': 'علمي رياضة', 'literature': 'أدبي',
+        'scientific_common': 'مواد علمي مشترك',
         'languages': 'اللغات (مشترك)', 'non_scoring': 'مواد خارج المجموع'
     };
     return `${grades[grade]} - ${vals[val] || val}`;
