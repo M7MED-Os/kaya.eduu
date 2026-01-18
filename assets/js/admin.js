@@ -519,7 +519,7 @@ async function renderExamQuestions(exam) {
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                 <h4 style="margin:0;">إضافة سؤال جديد</h4>
                 <button class="btn btn-outline btn-sm" onclick="openBulkAddModal('${exam.id}')">
-                    <i class="fas fa-layer-group"></i> إضافة جملة (Bulk Add)
+                    <i class="fas fa-layer-group"></i> إضافة مجموعة
                 </button>
             </div>
             <textarea id="NewQText" class="form-control" placeholder="نص السؤال..." rows="2"></textarea>
@@ -832,17 +832,19 @@ window.openBulkAddModal = (examId) => {
 };
 
 window.deleteStudent = async (id, name) => {
-    if (!confirm(`هل أنت متأكد من حذف الطالب "${name}" نهائياً من الموقع؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
+    if (!confirm(`هل أنت متأكد من حذف الطالب (${name}) نهائياً؟ \nسيؤدي هذا لحذف حسابه وكل درجاته ولا يمكن التراجع عن هذه الخطوة.`)) return;
 
     try {
+        // بمجرد الحذف من هنا، التريجر في SQL سيتولى حذف حسابه من Auth تلقائياً
         const { error } = await supabase.from('profiles').delete().eq('id', id);
+
         if (error) throw error;
 
-        alert('تم حذف الطالب بنجاح');
+        alert("تم حذف الطالب وحسابه بالكامل بنجاح ✅");
         loadStudents();
     } catch (err) {
-        console.error("Delete Student Error:", err);
+        console.error("Delete Fail", err);
         alert("فشل الحذف: " + err.message);
     }
-}
+};
 
