@@ -9,8 +9,10 @@ async function checkAuth() {
     const { data: { session }, error } = await supabase.auth.getSession();
 
     if (error || !session) {
-        // Not logged in, redirect to login
-        if (window.location.pathname.includes("dashboard")) {
+        // Not logged in, redirect to login if page is protected
+        const protectedPages = ["dashboard.html", "subject.html", "leaderboard.html", "profile.html"];
+        const currentPage = window.location.pathname.split("/").pop();
+        if (protectedPages.includes(currentPage)) {
             window.location.href = "login.html";
         }
         return null;
@@ -358,10 +360,10 @@ if (resetForm) {
 // ==========================
 
 async function loadUserProfile() {
-    const user = await checkAuth();
-    if (!user) return;
-
     try {
+        const user = await checkAuth();
+        if (!user) return;
+
         const userMetadata = user.user_metadata;
         const fullName = userMetadata?.full_name || "الطالب";
 
@@ -414,7 +416,9 @@ async function loadUserProfile() {
         const loadingEl = document.getElementById("loading");
         if (loadingEl) {
             loadingEl.style.opacity = "0";
-            setTimeout(() => loadingEl.remove(), 500);
+            setTimeout(() => {
+                if (loadingEl.parentNode) loadingEl.remove();
+            }, 500);
         }
     }
 }

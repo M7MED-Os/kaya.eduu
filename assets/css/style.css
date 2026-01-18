@@ -212,12 +212,13 @@ img {
 
   .nav-links {
     position: fixed;
-    top: 70px;
+    top: 68px;
     /* Adjust based on navbar height */
     right: -100%;
     width: 100%;
     height: calc(100vh - 70px);
     background-color: var(--bg-white);
+    border-top: 3px solid var(--primary-color);
     flex-direction: column;
     padding: 2rem;
     transition: var(--transition);

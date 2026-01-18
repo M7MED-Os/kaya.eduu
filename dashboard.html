@@ -145,6 +145,9 @@
 
             <ul class="nav-links">
                 <li><a href="dashboard.html">الرئيسية</a></li>
+                <li><a href="todo.html">المهام</a></li>
+                <li><a href="leaderboard.html" style="font-weight: bold; color: var(--secondary-color);">المتصدرين</a>
+                </li>
                 <li id="adminNavBtn" style="display: none;">
                     <a href="admin.html" style="color: var(--secondary-color); font-weight: bold;">
                         <i class="fas fa-shield-alt"></i> Admin
@@ -161,6 +164,7 @@
     <header class="dashboard-header">
         <div class="container">
             <h1 class="welcome-text">أهلاً يا <span id="studentName">...</span> 👋</h1>
+            <h1 style="display:none;" id="studentStatsHeader">...</h1>
             <p>جاهز تفرم شوية أسئلة النهاردة؟</p>
         </div>
     </header>
@@ -169,6 +173,10 @@
 
         <!-- Quick Stats -->
         <div class="stats-grid">
+            <div class="stat-card" style="border-bottom: 3px solid var(--secondary-color);">
+                <span class="stat-number" id="stats-points">0</span>
+                <span class="stat-label">مجموع النقاط ✨</span>
+            </div>
             <div class="stat-card">
                 <span class="stat-number" id="stats-questions">0</span>
                 <span class="stat-label">أسئلة حليتها</span>
@@ -176,10 +184,6 @@
             <div class="stat-card">
                 <span class="stat-number" id="stats-exams">0</span>
                 <span class="stat-label">امتحانات كاملة</span>
-            </div>
-            <div class="stat-card" style="border-bottom: 3px solid var(--secondary-color);">
-                <span class="stat-number" id="stats-points">0</span>
-                <span class="stat-label">مجموع النقاط ✨</span>
             </div>
             <div class="stat-card">
                 <span class="stat-number" id="stats-accuracy">%0</span>

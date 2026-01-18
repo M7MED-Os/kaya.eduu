@@ -168,10 +168,28 @@
                 padding: 0.75rem 0.25rem;
             }
         }
+
+        @media (max-width: 640px) {
+            .leaderboard-hero {
+                margin-bottom: 0;
+                padding: 3rem 0;
+            }
+
+            .leaderboard-container {
+                margin-top: 1rem;
+            }
+        }
     </style>
 </head>
 
 <body>
+
+    <!-- Loading Screen (Disabled to prevent layout shift)
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>جاري التحميل...</p>
+    </div>
+    -->
 
     <!-- Navbar -->
     <nav class="navbar">
@@ -186,12 +204,16 @@
 
             <ul class="nav-links">
                 <li><a href="dashboard.html">الرئيسية</a></li>
+                <li><a href="todo.html">المهام</a></li>
+                <li><a href="leaderboard.html" style="font-weight: bold; color: var(--secondary-color);">المتصدرين</a>
+                </li>
                 <li id="adminNavBtn" style="display: none;">
                     <a href="admin.html" style="color: var(--secondary-color); font-weight: bold;">
                         <i class="fas fa-shield-alt"></i> Admin
                     </a>
                 </li>
-                <li><a href="profile.html" id="navUserName" style="font-weight: bold; color: var(--primary-color);"></a>
+                <li><a href="profile.html" id="navUserName"
+                        style="font-weight: bold; color: var(--primary-color); display: inline-block;"></a>
                 </li>
                 <li><button id="logoutBtn" class="btn btn-outline" style="padding: 0.5rem 1rem;">خروج</button></li>
             </ul>
@@ -292,6 +314,13 @@
             } catch (err) {
                 console.error(err);
                 body.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red; padding: 2rem;">فشل في تحميل البيانات</td></tr>';
+            } finally {
+                // Safety: Ensure any global loading spinner is hidden
+                const globalLoading = document.getElementById('loading');
+                if (globalLoading) {
+                    globalLoading.style.opacity = '0';
+                    setTimeout(() => { if (globalLoading.parentNode) globalLoading.remove(); }, 500);
+                }
             }
         }
 

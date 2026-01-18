@@ -1,0 +1,451 @@
+/* 
+  Todo List Premium CSS - V3 (Inline Subtasks, Fixed Layout & Smart Logic)
+*/
+
+:root {
+    --todo-primary: #00897B;
+    --todo-secondary: #FF6F00;
+    --todo-bg: #F8FAFC;
+    --todo-card-bg: #FFFFFF;
+    --todo-text-main: #1E293B;
+    --todo-text-muted: #64748B;
+    --todo-border: #E2E8F0;
+    --todo-success: #10B981;
+    --todo-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    --todo-radius: 1.25rem;
+}
+
+.todo-page {
+    background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+    min-height: 80vh;
+    padding: 3rem 1.5rem;
+    font-family: 'Cairo', sans-serif;
+}
+
+.todo-container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* Header & Progress Bar */
+.todo-header {
+    margin-bottom: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.header-content h1 {
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
+    font-weight: 900;
+    color: var(--todo-text-main);
+    margin-bottom: 0.5rem;
+}
+
+.header-content p {
+    color: var(--todo-text-muted);
+    font-size: clamp(0.95rem, 3vw, 1.1rem);
+}
+
+.global-progress-card {
+    background: var(--todo-card-bg);
+    padding: 1.5rem;
+    border-radius: var(--todo-radius);
+    box-shadow: var(--todo-shadow);
+    border: 1px solid var(--todo-border);
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-weight: 700;
+}
+
+#progressPercentage {
+    color: var(--todo-primary);
+    font-size: 1.2rem;
+}
+
+.progress-bar-outer {
+    height: 12px;
+    background: #F1F5F9;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.progress-bar-inner {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--todo-primary), #4DB6AC);
+    border-radius: 10px;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.task-summary {
+    font-size: 0.9rem;
+    color: var(--todo-text-muted);
+    font-weight: 600;
+}
+
+/* Input Section */
+.task-input-section {
+    margin-bottom: 2rem;
+}
+
+.input-wrapper {
+    display: flex;
+    gap: 12px;
+    background: var(--todo-card-bg);
+    padding: 0.75rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.input-wrapper:focus-within {
+    border-color: var(--todo-primary);
+    box-shadow: 0 0 0 4px rgba(0, 137, 123, 0.1);
+}
+
+.input-wrapper input {
+    flex: 1;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: clamp(1rem, 4vw, 1.15rem);
+    font-weight: 600;
+    font-family: inherit;
+    outline: none;
+    background: transparent;
+}
+
+.btn-add-task {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--todo-primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Todo List Area */
+.todo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* Color Coding for Tasks - Enhanced */
+.task-card[data-color="0"] {
+    border-right: 8px solid #FFCDD2;
+    background-color: #FFF9F9;
+}
+
+.task-card[data-color="1"] {
+    border-right: 8px solid #C8E6C9;
+    background-color: #F8FFF8;
+}
+
+.task-card[data-color="2"] {
+    border-right: 8px solid #BBDEFB;
+    background-color: #F9FCFF;
+}
+
+.task-card[data-color="3"] {
+    border-right: 8px solid #FFF9C4;
+    background-color: #FFFFF8;
+}
+
+.task-card[data-color="4"] {
+    border-right: 8px solid #E1BEE7;
+    background-color: #FDF9FF;
+}
+
+/* Completed state should override coloring to maintain focus */
+.task-card.completed {
+    border-right-color: #E2E8F0 !important;
+    background-color: var(--todo-bg) !important;
+}
+
+/* Task Item */
+.task-card {
+    background: var(--todo-card-bg);
+    border-radius: var(--todo-radius);
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--todo-border);
+    box-shadow: var(--todo-shadow);
+    transition: all 0.3s ease;
+    animation: slideUp 0.4s ease-out;
+}
+
+.task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+.task-main {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: 40px;
+    width: 100%;
+}
+
+/* Inline Edit Style - Fixed Layout */
+.inline-edit-input {
+    flex: 1;
+    min-width: 0;
+    /* CRITICAL: Allows flex child to shrink below content width */
+    border: 2px solid var(--todo-primary);
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.6rem;
+    font-size: clamp(0.95rem, 3.5vw, 1.1rem);
+    font-weight: 700;
+    font-family: inherit;
+    background: #F0FDF4;
+    outline: none;
+    box-sizing: border-box;
+}
+
+/* Custom Checkbox */
+.task-checkbox-wrapper {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.task-checkbox {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid #CBD5E1;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.task-checkbox i {
+    color: white;
+    font-size: 0.8rem;
+    transform: scale(0);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.task-card.completed .task-checkbox {
+    background: var(--todo-success);
+    border-color: var(--todo-success);
+}
+
+.task-card.completed .task-checkbox i {
+    transform: scale(1);
+}
+
+.task-text {
+    flex: 1;
+    min-width: 0;
+    font-size: clamp(0.95rem, 3.8vw, 1.15rem);
+    font-weight: 700;
+    color: var(--todo-text-main);
+    cursor: pointer;
+    word-break: break-word;
+    /* Better than break-all for long titles */
+    overflow: hidden;
+}
+
+.task-card.completed .task-text {
+    color: var(--todo-text-muted);
+    text-decoration: line-through;
+}
+
+.task-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    background: white;
+    /* Ensures buttons don't overlap text if overflowed */
+    padding-right: 4px;
+}
+
+.action-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: none !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #F1F5F9;
+    color: var(--todo-text-muted);
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+}
+
+.action-btn.delete:hover {
+    background: #Fee2e2;
+    color: #EF4444;
+}
+
+.action-btn.add-sub:hover {
+    background: #ECFDF5;
+    color: var(--todo-success);
+}
+
+.action-btn.save:hover {
+    background: var(--todo-primary);
+    color: white;
+}
+
+/* Subtasks Area */
+.subtasks-wrapper {
+    margin-right: 2rem;
+    margin-top: 0.75rem;
+    padding-right: 1rem;
+    border-right: 2px solid #E2E8F0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.subtask-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.35rem 0;
+}
+
+/* Styled Add Subtask Input */
+.sub-add-wrapper {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    animation: fadeIn 0.3s ease;
+}
+
+.sub-add-input {
+    flex: 1;
+    border: 1.5px dashed var(--todo-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: inherit;
+    outline: none;
+    background: rgba(236, 253, 245, 0.5);
+}
+
+/* Sub Editing Input */
+.sub-edit-input {
+    flex: 1;
+    border: 1.5px solid var(--todo-primary);
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.6rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: inherit;
+    background: #F0FDF4;
+    outline: none;
+}
+
+/* Circular Subtask Checkbox - Matches main task style */
+.sub-checkbox {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    /* Made circular */
+    border: 2px solid #CBD5E1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.sub-checkbox i {
+    color: white;
+    font-size: 0.7rem;
+    transform: scale(0);
+    transition: transform 0.2s ease;
+}
+
+.subtask-item.completed .sub-checkbox {
+    background: var(--todo-primary);
+    border-color: var(--todo-primary);
+}
+
+.subtask-item.completed .sub-checkbox i {
+    transform: scale(1);
+}
+
+.sub-text {
+    flex: 1;
+    min-width: 0;
+    font-size: clamp(0.9rem, 3.5vw, 1rem);
+    font-weight: 600;
+    color: var(--todo-text-main);
+}
+
+.subtask-item.completed .sub-text {
+    color: var(--todo-text-muted);
+    text-decoration: line-through;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+    .todo-page {
+        padding: 1.5rem 1rem;
+    }
+
+    .global-progress-card {
+        padding: 1.25rem 1rem;
+    }
+
+    .subtasks-wrapper {
+        margin-right: 1.5rem;
+        padding-right: 1rem;
+    }
+
+    .action-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+    }
+}
