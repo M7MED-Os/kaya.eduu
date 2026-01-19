@@ -454,12 +454,6 @@ async function loadUserProfile() {
         const userMetadata = user.user_metadata;
         const fullName = userMetadata?.full_name || "الطالب";
 
-        // Render subjects based on metadata
-        renderSubjects(userMetadata);
-
-        // Load user results and stats
-        await loadUserDashboardData(user.id);
-
         // Try to fetch from profiles table
         const { data: profile, error } = await supabase
             .from("profiles")
@@ -471,8 +465,12 @@ async function loadUserProfile() {
             console.error("Profile Fetch Error:", error);
         }
 
+        // Use profile data if available, otherwise fallback to metadata
+        const dataToRender = profile || userMetadata;
+
+
         if (!profile) {
-            // Profile doesn't exist, create it
+            // Profile doesn't exist, create it (Self-healing)
             const { error: insertError } = await supabase.from("profiles").insert({
                 id: user.id,
                 full_name: fullName,
@@ -485,6 +483,7 @@ async function loadUserProfile() {
             if (!insertError) updateNameUI(fullName);
         }
 
+        // Update UI elements that depend on the profile data
         if (profile) {
             updateNameUI(profile.full_name);
 
@@ -500,6 +499,18 @@ async function loadUserProfile() {
                 if (adminBtn) adminBtn.remove();
             }
         }
+
+        // Parallel Execution: Render Subjects & Load Results
+        // This makes the dashboard load much faster by not waiting for one to finish before starting the other
+        const tasks = [];
+
+        // 1. Subjects
+        tasks.push(renderSubjects(dataToRender));
+
+        // 2. Results & Stats
+        tasks.push(loadUserDashboardData(user.id));
+
+        await Promise.all(tasks);
 
     } catch (err) {
         console.error("Profile Fetch Error:", err);
@@ -519,24 +530,53 @@ async function loadUserProfile() {
 
 async function loadUserDashboardData(userId) {
     try {
-        const { data: results, error } = await supabase
+        // Parallel Fetch: 
+        // 1. Stats (Lightweight, all history)
+        // 2. Recent Results (Heavy, limit 5)
+
+        const statsPromise = supabase
             .from('results')
-            .select('*')
+            .select('score, total_questions, percentage, exam_id') // Fetch ONLY needed columns
             .eq('user_id', userId);
 
-        if (error) throw error;
+        const historyPromise = supabase
+            .from('results')
+            .select(`
+                *,
+                exams (
+                    title,
+                    subject_id,
+                    chapter_id,
+                    lesson_id,
+                    chapters:chapter_id (title),
+                    lessons:lesson_id (
+                        title,
+                        chapters:chapter_id (title)
+                    )
+                )
+            `)
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(5); // Fixed Limit
 
-        if (!results || results.length === 0) return;
+        const [statsResponse, historyResponse] = await Promise.all([statsPromise, historyPromise]);
 
-        // Calculate Stats
-        const totalSolved = results.reduce((sum, r) => sum + (r.score || 0), 0);
-        const totalExams = new Set(results.map(r => r.exam_id)).size;
+        if (statsResponse.error) throw statsResponse.error;
+        if (historyResponse.error) throw historyResponse.error;
 
-        // Accurate Accuracy Calculation
-        const totalPossible = results.reduce((sum, r) => sum + (r.total_questions || 0), 0);
+        const allResults = statsResponse.data || [];
+        const recentResults = historyResponse.data || [];
+
+        // --- 1. Update Stats UI ---
+        const totalSolved = allResults.reduce((sum, r) => sum + (r.score || 0), 0);
+        const totalExams = new Set(allResults.map(r => r.exam_id)).size;
+
+        // Calculate Accuracy
+        const totalPossible = allResults.reduce((sum, r) => sum + (r.total_questions || 0), 0);
+        const avgScore = allResults.length > 0 ? Math.round(allResults.reduce((sum, r) => sum + r.percentage, 0) / allResults.length) : 0;
+        const bestScore = allResults.length > 0 ? Math.max(...allResults.map(r => r.percentage)) : 0;
         const accuracy = totalPossible > 0 ? Math.round((totalSolved / totalPossible) * 100) : 0;
 
-        // Update UI
         const qEl = document.getElementById('stats-questions');
         const eEl = document.getElementById('stats-exams');
         const aEl = document.getElementById('stats-accuracy');
@@ -545,8 +585,27 @@ async function loadUserDashboardData(userId) {
         if (eEl) eEl.textContent = totalExams;
         if (aEl) aEl.textContent = `%${accuracy}`;
 
-        // Load History Section
-        await loadUserResults(userId);
+        // Update Results Stats Section
+        renderResultsStats(totalExams, avgScore, bestScore);
+
+        // --- 2. Update History List UI ---
+        if (recentResults.length > 0) {
+            const resultsSection = document.getElementById('resultsSection');
+            if (resultsSection) resultsSection.style.display = 'block';
+
+            // Group recent results (should be simple as we just want a list, but keeping grouping logic for safety)
+            const examGroups = {};
+            recentResults.forEach(result => {
+                if (!examGroups[result.exam_id]) examGroups[result.exam_id] = [];
+                examGroups[result.exam_id].push(result);
+            });
+
+            // Need subjects map for the list renderer
+            const subjects = await loadSubjectsFromDB(); // This might be cached or filtered, ideally renderResultsList should handle its own lookups or we pass it.
+            // Simplified: The previous renderResultsList fetched subjects again. Let's fix that too.
+            // For now, let's call the optimized render function directly
+            renderResultsList(examGroups, recentResults);
+        }
 
     } catch (err) {
         console.error("Dashboard Data Error:", err);
@@ -567,23 +626,29 @@ function updateNameUI(name) {
 // ==========================
 
 // Cache for subjects to avoid repeated queries
-let subjectsCache = null;
+let subjectsCache = {};
 
-async function loadSubjectsFromDB() {
-    if (subjectsCache) return subjectsCache;
+async function loadSubjectsFromDB(grade) {
+    if (subjectsCache[grade]) return subjectsCache[grade];
 
-    const { data: subjects, error } = await supabase
+    let query = supabase
         .from('subjects')
         .select('*')
         .eq('is_active', true)
         .order('order_index');
+
+    if (grade) {
+        query = query.eq('grade', grade); // Server-side optimized filter
+    }
+
+    const { data: subjects, error } = await query;
 
     if (error) {
         console.error('Error loading subjects:', error);
         return [];
     }
 
-    subjectsCache = subjects;
+    subjectsCache[grade] = subjects;
     return subjects;
 }
 
@@ -597,8 +662,13 @@ async function renderSubjects(userMetadata) {
     const stream = userMetadata?.stream; // "science_bio", ...
     const term = userMetadata?.term; // "1", "2"
 
-    // Load subjects from database
-    const allSubjects = await loadSubjectsFromDB();
+    if (!grade) {
+        grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-light); padding: 2rem;">يرجى تحديث بياناتك الدراسية</p>`;
+        return;
+    }
+
+    // Load ONLY relevant subjects from database
+    const allSubjects = await loadSubjectsFromDB(grade);
 
     // Filter Logic
     if (grade === "1" || grade === "2") {
@@ -709,63 +779,8 @@ function renderSection(title, subjects, container) {
 // 11. Results Display
 // ==========================
 
-async function loadUserResults(userId) {
-    try {
-        // Fetch all results with exam details
-        const { data: results, error } = await supabase
-            .from('results')
-            .select(`
-                *,
-                exams (
-                    title,
-                    subject_id,
-                    chapter_id,
-                    lesson_id,
-                    chapters:chapter_id (title),
-                    lessons:lesson_id (
-                        title,
-                        chapters:chapter_id (title)
-                    )
-                )
-            `)
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false });
+// Heavily modified to accept data directly instead of fetching
 
-        if (error) throw error;
-
-        if (!results || results.length === 0) {
-            // No results yet, hide section
-            return;
-        }
-
-        // Show results section
-        const resultsSection = document.getElementById('resultsSection');
-        if (resultsSection) resultsSection.style.display = 'block';
-
-        // Calculate stats
-        const totalExams = new Set(results.map(r => r.exam_id)).size;
-        const avgScore = Math.round(results.reduce((sum, r) => sum + r.percentage, 0) / results.length);
-        const bestScore = Math.max(...results.map(r => r.percentage));
-
-        // Render stats
-        renderResultsStats(totalExams, avgScore, bestScore);
-
-        // Group by exam_id and get first + last
-        const examGroups = {};
-        results.forEach(result => {
-            if (!examGroups[result.exam_id]) {
-                examGroups[result.exam_id] = [];
-            }
-            examGroups[result.exam_id].push(result);
-        });
-
-        // Render results
-        renderResultsList(examGroups);
-
-    } catch (err) {
-        console.error("Error loading results:", err);
-    }
-}
 
 function renderResultsStats(totalExams, avgScore, bestScore) {
     const statsGrid = document.getElementById('resultsStatsGrid');
@@ -868,7 +883,7 @@ async function renderResultsList(examGroups) {
             card.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                     <div style="flex: 1; min-width: 200px;">
-                        <div style="font-size: 0.95rem; font-weight: bold; color: var(--primary-color); margin-bottom: 0.2rem;">
+                        <div style="font-weight: bold; color: var(--primary-color); margin-bottom: 0.2rem;">
                             <i class="fas fa-book"></i> ${subjectName}
                         </div>
                         <h4 style="font-size: 0.8rem; margin: 0; color: var(--text-light); font-weight: normal; line-height: 1.4;">

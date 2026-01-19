@@ -1010,3 +1010,89 @@ html[dir='rtl'] .step-item:not(:last-child)::after {
     width: 100%;
   }
 }
+
+/* --- Exam Images --- */
+.question-img {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: var(--radius-sm);
+  margin-top: 1rem;
+  display: block;
+  border: 1px solid #e2e8f0;
+  cursor: zoom-in;
+}
+
+.option-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.choice-img {
+  max-width: 120px;
+  max-height: 120px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #e2e8f0;
+  object-fit: contain;
+  background: white;
+  padding: 2px;
+  cursor: zoom-in;
+}
+
+.review-question .choice-img {
+  max-width: 100px;
+  max-height: 100px;
+}
+
+/* --- Lightbox --- */
+#imageLightbox {
+  display: none;
+  position: fixed;
+  z-index: 10000;
+  padding-top: 50px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.9);
+}
+
+#imageLightbox .lightbox-content {
+  margin: auto;
+  display: block;
+  max-width: 90%;
+  max-height: 85vh;
+  border-radius: 4px;
+  animation: zoomIn 0.3s;
+}
+
+#imageLightbox .close-lightbox {
+  position: absolute;
+  top: 15px;
+  right: 35px;
+  color: #f1f1f1;
+  font-size: 40px;
+  font-weight: bold;
+  transition: 0.3s;
+  cursor: pointer;
+}
+
+#imageLightbox .close-lightbox:hover,
+#imageLightbox .close-lightbox:focus {
+  color: #bbb;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0)
+  }
+
+  to {
+    transform: scale(1)
+  }
+}

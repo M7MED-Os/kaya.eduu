@@ -11,6 +11,9 @@ let currentContext = {
     termOrStream: null, // "term" for G1/2, "stream" for G3
     subject: null
 };
+// Editor State
+let editingQuestionId = null;
+let existingQuestionImages = {}; // { qId: { q: url, a: url, ... } }
 
 document.addEventListener('DOMContentLoaded', async () => {
     await checkAdminAuth();
@@ -586,13 +589,29 @@ async function renderExamQuestions(exam) {
             
             <div class="form-group">
                 <textarea id="NewQText" class="form-control" placeholder="اكتب نص السؤال هنا..." rows="3" style="resize:none; padding:1rem;"></textarea>
+                <div style="margin-top:8px;">
+                   <label style="font-size:0.85rem; color:#64748b; margin-bottom:4px; display:block;">صورة للسؤال (اختياري)</label>
+                   <input type="file" id="QImg" accept="image/*" class="form-control" style="font-size:0.9rem; padding:6px;">
+                </div>
             </div>
             
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-top:1rem;">
-                <div class="form-group" style="margin:0;"><input id="OptA" class="form-control" placeholder="الخيار A"></div>
-                <div class="form-group" style="margin:0;"><input id="OptB" class="form-control" placeholder="الخيار B"></div>
-                <div class="form-group" style="margin:0;"><input id="OptC" class="form-control" placeholder="الخيار C"></div>
-                <div class="form-group" style="margin:0;"><input id="OptD" class="form-control" placeholder="الخيار D"></div>
+                <div class="form-group" style="margin:0;">
+                    <input id="OptA" class="form-control" placeholder="الخيار A">
+                    <input type="file" id="OptAImg" accept="image/*" class="form-control" style="margin-top:4px; font-size:0.75rem; padding:4px;">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <input id="OptB" class="form-control" placeholder="الخيار B">
+                    <input type="file" id="OptBImg" accept="image/*" class="form-control" style="margin-top:4px; font-size:0.75rem; padding:4px;">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <input id="OptC" class="form-control" placeholder="الخيار C">
+                    <input type="file" id="OptCImg" accept="image/*" class="form-control" style="margin-top:4px; font-size:0.75rem; padding:4px;">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <input id="OptD" class="form-control" placeholder="الخيار D">
+                    <input type="file" id="OptDImg" accept="image/*" class="form-control" style="margin-top:4px; font-size:0.75rem; padding:4px;">
+                </div>
             </div>
             
             <div style="margin-top:1.5rem; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f1f5f9; padding-top:1rem;">
@@ -605,38 +624,52 @@ async function renderExamQuestions(exam) {
                         <option value="d">Option D</option>
                     </select>
                 </div>
-                <button class="btn btn-primary" onclick="addQuestion('${exam.id}')" style="padding:0.6rem 2rem;">
-                    <i class="fas fa-save"></i> حفظ السؤال
-                </button>
+                <div style="display:flex; gap:10px; align-items:center;">
+                     <button class="btn" onclick="resetQuestionForm()" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; font-size:0.85rem; padding:0.5rem 1rem;">
+                        <i class="fas fa-times" style="margin-left:5px;"></i> إلغاء التعديل
+                     </button>
+                     <button class="btn btn-primary" id="addQuestionBtn" onclick="saveQuestion('${exam.id}')" style="font-size:0.85rem; padding:0.5rem 1.5rem;">
+                        <i class="fas fa-save" style="margin-left:5px;"></i> حفظ السؤال
+                     </button>
+                </div>
             </div>
         </div>
 
         <div class="questions-list">
             ${questions && questions.length > 0 ? questions.map((q, i) => `
-                <div class="question-card">
-                    <div class="question-card-header">
-                        <div class="question-text">س${i + 1}: ${q.question_text}</div>
-                        <button class="btn" style="background:#fff1f2; color:#be123c; padding:6px 10px; border-radius:8px; font-size:0.8rem;" 
-                                onclick="deleteQuestion('${q.id}', '${exam.id}')" title="حذف السؤال">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
+                <div class="question-card" style="border:1px solid #e5e7eb; padding:1rem; border-radius:8px; margin-bottom:1rem; background:#fff;">
+                    <div class="question-card-header" style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                        <div class="question-text" style="font-weight:bold;">
+                            س${i + 1}: ${q.question_text || ''}
+                            ${q.question_image ? `<br><img src="${q.question_image}" style="max-height:80px; margin-top:5px; border-radius:4px;">` : ''}
+                        </div>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn" style="background:#e0f2fe; color:#0369a1; padding:6px 10px; border-radius:8px; font-size:0.8rem;" 
+                                    onclick="editQuestion(${JSON.stringify(q).replace(/"/g, '&quot;')})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn" style="background:#fff1f2; color:#be123c; padding:6px 10px; border-radius:8px; font-size:0.8rem;" 
+                                    onclick="deleteQuestion('${q.id}', '${exam.id}')" title="حذف السؤال">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="options-grid">
                         <div class="option-item ${q.correct_answer === 'a' ? 'correct' : ''}">
                             <span class="option-label">A</span>
-                            <span>${q.choice_a}</span>
+                             ${q.choice_a_image ? `<img src="${q.choice_a_image}" style="max-height:40px; vertical-align:middle;">` : ''} <span>${q.choice_a || ''}</span>
                         </div>
                         <div class="option-item ${q.correct_answer === 'b' ? 'correct' : ''}">
                             <span class="option-label">B</span>
-                            <span>${q.choice_b}</span>
+                             ${q.choice_b_image ? `<img src="${q.choice_b_image}" style="max-height:40px; vertical-align:middle;">` : ''} <span>${q.choice_b || ''}</span>
                         </div>
                         <div class="option-item ${q.correct_answer === 'c' ? 'correct' : ''}">
                             <span class="option-label">C</span>
-                            <span>${q.choice_c}</span>
+                             ${q.choice_c_image ? `<img src="${q.choice_c_image}" style="max-height:40px; vertical-align:middle;">` : ''} <span>${q.choice_c || ''}</span>
                         </div>
                         <div class="option-item ${q.correct_answer === 'd' ? 'correct' : ''}">
                             <span class="option-label">D</span>
-                            <span>${q.choice_d}</span>
+                             ${q.choice_d_image ? `<img src="${q.choice_d_image}" style="max-height:40px; vertical-align:middle;">` : ''} <span>${q.choice_d || ''}</span>
                         </div>
                     </div>
                 </div>
@@ -651,7 +684,7 @@ async function renderExamQuestions(exam) {
     panel.innerHTML = html;
 }
 
-window.addQuestion = async (examId) => {
+window.saveQuestion = async (examId) => {
     const text = document.getElementById('NewQText').value;
     const a = document.getElementById('OptA').value;
     const b = document.getElementById('OptB').value;
@@ -659,23 +692,157 @@ window.addQuestion = async (examId) => {
     const d = document.getElementById('OptD').value;
     const correct = document.getElementById('CorrectOpt').value;
 
-    if (!text || !a || !b) return Swal.fire({
+    const qFile = document.getElementById('QImg').files[0];
+    const aFile = document.getElementById('OptAImg').files[0];
+    const bFile = document.getElementById('OptBImg').files[0];
+    const cFile = document.getElementById('OptCImg').files[0];
+    const dFile = document.getElementById('OptDImg').files[0];
+
+    // Check minimum (text OR image required)
+    const hasQ = text || qFile || (editingQuestionId && existingQuestionImages.q);
+    const hasA = a || aFile || (editingQuestionId && existingQuestionImages.a);
+    const hasB = b || bFile || (editingQuestionId && existingQuestionImages.b);
+
+    if (!hasQ || !hasA || !hasB) return Swal.fire({
         icon: 'warning',
         title: 'عذراً',
-        text: 'يرجى إكمال جميع البيانات المطلوبة',
+        text: 'يرجى إكمال البيانات الأساسية',
         confirmButtonText: 'حسناً'
     });
 
-    await supabase.from('questions').insert({
-        exam_id: examId,
-        question_text: text,
-        choice_a: a, choice_b: b, choice_c: c, choice_d: d,
-        correct_answer: correct
-    });
+    const btn = document.getElementById('addQuestionBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...`;
+    btn.disabled = true;
 
-    // Refresh current view (Hack: fetch exam data again and re-render)
-    const { data: exam } = await supabase.from('exams').select('*').eq('id', examId).single();
-    renderExamQuestions(exam);
+    try {
+        const upload = async (file) => {
+            if (!file) return null;
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+            const filePath = `${examId}/${fileName}`;
+            const { error } = await supabase.storage.from('exam_attachments').upload(filePath, file);
+            if (error) throw error;
+            const { data } = supabase.storage.from('exam_attachments').getPublicUrl(filePath);
+            return data.publicUrl;
+        };
+
+        const qImgUrl = await upload(qFile);
+        const aImgUrl = await upload(aFile);
+        const bImgUrl = await upload(bFile);
+        const cImgUrl = await upload(cFile);
+        const dImgUrl = await upload(dFile);
+
+        const payload = {
+            exam_id: examId,
+            question_text: text || "",
+            choice_a: a || "", choice_b: b || "", choice_c: c || "", choice_d: d || "",
+            correct_answer: correct
+        };
+
+        // If uploading new image, use it. Else if editing, keep existing. Else null.
+        if (qImgUrl) payload.question_image = qImgUrl;
+        else if (editingQuestionId && !qFile) payload.question_image = existingQuestionImages.q;
+
+        if (aImgUrl) payload.choice_a_image = aImgUrl;
+        else if (editingQuestionId && !aFile) payload.choice_a_image = existingQuestionImages.a;
+
+        if (bImgUrl) payload.choice_b_image = bImgUrl;
+        else if (editingQuestionId && !bFile) payload.choice_b_image = existingQuestionImages.b;
+
+        if (cImgUrl) payload.choice_c_image = cImgUrl;
+        else if (editingQuestionId && !cFile) payload.choice_c_image = existingQuestionImages.c;
+
+        if (dImgUrl) payload.choice_d_image = dImgUrl;
+        else if (editingQuestionId && !dFile) payload.choice_d_image = existingQuestionImages.d;
+
+        let error;
+        if (editingQuestionId) {
+            // UPDATE
+            const { error: err } = await supabase.from('questions').update(payload).eq('id', editingQuestionId);
+            error = err;
+        } else {
+            // INSERT
+            const { error: err } = await supabase.from('questions').insert(payload);
+            error = err;
+        }
+
+        if (error) throw error;
+
+        // Reset and Reload
+        resetQuestionForm();
+        const { data: exam } = await supabase.from('exams').select('*').eq('id', examId).single();
+        renderExamQuestions(exam);
+
+    } catch (err) {
+        console.error(err);
+        Swal.fire('خطأ', 'حدث خطأ: ' + (err.message || err.error_description || err), 'error');
+    } finally {
+        if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+};
+
+window.editQuestion = (q) => {
+    // Scroll to form input
+    const inputField = document.getElementById('NewQText');
+    inputField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => inputField.focus(), 500);
+
+    // Populate Fields
+    document.getElementById('NewQText').value = q.question_text || '';
+    document.getElementById('OptA').value = q.choice_a || '';
+    document.getElementById('OptB').value = q.choice_b || '';
+    document.getElementById('OptC').value = q.choice_c || '';
+    document.getElementById('OptD').value = q.choice_d || '';
+    document.getElementById('CorrectOpt').value = q.correct_answer || 'a';
+
+    // Set Editing State
+    editingQuestionId = q.id;
+    existingQuestionImages = {
+        q: q.question_image,
+        a: q.choice_a_image,
+        b: q.choice_b_image,
+        c: q.choice_c_image,
+        d: q.choice_d_image
+    };
+
+    // UI Feedback
+    const btn = document.getElementById('addQuestionBtn');
+    btn.innerHTML = `<i class="fas fa-edit" style="margin-left:5px;"></i> تعديل السؤال`;
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-warning');
+    // Ideally clear file inputs (browser security prevents setting value, but they are empty by default anyway)
+
+    Swal.fire({
+        toast: true, position: 'top-end', icon: 'info', title: 'وضع التعديل', timer: 1500, showConfirmButton: false
+    });
+};
+
+window.resetQuestionForm = () => {
+    document.getElementById('NewQText').value = '';
+    document.getElementById('OptA').value = '';
+    document.getElementById('OptB').value = '';
+    document.getElementById('OptC').value = '';
+    document.getElementById('OptD').value = '';
+    document.getElementById('QImg').value = null; // Reset File Inputs
+    document.getElementById('OptAImg').value = null;
+    document.getElementById('OptBImg').value = null;
+    document.getElementById('OptCImg').value = null;
+    document.getElementById('OptDImg').value = null;
+    document.getElementById('CorrectOpt').value = 'a';
+
+    editingQuestionId = null;
+    existingQuestionImages = {};
+
+    const btn = document.getElementById('addQuestionBtn');
+    if (btn) {
+        btn.innerHTML = `<i class="fas fa-save" style="margin-left:5px;"></i> حفظ السؤال`;
+        btn.classList.remove('btn-warning');
+        btn.classList.add('btn-primary');
+    }
 };
 
 window.deleteQuestion = async (qId, examId) => {
@@ -692,6 +859,8 @@ window.deleteQuestion = async (qId, examId) => {
 
     if (result.isConfirmed) {
         await supabase.from('questions').delete().eq('id', qId);
+        // Also could delete images from storage, but keeping it simple for now (orphan files).
+
         const { data: exam } = await supabase.from('exams').select('*').eq('id', examId).single();
         renderExamQuestions(exam);
 
@@ -989,10 +1158,18 @@ window.openEditStudent = async (id) => {
                     text: error.message
                 });
             } else {
+                // Clean up old data via RPC
+                await supabase.rpc('cleanup_student_data', {
+                    p_user_id: id,
+                    p_grade: updates.grade,
+                    p_term: updates.term || '',
+                    p_stream: updates.stream || ''
+                });
+
                 Swal.fire({
                     icon: 'success',
                     title: 'تم التحديث!',
-                    text: 'تم تعديل بيانات الطالب بنجاح.',
+                    text: 'تم تعديل بيانات الطالب وتنظيف السجلات القديمة بنجاح.',
                     timer: 1500,
                     showConfirmButton: false
                 });

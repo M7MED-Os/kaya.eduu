@@ -129,12 +129,16 @@ function renderQuestions() {
                 </div>
                 <span style="color: #718096; font-size: 0.9rem;">${currentQuestions.length} سؤال كلي</span>
             </div>
-            <div class="question-text">${q.question_text}</div>
+            <div class="question-text">${q.question_text || ''}</div>
+            ${q.question_image ? `<img src="${q.question_image}" class="question-img" alt="سؤال" onclick="openLightbox(this.src)">` : ''}
             <div class="options-list">
                 ${['a', 'b', 'c', 'd'].map(opt => `
                     <label class="option-label" id="label-${q.id}-${opt}">
-                        <input type="radio" name="q_${q.id}" value="${opt}" class="option-radio" onchange="handleAnswerChange('${q.id}', '${opt}', ${index})">
-                        <span class="option-text">${q[`choice_${opt}`]}</span>
+                         <input type="radio" name="q_${q.id}" value="${opt}" class="option-radio" onchange="handleAnswerChange('${q.id}', '${opt}', ${index})">
+                         <div class="option-content">
+                            <span class="option-text">${q[`choice_${opt}`] || ''}</span>
+                            ${q[`choice_${opt}_image`] ? `<img src="${q[`choice_${opt}_image`]}" class="choice-img" alt="خيار" onclick="event.preventDefault(); openLightbox(this.src)">` : ''}
+                         </div>
                     </label>
                 `).join('')}
             </div>
@@ -472,11 +476,13 @@ function renderSection(title, type, questions) {
 
         // Build options HTML
         let optionsHTML = '';
-        const choices = { 'a': q.choice_a, 'b': q.choice_b, 'c': q.choice_c, 'd': q.choice_d };
+        const choiceKeys = ['a', 'b', 'c', 'd'];
 
-        for (const [key, text] of Object.entries(choices)) {
+        for (const key of choiceKeys) {
             let optionClass = '';
             let icon = '';
+            const text = q[`choice_${key}`] || '';
+            const img = q[`choice_${key}_image`];
 
             if (key === correctAnswer) {
                 optionClass = 'correct-answer';
@@ -486,7 +492,14 @@ function renderSection(title, type, questions) {
                 icon = '<i class="fas fa-times-circle" style="color: #EF4444; margin-left: 0.5rem;"></i>';
             }
 
-            optionsHTML += `<div class="review-option ${optionClass}">${text} ${icon}</div>`;
+            let content = '';
+            content += `<span style="margin-left:5px;">${text}</span>`;
+            if (img) content += `<img src="${img}" class="choice-img" style="margin-right:5px;" onclick="openLightbox(this.src)">`;
+
+            optionsHTML += `<div class="review-option ${optionClass}" style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display:flex; align-items:center;">${content}</div>
+                ${icon}
+            </div>`;
         }
 
         let explanationHTML = q.explanation ? `<div class="review-explanation"><strong><i class="fas fa-lightbulb"></i> الشرح:</strong> ${q.explanation}</div>` : '';
@@ -498,7 +511,8 @@ function renderSection(title, type, questions) {
                     ${isCorrect ? '✓ إجابة صحيحة' : (userAnswer ? '✗ إجابة خاطئة' : '⚠️ لم يتم الحل')}
                 </span>
             </div>
-            <div class="question-text" style="font-size: 1rem; margin-bottom: 1.25rem;">${q.question_text}</div>
+            <div class="question-text" style="font-size: 1rem; margin-bottom: 1rem;">${q.question_text || ''}</div>
+            ${q.question_image ? `<img src="${q.question_image}" class="question-img" style="max-height:200px; margin-top:0.5rem;" onclick="openLightbox(this.src)">` : ''}
             ${optionsHTML}
             ${explanationHTML}
         `;
@@ -544,3 +558,30 @@ if (backToResultBtn) {
 
 // Init
 initExam();
+
+// Lightbox Logic
+window.openLightbox = (src) => {
+    let lightbox = document.getElementById('imageLightbox');
+    if (!lightbox) {
+        lightbox = document.createElement('div');
+        lightbox.id = 'imageLightbox';
+        lightbox.innerHTML = `
+            <span class="close-lightbox" onclick="closeLightbox()">&times;</span>
+            <img class="lightbox-content" id="lightboxImg">
+        `;
+        document.body.appendChild(lightbox);
+
+        // Close on background click
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) closeLightbox();
+        });
+    }
+    const img = document.getElementById('lightboxImg');
+    img.src = src;
+    lightbox.style.display = 'block';
+};
+
+window.closeLightbox = () => {
+    const lightbox = document.getElementById('imageLightbox');
+    if (lightbox) lightbox.style.display = 'none';
+};
