@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>الملف الشخصي | ثانوية.كوم</title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/bottom-nav.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
     <style>
         .auth-card {
             max-width: 600px;
@@ -35,12 +37,6 @@
                 <li id="adminNavBtn" style="display: none;">
                     <a href="admin.html" style="color: var(--secondary-color); font-weight: bold;">
                         <i class="fas fa-shield-alt"></i> Admin
-                    </a>
-                </li>
-                <li id="installAppBtn" style="display: none;">
-                    <a href="#" style="color: #10b981; font-weight: bold;"
-                        onclick="event.preventDefault(); document.getElementById('installAppBtn').click();">
-                        <i class="fas fa-download"></i> حمّل التطبيق
                     </a>
                 </li>
                 <li><a href="profile.html" id="navUserName" class="active">البروفايل</a></li>
@@ -174,8 +170,33 @@
         </div>
     </footer>
 
+    <!-- Bottom Navigation (Mobile Only) -->
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="bottom-nav-item">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="todo.html" class="bottom-nav-item">
+            <i class="fas fa-tasks"></i>
+            <span>المهام</span>
+        </a>
+        <a href="leaderboard.html" class="bottom-nav-item">
+            <i class="fas fa-trophy"></i>
+            <span>الأوائل</span>
+        </a>
+        <a href="profile.html" class="bottom-nav-item active">
+            <i class="fas fa-user"></i>
+            <span>البروفايل</span>
+        </a>
+        <a href="#" id="bottomLogoutBtn" class="bottom-nav-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>خروج</span>
+        </a>
+    </nav>
+
     <script src="assets/js/main.js"></script>
     <script type="module" src="assets/js/profile.js"></script>
+    <script type="module" src="assets/js/bottom-nav.js"></script>
 
 </body>
 
