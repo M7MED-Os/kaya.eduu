@@ -340,22 +340,51 @@ async function calculateResult() {
     scoreValEl.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i>';
 
     try {
-        // CALL SERVER-SIDE SCORING (The Secure Way)
-        const { data, error } = await supabase.rpc('submit_exam', {
-            p_exam_id: examId,
-            p_answers: userAnswers,
-            p_time_spent: timeElapsed
+        // --- CLIENT SIDE CALCULATION ---
+        let score = 0;
+        let totalQuestions = currentQuestions.length;
+
+        currentQuestions.forEach(q => {
+            const userAnswer = userAnswers[q.id];
+            if (userAnswer && userAnswer === q.correct_answer) {
+                score++;
+            }
         });
 
-        if (error) throw error;
+        const percentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
 
-        // Data from server
-        const { final_score, final_total } = data[0];
-        const percentage = Math.round((final_score / final_total) * 100);
+        // 1. Get User ID
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("User not authenticated");
 
-        // Update Statistics UI
-        document.getElementById("correctCount").textContent = final_score;
-        document.getElementById("wrongCount").textContent = final_total - final_score;
+        // 2. Insert Result
+        // Note: 'percentage' is a generated column in DB, so we don't send it. 
+        // We only send score and total_questions.
+        const { error: insertError } = await supabase
+            .from('results')
+            .insert({
+                user_id: user.id,
+                exam_id: examId,
+                score: score,
+                total_questions: totalQuestions,
+                answers: userAnswers,
+                time_spent: timeElapsed
+            });
+
+        if (insertError) throw insertError;
+
+        // 3. Update Points (Client-Side Best Effort)
+        try {
+            const { data: profile } = await supabase.from('profiles').select('points').eq('id', user.id).single();
+            const newPoints = (profile?.points || 0) + score;
+            await supabase.from('profiles').update({ points: newPoints }).eq('id', user.id);
+        } catch (pointErr) {
+            console.warn("Points update failed (likely RLS), but result is saved:", pointErr);
+        }
+
+        // --- UI UPDATES ---
+        document.getElementById("correctCount").textContent = score;
+        document.getElementById("wrongCount").textContent = totalQuestions - score;
         document.getElementById("timeSpent").textContent = formatTime(timeElapsed);
 
         // Show Hierarchy and Original Title
@@ -397,15 +426,15 @@ async function calculateResult() {
         if (percentage >= 85) {
             resultTitle.textContent = "ممتاز يا بطل! 🥇";
             resultTitle.style.color = "var(--primary-color)";
-            resultMsg.textContent = `جبت ${final_score} من ${final_total}. أداء رائع، كمل بنفس المستوى!`;
+            resultMsg.textContent = `جبت ${score} من ${totalQuestions}. أداء رائع، كمل بنفس المستوى!`;
         } else if (percentage >= 50) {
             resultTitle.textContent = "جيد جداً 👍";
             resultTitle.style.color = "var(--secondary-color)";
-            resultMsg.textContent = `جبت ${final_score} من ${final_total}. محتاج شوية تركيز المرة الجاية.`;
+            resultMsg.textContent = `جبت ${score} من ${totalQuestions}. محتاج شوية تركيز المرة الجاية.`;
         } else {
             resultTitle.textContent = "محتاج تذاكر تاني 📚";
             resultTitle.style.color = "#EF4444";
-            resultMsg.textContent = `جبت ${final_score} من ${final_total}. راجع الدرس وحاول تاني.`;
+            resultMsg.textContent = `جبت ${score} من ${totalQuestions}. راجع الدرس وحاول تاني.`;
         }
 
     } catch (err) {

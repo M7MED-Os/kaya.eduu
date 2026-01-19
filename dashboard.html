@@ -5,10 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>الرئيسية | ثانوية.كوم</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -233,43 +229,8 @@
     </footer>
 
     <!-- Scripts -->
-    <!-- Bottom Navigation (Mobile Only) -->
-    <nav class="bottom-nav">
-        <a href="dashboard.html" class="bottom-nav-item active">
-            <i class="fas fa-home"></i>
-            <span>الرئيسية</span>
-        </a>
-        <a href="subject.html" class="bottom-nav-item">
-            <i class="fas fa-book-open"></i>
-            <span>المواد</span>
-        </a>
-        <a href="leaderboard.html" class="bottom-nav-item">
-            <i class="fas fa-trophy"></i>
-            <span>الأوائل</span>
-        </a>
-        <a href="profile.html" class="bottom-nav-item">
-            <i class="fas fa-user"></i>
-            <span>بروفايلي</span>
-        </a>
-    </nav>
-
     <script src="assets/js/main.js"></script>
     <script type="module" src="assets/js/auth.js"></script>
-    <script>
-        // Check if existing nav items should be active
-        const currentPath = window.location.pathname;
-        document.querySelectorAll('.bottom-nav-item').forEach(link => {
-            if (link.getAttribute('href') === currentPath.split('/').pop()) {
-                document.querySelectorAll('.bottom-nav-item').forEach(i => i.classList.remove('active'));
-                link.classList.add('active');
-            }
-        });
-
-        // Add padding to body for mobile
-        if (window.innerWidth <= 768) {
-            document.body.classList.add('app-mode');
-        }
-    </script>
     <script type="module" src="assets/js/dashboard.js"></script>
 </body>
 
