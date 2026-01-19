@@ -19,30 +19,101 @@ async function checkAuth() {
     }
 
     // User is logged in
-    const { data: profile } = await supabase.from('profiles').select('role, is_active').eq('id', session.user.id).single();
+    const { data: profile } = await supabase.from('profiles')
+        .select('role, is_active, subscription_ends_at, full_name, points')
+        .eq('id', session.user.id)
+        .single();
 
     const protectedPages = ["dashboard.html", "subject.html", "leaderboard.html", "profile.html"];
     const currentPage = window.location.pathname.split("/").pop();
 
-    // 1. Check Activation
-    if (profile && !profile.is_active && profile.role !== 'admin') {
-        if (protectedPages.includes(currentPage)) {
-            window.location.href = "pending.html";
-            return null;
+    // 1. Check Activation & Expiry
+    const now = new Date();
+    const expiry = profile?.subscription_ends_at ? new Date(profile.subscription_ends_at) : null;
+    const isExpired = expiry && now > expiry;
+
+    if (profile && profile.role !== 'admin') {
+        if (!profile.is_active || isExpired) {
+            if (protectedPages.includes(currentPage)) {
+                window.location.href = "pending.html";
+                return null;
+            }
         }
     }
 
-    // 2. If on auth pages (login/register) or pending (if active), redirect to dashboard
+    // 2. Dashboard Warnings
+    if (currentPage === "dashboard.html" && profile && expiry && !isExpired) {
+        const diffMs = expiry - now;
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+        if (diffDays <= 3) {
+            showSubscriptionWarning(expiry);
+        }
+    }
+
+    // 3. Redirections for auth/pending pages - Only redirect from pending if NOT expired
     const authPages = ["login.html", "register.html"];
     if (authPages.includes(currentPage)) {
         window.location.href = "dashboard.html";
     }
 
-    if (currentPage === "pending.html" && profile && profile.is_active) {
+    if (currentPage === "pending.html" && profile && profile.is_active && !isExpired) {
         window.location.href = "dashboard.html";
     }
 
-    return session.user;
+    return { ...session.user, profile };
+}
+
+function showSubscriptionWarning(expiry) {
+    const parent = document.querySelector('header.dashboard-header .container') || document.body;
+
+    // Check if already exists
+    if (document.getElementById('expiryWarning')) return;
+
+    const dateStr = expiry.toLocaleDateString('ar-EG', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        hour: 'numeric',
+        minute: 'numeric'
+    });
+
+    const banner = document.createElement('div');
+    banner.id = 'expiryWarning';
+    banner.style = `
+        background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+        border-right: 5px solid #fb8c00;
+        color: #e65100;
+        padding: 1.25rem;
+        border-radius: 16px;
+        margin-top: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        box-shadow: 0 10px 20px rgba(251, 140, 0, 0.1);
+        animation: slideIn 0.5s ease-out;
+    `;
+
+    banner.innerHTML = `
+        <div style="background:#fb8c00; color:white; width:45px; height:45px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem;">
+            <i class="fas fa-hourglass-half"></i>
+        </div>
+        <div style="flex:1">
+            <h4 style="margin:0; font-size:1.1rem; font-weight:900;">اشتراكك أوشك على الانتهاء! ⚠️</h4>
+            <p style="margin:2px 0 0; font-size:0.9rem; opacity:0.9;">سيفصل الحساب تلقائياً في: <b>${dateStr}</b></p>
+        </div>
+        <a href="pending.html" style="background:#fb8c00; color:white; padding:8px 16px; border-radius:10px; text-decoration:none; font-size:0.85rem; font-weight:bold; transition:0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">تجديد الآن</a>
+    `;
+
+    if (parent === document.body) {
+        banner.style.position = 'fixed';
+        banner.style.top = '20px';
+        banner.style.left = '20px';
+        banner.style.right = '20px';
+        banner.style.zIndex = '10000';
+    }
+
+    parent.prepend(banner);
 }
 
 // ==========================

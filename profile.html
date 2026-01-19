@@ -79,6 +79,40 @@
                         </div>
                     </div>
 
+                    <!-- Subscription Plan Card -->
+                    <div id="subscriptionCard"
+                        style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 1.5rem; border-radius: 20px; margin-bottom: 2rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; overflow: hidden;">
+                        <div
+                            style="position: absolute; top: -20px; right: -20px; font-size: 8rem; color: rgba(255,255,255,0.05);">
+                            <i class="fas fa-crown"></i>
+                        </div>
+                        <h4
+                            style="margin-bottom: 1.25rem; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; color: #38bdf8;">
+                            <i class="fas fa-gem"></i> خطة الاشتراك الحالية
+                        </h4>
+                        <div style="display: grid; gap: 1rem;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="opacity: 0.7;">الخطة:</span>
+                                <span id="planName" style="font-weight: 900;">-</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="opacity: 0.7;">تاريخ البدء:</span>
+                                <span id="subStart" style="font-family: 'Cairo';">-</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="opacity: 0.7;">تاريخ الانتهاء:</span>
+                                <span id="subEnd"
+                                    style="font-family: 'Cairo'; color: #fbbf24; font-weight: bold;">-</span>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+                                <span style="opacity: 0.7;">باقي لك:</span>
+                                <span id="timeLeft"
+                                    style="background: rgba(56, 189, 248, 0.2); padding: 4px 10px; border-radius: 50px; font-size: 0.85rem; color: #38bdf8;">-</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Hidden Admin Fields (Keep for logic/admin override if needed later, but hidden now) -->
                     <div id="adminAcademicFields" style="display: none;">
                         <div class="form-group">

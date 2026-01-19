@@ -378,12 +378,18 @@
             if (!user) return;
 
             const { data: profile } = await supabase.from('profiles')
-                .select('is_active')
+                .select('is_active, subscription_ends_at')
                 .eq('id', user.id)
                 .single();
 
-            if (profile && profile.is_active) {
-                window.location.href = 'dashboard.html';
+            if (profile) {
+                const now = new Date();
+                const expiry = profile.subscription_ends_at ? new Date(profile.subscription_ends_at) : null;
+                const isNotExpired = !expiry || expiry > now;
+
+                if (profile.is_active && isNotExpired) {
+                    window.location.href = 'dashboard.html';
+                }
             }
         }
 

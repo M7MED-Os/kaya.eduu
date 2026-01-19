@@ -123,6 +123,38 @@ async function loadProfile() {
         infoRows.innerHTML = infoHtml;
     }
 
+    // 5. Subscription Card Logic
+    if (profile && profile.role !== 'admin') {
+        const subStart = document.getElementById('subStart');
+        const subEnd = document.getElementById('subEnd');
+        const planName = document.getElementById('planName');
+        const timeLeft = document.getElementById('timeLeft');
+
+        if (subStart) subStart.textContent = profile.subscription_started_at ? new Date(profile.subscription_started_at).toLocaleString('ar-EG') : 'غير محدد';
+        if (subEnd) subEnd.textContent = profile.subscription_ends_at ? new Date(profile.subscription_ends_at).toLocaleString('ar-EG') : 'غير محدد';
+        if (planName) planName.textContent = profile.last_duration_text || 'خطة مخصصة';
+
+        if (profile.subscription_ends_at && timeLeft) {
+            const end = new Date(profile.subscription_ends_at);
+            const now = new Date();
+            const diff = end - now;
+
+            if (diff > 0) {
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                const mins = Math.floor((diff / (1000 * 60)) % 60);
+                timeLeft.textContent = `${days} يوم و ${hours} ساعة و ${mins} دقيقة`;
+            } else {
+                timeLeft.textContent = 'منتهي';
+                timeLeft.style.background = '#ef4444';
+                timeLeft.style.color = 'white';
+            }
+        }
+    } else {
+        const card = document.getElementById('subscriptionCard');
+        if (card) card.style.display = 'none';
+    }
+
     // Special Admin UI override (Optional: could show a button to reveal fields)
     const adminBtn = document.getElementById("adminNavBtn");
     if (isAdmin) {

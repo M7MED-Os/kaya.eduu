@@ -9,13 +9,24 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --sidebar-width: 280px;
             --header-height: 70px;
-            --bg-body: #f3f4f6;
-            --border-color: #e5e7eb;
+            --bg-body: #f8fafc;
+            --border-color: #e2e8f0;
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --radius-md: 12px;
+            --radius-lg: 16px;
         }
+
 
         body {
             background-color: var(--bg-body);
@@ -23,6 +34,301 @@
             height: 100vh;
             overflow: hidden;
             font-family: 'Cairo', sans-serif;
+            color: #1e293b;
+        }
+
+        /* --- Stats Grid --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-info .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: block;
+            line-height: 1;
+        }
+
+        .stat-info .stat-label {
+            font-size: 0.875rem;
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        /* --- Filter Bar --- */
+        .filter-bar {
+            background: white;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .filter-group label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            white-space: nowrap;
+        }
+
+        .filter-control {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .filter-control:focus {
+            border-color: var(--primary-color);
+        }
+
+        /* --- Question Cards --- */
+        .question-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: box-shadow 0.2s;
+        }
+
+        .question-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
+        .question-text {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #0f172a;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .option-item {
+            padding: 0.75rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .option-item.correct {
+            border-color: var(--success-color);
+            background: #ecfdf5;
+            color: #065f46;
+            font-weight: 600;
+        }
+
+        .option-label {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .option-item.correct .option-label {
+            background: var(--success-color);
+            color: white;
+        }
+
+        @media (max-width: 640px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* --- Modern Table Enhancements --- */
+        .table-responsive-wrapper {
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            overflow-x: auto;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .responsive-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+        }
+
+        .responsive-table th {
+            background: #f8fafc;
+            padding: 1rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .responsive-table td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+            color: #1e293b;
+            font-size: 0.95rem;
+        }
+
+        .responsive-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .responsive-table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* Status & Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .badge-success {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .badge-danger {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .badge-warning {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .badge-info {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+        .badge-gray {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .user-id {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            background: #f8fafc;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 3rem;
+            color: var(--secondary-color);
+            background: #fff;
+            border-radius: var(--radius-md);
+            border: 1px dashed var(--border-color);
+        }
+
+        .empty-state i {
+            font-size: 1.5rem;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        /* --- Chart Section --- */
+        .chart-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
         }
 
         /* --- Sidebar --- */
@@ -41,13 +347,28 @@
             height: var(--header-height);
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             border-bottom: 1px solid var(--border-color);
             padding: 0 1rem;
         }
 
+        #closeSidebar {
+            display: none;
+            background: none;
+            border: none;
+            color: #6b7280;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        @media (max-width: 1553px) {
+            #closeSidebar {
+                display: block;
+            }
+        }
+
         .sidebar-header h2 {
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             color: var(--primary-color);
             margin: 0;
             display: flex;
@@ -380,16 +701,14 @@
             background: var(--primary-dark);
         }
 
-        /* Responsive Admin Panel */
-        @media (max-width: 992px) {
+
+
+        @media (max-width: 1553px) {
             :root {
                 --sidebar-width: 280px;
             }
 
-            body {
-                overflow: hidden;
-            }
-
+            /* Mobile Sidebar Logic */
             .sidebar {
                 position: fixed;
                 right: calc(-1 * var(--sidebar-width));
@@ -426,50 +745,69 @@
             #mobileToggle {
                 display: flex !important;
             }
-        }
 
-        @media (max-width: 600px) {
-            .top-header {
+            /* Manager Layout (Tree vs Editor) */
+            .manager-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .tree-panel {
+                margin-bottom: 1.5rem;
+                max-height: 400px;
+            }
+
+            /* Table to Card Layout for Tablet & Mobile */
+            .table-responsive-wrapper {
+                background: transparent;
+                box-shadow: none;
+                overflow: visible;
+            }
+
+            .responsive-table thead {
+                display: none;
+            }
+
+            .responsive-table,
+            .responsive-table tbody,
+            .responsive-table tr,
+            .responsive-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .responsive-table tr {
+                margin-bottom: 1.25rem;
+                border: 1px solid #e5e7eb;
+                border-radius: 16px;
+                padding: 15px;
+                background: white;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            }
+
+            .responsive-table td {
+                text-align: right;
+                padding: 12px 10px !important;
+                border-bottom: 1px solid #f3f4f6;
+                display: flex;
                 justify-content: space-between;
-                padding: 0 0.75rem;
+                align-items: center;
+            }
+
+            .responsive-table td:last-child {
+                border-bottom: none;
+            }
+
+            .responsive-table td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                color: #64748b;
+                font-size: 0.9rem;
             }
 
             .breadcrumbs {
-                font-size: 0.9rem;
-                max-width: 140px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-
-            .main-content {
-                padding: 0.75rem;
-            }
-
-            .view-section h2 {
-                font-size: 1.1rem;
-                margin-bottom: 0.5rem;
-            }
-
-            #studentsView>div:first-child {
-                flex-direction: column;
-                align-items: stretch !important;
-                gap: 10px;
-            }
-
-            #studentSearch {
-                width: 100% !important;
-            }
-
-            /* Enhanced Table Scroll */
-            .view-section div[style*="overflow:hidden"] {
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            table {
-                min-width: 800px;
-                font-size: 0.85rem;
+                font-size: 1rem;
+                max-width: 220px;
             }
         }
 
@@ -549,8 +887,17 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <h2><i class="fas fa-shield-alt"></i> ثانوية.كوم</h2>
+            <button id="closeSidebar"><i class="fas fa-times"></i></button>
         </div>
         <div class="sidebar-content">
+            <div class="nav-group-title">الإدارة العامة</div>
+            <div class="nav-item" id="navStudents" onclick="showStudentsView()">
+                <i class="fas fa-users"></i> إدارة الطلاب
+            </div>
+            <div class="nav-item" id="navBroadcast" onclick="showBroadcastView()">
+                <i class="fas fa-bullhorn"></i> مركز التنبيهات
+            </div>
+
             <div class="nav-group-title">الصف الثالث الثانوي</div>
             <div class="nav-item" onclick="selectContext('3', 'languages')">
                 <i class="fas fa-globe"></i> اللغات (مشترك)
@@ -587,11 +934,6 @@
                 <i class="fas fa-2"></i> الترم الثاني
             </div>
 
-            <div class="nav-group-title">الإدارة</div>
-            <div class="nav-item" onclick="showStudentsView()">
-                <i class="fas fa-users"></i> الطلاب
-            </div>
-
             <div class="nav-group-title">حسابي</div>
             <div class="nav-item" style="color:red;" id="logoutBtn">
                 <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
@@ -608,7 +950,7 @@
                 </button>
                 <div class="breadcrumbs" id="pageTitle">مرحباً بك في الرئيسية</div>
             </div>
-            <div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
                 <a href="dashboard.html" class="btn btn-outline btn-sm">
                     <i class="fas fa-external-link-alt"></i> عرض الموقع
                 </a>
@@ -646,7 +988,7 @@
                     <div id="editorPanel" class="editor-panel">
                         <div class="empty-state">
                             <i class="fas fa-edit"></i>
-                            <p>اختر عنصراً من الشجرة للتعديل أو أضف عنصر جديد</p>
+                            <p>اختر عنصراً للتعديل أو أضف عنصر جديد</p>
                         </div>
                     </div>
                 </div>
@@ -654,15 +996,110 @@
 
             <!-- 3. Students View -->
             <div id="studentsView" class="view-section">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
-                    <h2>إدارة الطلاب</h2>
-                    <input type="text" id="studentSearch" placeholder="بحث بالاسم..." class="form-control"
-                        style="width:250px; padding:0.5rem;">
+                <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="margin: 0; font-weight: 800; color: #0f172a;">إدارة الطلاب</h2>
+                    <div style="color: var(--secondary-color); font-size: 0.9rem;">إجمالي المقيدين بالمنصة</div>
                 </div>
 
-                <div
-                    style="background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); overflow:hidden;">
-                    <table style="width:100%; border-collapse: collapse; text-align:right;">
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #eff6ff; color: #2563eb;">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statsTotal">0</span>
+                            <span class="stat-label">إجمالي الطلاب</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #ecfdf5; color: #10b981;">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statsActive">0</span>
+                            <span class="stat-label">نشط حالياً</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #fffbeb; color: #f59e0b;">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statsPending">0</span>
+                            <span class="stat-label">بانتظار التفعيل</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #fef2f2; color: #ef4444;">
+                            <i class="fas fa-user-times"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statsExpired">0</span>
+                            <span class="stat-label">اشتراكات منتهية</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis Grid -->
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="chart-section">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="font-size: 1.1rem; font-weight: 700;">منحنى التسجيل (آخر 7 أيام)</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="enrollmentChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-section"
+                        style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem;">توزيع الطلاب</h3>
+                        <div style="width: 200px; height: 200px;">
+                            <canvas id="statusPieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Bar -->
+                <div class="filter-bar">
+                    <div class="filter-group" style="flex: 2; min-width: 250px;">
+                        <input type="text" id="studentSearch" placeholder="بحث بالاسم أو البريد..."
+                            class="filter-control">
+                    </div>
+                    <div class="filter-group">
+                        <select id="filterStatus" class="filter-control">
+                            <option value="all">كل الحالات</option>
+                            <option value="active">نشط</option>
+                            <option value="pending">معلق</option>
+                            <option value="expired">منتهي</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <select id="filterGrade" class="filter-control">
+                            <option value="all">كل الصفوف</option>
+                            <option value="3">الصف الثالث</option>
+                            <option value="2">الصف الثاني</option>
+                            <option value="1">الصف الأول</option>
+                        </select>
+                    </div>
+                    <div id="streamFilterGroup" class="filter-group" style="display:none;">
+                        <select id="filterStream" class="filter-control">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <select id="filterSort" class="filter-control">
+                            <option value="newest">الأحدث تسجيلاً</option>
+                            <option value="points">الأعلى نقاطاً</option>
+                            <option value="expiry">الأقرب انتهاءً</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive-wrapper">
+                    <table class="responsive-table">
                         <thead style="background:#f9fafb; border-bottom:1px solid #e5e7eb;">
                             <tr>
                                 <th style="padding:1rem;">الاسم</th>
@@ -672,6 +1109,7 @@
                                 <th style="padding:1rem;">النقاط</th>
                                 <th style="padding:1rem;">الدور</th>
                                 <th style="padding:1rem;">الحالة</th>
+                                <th style="padding:1rem;">الانتهاء</th>
                                 <th style="padding:1rem;">إجراءات</th>
                             </tr>
                         </thead>
@@ -679,6 +1117,135 @@
                             <!-- JS Looped -->
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- 4. Broadcast View -->
+            <div id="broadcastView" class="view-section">
+                <div style="max-width: 800px; margin: 0 auto;">
+                    <div
+                        style="background: white; padding: 2.5rem; border-radius: var(--radius-lg); border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
+                        <h2
+                            style="margin-bottom: 2rem; display: flex; align-items: center; gap: 12px; font-weight: 800;">
+                            <i class="fas fa-paper-plane" style="color: var(--primary-color);"></i>
+                            إرسال تنبيه عام للطلاب
+                        </h2>
+
+                        <div class="form-group">
+                            <label>عنوان التنبيه</label>
+                            <input type="text" id="bcTitle" class="form-control"
+                                placeholder="مثلاً: تنبيه هام، عطل فني، مسابقة جديدة...">
+                        </div>
+
+                        <div class="form-group">
+                            <label>محتوى الرسالة</label>
+                            <textarea id="bcMessage" class="form-control" rows="5"
+                                placeholder="اكتب تفاصيل الرسالة هنا..."></textarea>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div class="form-group">
+                                <label>نوع التنبيه</label>
+                                <select id="bcType" class="form-control">
+                                    <option value="info">معلومة (أزرق)</option>
+                                    <option value="warning">تنبيه (أصفر)</option>
+                                    <option value="danger">هام جداً (أحمر)</option>
+                                    <option value="success">إنجاز (اخضر)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>الفئة المستهدفة</label>
+                                <select id="bcTarget" class="form-control">
+                                    <option value="all">جميع الطلاب</option>
+                                    <option value="grade_3">الصف الثالث الثانوي</option>
+                                    <option value="grade_2">الصف الثاني الثانوي</option>
+                                    <option value="grade_1">الصف الأول الثانوي</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div
+                            style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-top: 1.5rem; border: 1px dashed #cbd5e1;">
+                            <label
+                                style="display:block; margin-bottom: 0.8rem; font-weight: 700; font-size: 0.95rem;">توقيت
+                                النشر</label>
+
+                            <!-- Segmented Control for Radios -->
+                            <div
+                                style="display: flex; background: #e2e8f0; padding: 4px; border-radius: 10px; width: fit-content; margin-bottom: 1rem;">
+                                <label
+                                    style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 8px 16px; border-radius: 8px; transition: 0.2s;"
+                                    id="lblPublishNow">
+                                    <input type="radio" name="publishType" value="now" checked
+                                        onchange="toggleScheduleDate(false); updateRadioStyles(this)"
+                                        style="display:none;">
+                                    <i class="fas fa-bolt"></i> نشر الآن
+                                </label>
+                                <label
+                                    style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 8px 16px; border-radius: 8px; transition: 0.2s;"
+                                    id="lblPublishLater">
+                                    <input type="radio" name="publishType" value="later"
+                                        onchange="toggleScheduleDate(true); updateRadioStyles(this)"
+                                        style="display:none;">
+                                    <i class="fas fa-clock"></i> جدولة
+                                </label>
+                            </div>
+
+                            <div id="scheduleDateGroup" class="form-group"
+                                style="display: none; animation: fadeIn 0.3s;">
+                                <label style="font-size:0.9rem;">تاريخ ووقت النشر</label>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <input type="datetime-local" id="bcScheduleDate" class="form-control"
+                                        style="font-size:0.95rem; flex: 1;">
+                                    <button onclick="document.getElementById('bcScheduleDate').value = ''"
+                                        title="مسح العرض"
+                                        style="background: #ef4444; border: none; color: white; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3); flex-shrink: 0;">
+                                        <i class="fas fa-times" style="font-size: 1rem;"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size:0.9rem;">تاريخ انتهاء الصلاحية <span
+                                        style="font-weight:400; color:#64748b;">(اختياري)</span></label>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <input type="datetime-local" id="bcExpiryDate" class="form-control"
+                                        style="font-size:0.95rem; flex: 1;">
+                                    <button onclick="document.getElementById('bcExpiryDate').value = ''"
+                                        title="مسح العرض"
+                                        style="background: #ef4444; border: none; color: white; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3); flex-shrink: 0;">
+                                        <i class="fas fa-times" style="font-size: 1rem;"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 1.5rem; display: flex; justify-content: center;">
+                            <button class="btn btn-primary"
+                                style="padding: 0.8rem 2rem; font-size: 1rem; font-weight: 700; border-radius: 10px; display: flex; align-items: center; gap: 8px;"
+                                onclick="sendBroadcast()">
+                                <i class="fas fa-check"></i> تأكيد
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 4rem;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3 style="margin: 0; font-weight: 800;">سجل التنبيهات</h3>
+                            <button class="btn btn-outline btn-sm" onclick="loadBroadcastHistory()">
+                                <i class="fas fa-sync-alt"></i> تحديث السجل
+                            </button>
+                        </div>
+                        <div id="broadcastHistory">
+                            <div
+                                style="text-align: center; padding: 4rem; opacity: 0.4; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                                <i class="fas fa-history"
+                                    style="font-size: 2.5rem; margin-bottom: 1rem; display: block;"></i>
+                                <p>يتم تحميل سجل الرسائل...</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
