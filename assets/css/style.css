@@ -183,10 +183,13 @@ img {
   color: var(--primary-color);
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
-.logo span {
-  color: var(--secondary-color);
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
 }
 
 .nav-links {
