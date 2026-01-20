@@ -135,8 +135,8 @@ function initLogout() {
     const logoutBtn = document.getElementById("logoutBtn");
     if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
 
-    const bottomLogoutBtn = document.getElementById("bottomLogoutBtn");
-    if (bottomLogoutBtn) bottomLogoutBtn.addEventListener("click", handleLogout);
+    // const bottomLogoutBtn = document.getElementById("bottomLogoutBtn");
+    // if (bottomLogoutBtn) bottomLogoutBtn.addEventListener("click", handleLogout);
 
     const pwaLogoutBtn = document.getElementById("pwaLogoutBtn");
     if (pwaLogoutBtn) pwaLogoutBtn.addEventListener("click", handleLogout);
@@ -185,7 +185,7 @@ function showToast(message, type = "success") {
                 container.remove(); // Cleanup container if empty
             }
         });
-    }, 3000);
+    }, 2000);
 }
 
 // ==========================

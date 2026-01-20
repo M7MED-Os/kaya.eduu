@@ -379,13 +379,29 @@ async function calculateResult() {
 
         if (insertError) throw insertError;
 
-        // 3. Update Points (Client-Side Best Effort)
+        // 3. Update Points (First Attempt Only)
         try {
-            const { data: profile } = await supabase.from('profiles').select('points').eq('id', user.id).single();
-            const newPoints = (profile?.points || 0) + score;
-            await supabase.from('profiles').update({ points: newPoints }).eq('id', user.id);
+            // Check if this is the first time solving this exam
+            const { data: previousAttempts, error: checkError } = await supabase
+                .from('results')
+                .select('id')
+                .eq('user_id', user.id)
+                .eq('exam_id', examId)
+                .limit(1);
+
+            if (checkError) throw checkError;
+
+            // Only award points if NO previous record exists
+            if (!previousAttempts || previousAttempts.length === 0) {
+                const { data: profile } = await supabase.from('profiles').select('points').eq('id', user.id).single();
+                const newPoints = (profile?.points || 0) + score;
+                await supabase.from('profiles').update({ points: newPoints }).eq('id', user.id);
+                console.log(`Points awarded: ${score}. First attempt detected.`);
+            } else {
+                console.log("No points awarded. Not the first attempt.");
+            }
         } catch (pointErr) {
-            console.warn("Points update failed (likely RLS), but result is saved:", pointErr);
+            console.warn("Points update logic failed:", pointErr);
         }
 
         // --- UI UPDATES ---
