@@ -85,4 +85,21 @@
     .footer {
         display: none !important;
     }
+
+    /* Hide menu toggle in PWA mode */
+    .menu-toggle {
+        display: none !important;
+    }
+
+    /* Show PWA specific logout button */
+    .pwa-logout-btn {
+        display: block !important;
+        font-size: 1.5rem;
+        color: var(--primary-color);
+        cursor: pointer;
+    }
+}
+
+.pwa-logout-btn {
+    display: none;
 }

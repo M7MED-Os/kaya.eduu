@@ -120,30 +120,33 @@ function showSubscriptionWarning(expiry) {
 // 2. Logout
 // ==========================
 
-const logoutBtn = document.getElementById("logoutBtn");
-if (logoutBtn) {
-    logoutBtn.addEventListener("click", async () => {
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-            console.error("Logout error:", error);
-        } else {
-            window.location.href = "login.html";
-        }
-    });
+async function handleLogout(e) {
+    if (e) e.preventDefault();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+        console.error("Logout error:", error);
+    } else {
+        window.location.href = "login.html";
+    }
 }
 
-// Bottom nav logout
-const bottomLogoutBtn = document.getElementById("bottomLogoutBtn");
-if (bottomLogoutBtn) {
-    bottomLogoutBtn.addEventListener("click", async (e) => {
-        e.preventDefault();
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-            console.error("Logout error:", error);
-        } else {
-            window.location.href = "login.html";
-        }
-    });
+// Function to attach logout listeners
+function initLogout() {
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
+
+    const bottomLogoutBtn = document.getElementById("bottomLogoutBtn");
+    if (bottomLogoutBtn) bottomLogoutBtn.addEventListener("click", handleLogout);
+
+    const pwaLogoutBtn = document.getElementById("pwaLogoutBtn");
+    if (pwaLogoutBtn) pwaLogoutBtn.addEventListener("click", handleLogout);
+}
+
+// Initialize on load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLogout);
+} else {
+    initLogout();
 }
 
 // ==========================
