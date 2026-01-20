@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const initBranding = () => {
         const logos = document.querySelectorAll('.logo');
         const logoHTML = `
-            <img src="assets/images/logo-icon.png" alt="Logo" class="brand-icon">
+            <img src="assets/images/logo-icon.jpeg" alt="Logo" class="brand-icon">
             <span class="logo-text">ثانوية<span class="logo-accent">.كوم</span></span>
         `;
 
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const adminLogo = document.querySelector('.sidebar-header h2');
         if (adminLogo) {
             adminLogo.innerHTML = `
-                <img src="assets/images/logo-icon.png" alt="Logo" class="brand-icon" style="height:35px">
+                <img src="assets/images/logo-icon.jpeg" alt="Logo" class="brand-icon" style="height:35px">
                 <span class="logo-text" style="font-size:1.5rem">ثانوية<span class="logo-accent">.كوم</span></span>
             `;
             adminLogo.style.display = "flex";
