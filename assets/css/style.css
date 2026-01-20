@@ -1239,3 +1239,23 @@ input:focus-visible {
     transform: translateY(-4px);
   }
 }
+
+/* --- PWA Standalone Styles --- */
+@media (display-mode: standalone) {
+
+  /* Hide navigation menu and footer on Login and Register pages in the App */
+  body:has(#loginForm) .navbar .menu-toggle,
+  body:has(#loginForm) .navbar .nav-links,
+  body:has(#loginForm) .footer,
+  body:has(#registerForm) .navbar .menu-toggle,
+  body:has(#registerForm) .navbar .nav-links,
+  body:has(#registerForm) .footer {
+    display: none !important;
+  }
+
+  /* Adjust padding if header is removed */
+  body:has(#loginForm) .page-header,
+  body:has(#registerForm) .page-header {
+    padding-top: 2rem;
+  }
+}

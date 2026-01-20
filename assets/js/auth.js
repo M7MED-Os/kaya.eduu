@@ -61,6 +61,23 @@ async function checkAuth() {
         window.location.href = "dashboard.html";
     }
 
+    // PWA (Standalone) UI Adjustments for Auth Pages
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        const authPages = ["login.html", "register.html", "index.html", ""];
+        const pageName = window.location.pathname.split("/").pop();
+
+        if (authPages.includes(pageName)) {
+            // Hide Menu and Links in Login/Register for PWA
+            const menuToggle = document.querySelector('.menu-toggle');
+            const navLinks = document.querySelector('.nav-links');
+            const footer = document.querySelector('.footer');
+
+            if (menuToggle) menuToggle.style.display = 'none';
+            if (navLinks) navLinks.style.display = 'none';
+            if (footer) footer.style.display = 'none';
+        }
+    }
+
     return { ...session.user, profile };
 }
 
