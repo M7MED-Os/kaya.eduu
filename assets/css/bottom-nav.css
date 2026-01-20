@@ -70,8 +70,8 @@
     color: var(--secondary-color);
 }
 
-/* Show on mobile only */
-@media (max-width: 768px) {
+/* Show only in PWA standalone mode (installed app) */
+@media (display-mode: standalone) {
     .bottom-nav {
         display: block;
     }
@@ -79,5 +79,10 @@
     /* Add padding to body so content isn't hidden */
     body {
         padding-bottom: calc(65px + env(safe-area-inset-bottom));
+    }
+
+    /* Hide footer in PWA mode */
+    .footer {
+        display: none !important;
     }
 }
