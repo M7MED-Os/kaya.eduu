@@ -39,6 +39,43 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Central Logo Management
+    const initBranding = () => {
+        const logos = document.querySelectorAll('.logo');
+        const logoHTML = `
+            <img src="assets/images/logo-icon.png" alt="Logo" class="brand-icon">
+            <span class="logo-text">ثانوية<span class="logo-accent">.كوم</span></span>
+        `;
+
+        logos.forEach(logo => {
+            logo.innerHTML = logoHTML;
+        });
+
+        // Also update Admin Sidebar Logo if exists
+        const adminLogo = document.querySelector('.sidebar-header h2');
+        if (adminLogo) {
+            adminLogo.innerHTML = `
+                <img src="assets/images/logo-icon.png" alt="Logo" class="brand-icon" style="height:35px">
+                <span class="logo-text" style="font-size:1.5rem">ثانوية<span class="logo-accent">.كوم</span></span>
+            `;
+            adminLogo.style.display = "flex";
+            adminLogo.style.alignItems = "center";
+            adminLogo.style.gap = "8px";
+        }
+
+        // Also update Exam Logo if exists
+        const examLogo = document.querySelector('.logo-box');
+        const examTitle = document.getElementById('examTitleMobile');
+        if (examLogo && examTitle) {
+            examLogo.innerHTML = `
+                <img src="assets/images/app_icon.png" alt="Logo" class="brand-icon" style="height:30px">
+                <span id="examTitleMobile">${examTitle.textContent}</span>
+            `;
+        }
+    };
+
+    initBranding();
+
     // Contact Form Validation
     const contactForm = document.getElementById('contactForm');
     if (contactForm) {
