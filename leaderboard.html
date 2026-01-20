@@ -313,6 +313,7 @@
                 const { data, error } = await supabase
                     .from('profiles')
                     .select('full_name, points, grade, role')
+                    .eq('show_on_leaderboard', true)
                     .order('points', { ascending: false })
                     .limit(10);
 

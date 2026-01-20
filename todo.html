@@ -111,6 +111,25 @@
         </div>
     </div>
 
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-icon" style="background: #E0F2FE; color: #0284C7;">
+                <i class="fas fa-edit"></i>
+            </div>
+            <h3>تعديل المهمة</h3>
+            <div class="form-group" style="margin: 1.5rem 0;">
+                <input type="text" id="editTaskInput" class="form-control" style="text-align: right;"
+                    placeholder="اكتب التعديل هنا...">
+            </div>
+            <div class="modal-buttons">
+                <button id="confirmEdit" class="btn-modal" style="background: var(--todo-primary); color: white;">حفظ
+                    التعديل</button>
+                <button id="cancelEdit" class="btn-modal cancel">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Footer -->
     <footer class="footer">
@@ -157,7 +176,7 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="assets/js/main.js"></script>
     <script type="module" src="assets/js/auth.js"></script>
-    <script src="assets/js/todo.js"></script>
+    <script type="module" src="assets/js/todo.js"></script>
 
 </body>
 

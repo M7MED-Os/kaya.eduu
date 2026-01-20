@@ -199,7 +199,7 @@
     border: 1px solid var(--todo-border);
     box-shadow: var(--todo-shadow);
     transition: all 0.3s ease;
-    animation: slideUp 0.4s ease-out;
+    transition: all 0.3s ease;
 }
 
 .task-card:hover {

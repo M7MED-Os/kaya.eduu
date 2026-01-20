@@ -1165,6 +1165,12 @@ window.openEditStudent = async (id) => {
                     <span>تفعيل الحساب (يسمح للطالب بدخول المنصة)</span>
                 </label>
             </div>
+            <div class="form-group">
+                <label style="display:flex; align-items:center; gap:10px; cursor:pointer; color: var(--primary-color); font-weight: bold;">
+                    <input type="checkbox" id="editShowLeaderboard" style="width:20px; height:20px;" ${student.show_on_leaderboard !== false ? 'checked' : ''}>
+                    <span>الظهور في لوحة المتصدرين</span>
+                </label>
+            </div>
         `,
         onSave: async () => {
             const updates = {
@@ -1175,6 +1181,7 @@ window.openEditStudent = async (id) => {
                 stream: document.getElementById('editStream').value || null,
                 term: document.getElementById('editTerm').value || null,
                 is_active: document.getElementById('editIsActive').checked,
+                show_on_leaderboard: document.getElementById('editShowLeaderboard').checked,
                 subscription_ends_at: document.getElementById('editExpiry').value || null,
             };
 
