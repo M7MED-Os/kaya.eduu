@@ -1,4 +1,5 @@
 import { supabase } from "./supabaseClient.js";
+import { showToast } from "./utils.js";
 
 // ==========================
 // 1. Auth Check
@@ -20,26 +21,6 @@ async function checkAuth() {
 // ==========================
 // 2. UI Helpers (Toast)
 // ==========================
-function showToast(message, type = "success") {
-    let container = document.querySelector(".toast-container");
-    if (!container) {
-        container = document.createElement("div");
-        container.className = "toast-container";
-        document.body.appendChild(container);
-    }
-    const toast = document.createElement("div");
-    toast.className = `toast ${type}`;
-    const iconClass = type === "success" ? "fa-check-circle" : "fa-exclamation-circle";
-    toast.innerHTML = `<i class="fas ${iconClass}"></i><span class="toast-message">${message}</span>`;
-    container.appendChild(toast);
-    setTimeout(() => {
-        toast.style.animation = "fadeOut 0.4s ease forwards";
-        toast.addEventListener("animationend", () => {
-            toast.remove();
-            if (container.children.length === 0) container.remove();
-        });
-    }, 3000);
-}
 
 // ==========================
 // 3. Load Profile Logic

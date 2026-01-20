@@ -1,4 +1,5 @@
 import { supabase } from "./supabaseClient.js";
+import { showToast, showInputError, clearInputError } from "./utils.js";
 
 // ==========================
 // 1. Auth State Management
@@ -167,67 +168,6 @@ if (document.readyState === 'loading') {
 }
 
 // ==========================
-// 3. Toast Notifications
-// ==========================
-
-function showToast(message, type = "success") {
-    // 1. Get or Create Container
-    let container = document.querySelector(".toast-container");
-    if (!container) {
-        container = document.createElement("div");
-        container.className = "toast-container";
-        document.body.appendChild(container); // Appending to body is fine now as CSS handles fixed position
-    }
-
-    // 2. Create Toast
-    const toast = document.createElement("div");
-    toast.className = `toast ${type}`; // Correct: "toast success"
-
-    // Add content (Icon + Message)
-    const iconClass = type === "success" ? "fa-check-circle" : "fa-exclamation-circle";
-    toast.innerHTML = `
-        <i class="fas ${iconClass}"></i>
-        <span class="toast-message">${message}</span>
-    `;
-
-    // 3. Append to Container
-    container.appendChild(toast);
-
-    // 4. Handle Removal (Animation is handled by CSS keyframes on mount)
-    setTimeout(() => {
-        toast.style.animation = "fadeOut 0.4s ease forwards";
-        toast.addEventListener("animationend", () => {
-            toast.remove();
-            if (container.children.length === 0) {
-                container.remove(); // Cleanup container if empty
-            }
-        });
-    }, 2000);
-}
-
-// ==========================
-// 4. Input Error Handling
-// ==========================
-
-function showInputError(inputElement, message) {
-    if (!inputElement) return;
-    clearInputError(inputElement);
-    inputElement.classList.add("input-error");
-    const errorMsg = document.createElement("small");
-    errorMsg.className = "error-message";
-    errorMsg.textContent = message;
-    inputElement.parentNode.insertBefore(errorMsg, inputElement.nextSibling);
-    inputElement.addEventListener("input", () => clearInputError(inputElement), {
-        once: true,
-    });
-}
-
-function clearInputError(inputElement) {
-    if (!inputElement) return;
-    inputElement.classList.remove("input-error");
-    const errorMsg = inputElement.parentNode.querySelector(".error-message");
-    if (errorMsg) errorMsg.remove();
-}
 
 // ==========================
 // 5. Registration Form
