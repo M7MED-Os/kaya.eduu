@@ -45,6 +45,8 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  /* Remove tap highlight */
+  -webkit-tap-highlight-color: transparent;
 }
 
 html {
@@ -53,9 +55,6 @@ html {
 }
 
 /* App-Like Enhancements (Part 1) */
--webkit-tap-highlight-color: transparent;
-/* Remove tap highlight */
-}
 
 /* Hide Scrollbar but allow scrolling */
 ::-webkit-scrollbar {
@@ -203,6 +202,7 @@ img {
   top: 0;
   z-index: 1000;
   padding: 1rem 0;
+  padding-top: calc(1rem + env(safe-area-inset-top));
 }
 
 .navbar .container {
@@ -1092,4 +1092,16 @@ html[dir='rtl'] .step-item:not(:last-child)::after {
 .review-question .choice-img {
   max-width: 100px;
   max-height: 100px;
+}
+
+/* App-Like Enhancements (Part 2) */
+
+/* Prevent iOS zoom on input focus */
+@media (max-width: 768px) {
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }

@@ -132,6 +132,20 @@ if (logoutBtn) {
     });
 }
 
+// Bottom nav logout
+const bottomLogoutBtn = document.getElementById("bottomLogoutBtn");
+if (bottomLogoutBtn) {
+    bottomLogoutBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            console.error("Logout error:", error);
+        } else {
+            window.location.href = "login.html";
+        }
+    });
+}
+
 // ==========================
 // 3. Toast Notifications
 // ==========================
@@ -494,9 +508,13 @@ async function loadUserProfile() {
             if (profile.role === 'admin') {
                 const adminBtn = document.getElementById('adminNavBtn');
                 if (adminBtn) adminBtn.style.display = 'block';
+                const bottomAdminBtn = document.getElementById('bottomAdminBtn');
+                if (bottomAdminBtn) bottomAdminBtn.style.display = 'flex';
             } else {
                 const adminBtn = document.getElementById('adminNavBtn');
                 if (adminBtn) adminBtn.remove();
+                const bottomAdminBtn = document.getElementById('bottomAdminBtn');
+                if (bottomAdminBtn) bottomAdminBtn.remove();
             }
         }
 
