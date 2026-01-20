@@ -258,7 +258,7 @@ window.openAddSubjectModal = () => {
         onSave: async () => {
             const name = document.getElementById('subjectName').value;
             const order = document.getElementById('subjectOrder').value;
-            if (!name) return alert('الاسم مطلوب');
+            if (!name) return Swal.fire('تنبيه', 'الاسم مطلوب', 'warning');
 
             const payload = {
                 name_ar: name,
@@ -270,8 +270,8 @@ window.openAddSubjectModal = () => {
             else payload.term = currentContext.termOrStream;
 
             const { error } = await supabase.from('subjects').insert(payload);
-            if (error) alert(error.message);
-            else { closeModal(); loadSubjects(); }
+            if (error) Swal.fire('خطأ', error.message, 'error');
+            else { closeModal(); loadSubjects(); Swal.fire('تم', 'تمت إضافة المادة بنجاح', 'success'); }
         }
     });
 };
@@ -292,24 +292,39 @@ window.openEditSubjectModal = (sub) => {
         onSave: async () => {
             const name = document.getElementById('editSubName').value;
             const order = document.getElementById('editSubOrder').value;
-            if (!name) return alert('الاسم مطلوب');
+            if (!name) return Swal.fire('تنبيه', 'الاسم مطلوب', 'warning');
 
             const { error } = await supabase.from('subjects').update({
                 name_ar: name,
                 order_index: order
             }).eq('id', sub.id);
 
-            if (error) alert(error.message);
-            else { closeModal(); loadSubjects(); }
+            if (error) Swal.fire('خطأ', error.message, 'error');
+            else { closeModal(); loadSubjects(); Swal.fire('تم', 'تم التعديل بنجاح', 'success'); }
         }
     });
 };
 
 window.deleteSubject = async (id) => {
-    if (!confirm('حذف المادة سيحذف كل المحتوى بداخلها. هل أنت متأكد؟')) return;
+    const result = await Swal.fire({
+        title: 'هل أنت متأكد؟',
+        text: "حذف المادة سيحذف كل المحتوى بداخلها!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'نعم، احذفها',
+        cancelButtonText: 'إلغاء'
+    });
+
+    if (!result.isConfirmed) return;
+
     const { error } = await supabase.from('subjects').delete().eq('id', id);
-    if (error) alert(error.message);
-    else loadSubjects();
+    if (error) Swal.fire('خطأ', error.message, 'error');
+    else {
+        loadSubjects();
+        Swal.fire('تم الحذف!', 'تم حذف المادة بنجاح.', 'success');
+    }
 };
 
 
@@ -415,7 +430,7 @@ function createTreeNode({ type, data, label, icon, indent = 0, color = '' }) {
 // ==========================================
 
 window.openAddChapterModal = () => {
-    if (!currentContext.subject) return alert("اختر مادة أولاً");
+    if (!currentContext.subject) return Swal.fire('تنبيه', 'اختر مادة أولاً', 'warning');
 
     openModal({
         title: 'إضافة باب جديد',
@@ -438,8 +453,8 @@ window.openAddChapterModal = () => {
                 title, order_index: order
             });
 
-            if (error) alert(error.message);
-            else { closeModal(); loadContentTree(); }
+            if (error) Swal.fire('خطأ', error.message, 'error');
+            else { closeModal(); loadContentTree(); Swal.fire('تم', 'تمت الإضافة بنجاح', 'success'); }
         }
     });
 };
@@ -520,10 +535,23 @@ window.openAddExamModal = (parentType, parentId) => {
 }
 
 window.deleteItem = async (table, id) => {
-    if (!confirm('هل أنت متأكد من الحذف؟')) return;
+    const result = await Swal.fire({
+        title: 'هل أنت متأكد؟',
+        text: "لا يمكن التراجع عن هذا الإجراء!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'نعم، احذف',
+        cancelButtonText: 'إلغاء'
+    });
+
+    if (!result.isConfirmed) return;
+
     await supabase.from(table).delete().eq('id', id);
     loadContentTree();
     document.getElementById('editorPanel').innerHTML = ''; // Clear editor
+    Swal.fire('تم الحذف!', 'تم حذف العنصر بنجاح.', 'success');
 };
 
 window.openEditNodeModal = (type, data) => {
@@ -545,17 +573,18 @@ window.openEditNodeModal = (type, data) => {
         onSave: async () => {
             const newTitle = document.getElementById('editNodeTitle').value;
             const newOrder = document.getElementById('editNodeOrder').value;
-            if (!newTitle) return alert('العنوان مطلوب');
+            if (!newTitle) return Swal.fire('تنبيه', 'العنوان مطلوب', 'warning');
 
             const { error } = await supabase.from(tables[type]).update({
                 title: newTitle,
                 order_index: newOrder
             }).eq('id', data.id);
 
-            if (error) alert(error.message);
+            if (error) Swal.fire('خطأ', error.message, 'error');
             else {
                 closeModal();
                 loadContentTree();
+                Swal.fire('تم', 'تم التعديل بنجاح', 'success');
             }
         }
     });

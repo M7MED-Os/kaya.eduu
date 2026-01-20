@@ -35,8 +35,14 @@ const mobileNavGrid = document.getElementById("mobileNavGrid");
 
 // Check Auth & ID
 if (!examId) {
-    alert("امتحان غير موجود");
-    window.location.href = "dashboard.html";
+    Swal.fire({
+        icon: 'error',
+        title: 'خطأ',
+        text: 'امتحان غير موجود',
+        confirmButtonText: 'عودة'
+    }).then(() => {
+        window.location.href = "dashboard.html";
+    });
 }
 
 async function initExam() {
@@ -439,7 +445,13 @@ async function calculateResult() {
 
     } catch (err) {
         console.error("Submission Error:", err);
-        scoreValEl.innerHTML = '<span style="color:red; font-size:1rem;">فشل في إرسال النتيجة. تأكد من اتصال الإنترنت.</span>';
+        Swal.fire({
+            icon: 'error',
+            title: 'خطأ',
+            text: 'فشل في إرسال النتيجة. تأكد من اتصال الإنترنت.',
+            confirmButtonText: 'حسناً'
+        });
+        scoreValEl.innerHTML = '<span style="color:red; font-size:1rem;">فشل الإرسال</span>';
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });

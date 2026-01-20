@@ -52,21 +52,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (name && email && message) {
                 // Simulate submission
-                alert('شكراً لتواصلك معنا! سنقوم بالرد عليك في أقرب وقت.');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تم الإرسال',
+                    text: 'شكراً لتواصلك معنا! سنقوم بالرد عليك في أقرب وقت.',
+                    confirmButtonText: 'حسناً'
+                });
                 contactForm.reset();
             } else {
-                alert('يرجى ملء جميع الحقول المطلوبة.');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'تنبيه',
+                    text: 'يرجى ملء جميع الحقول المطلوبة.',
+                    confirmButtonText: 'حسناً'
+                });
             }
         });
     }
 });
 
-// PWA Service Worker Registration
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('SW Registered!', reg))
-            .catch(err => console.log('SW Error:', err));
-    });
-}
+
 
