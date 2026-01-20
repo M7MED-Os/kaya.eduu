@@ -45,8 +45,6 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  /* Remove tap highlight */
-  -webkit-tap-highlight-color: transparent;
 }
 
 html {
@@ -56,10 +54,6 @@ html {
 
 /* App-Like Enhancements (Part 1) */
 
-/* Hide Scrollbar but allow scrolling */
-::-webkit-scrollbar {
-  display: none;
-}
 
 body {
   font-family: 'Cairo', sans-serif;
@@ -77,25 +71,6 @@ body {
   /* Firefox */
 }
 
-/* Prevent text selection on UI elements */
-a,
-button,
-.btn,
-.navbar,
-.footer,
-.card-header,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-.stat-label,
-.section-title,
-.section-subtitle {
-  user-select: none;
-  -webkit-user-select: none;
-}
 
 a {
   text-decoration: none;
@@ -104,15 +79,6 @@ a {
   cursor: pointer;
 }
 
-/* Active State (Touch Feedback) */
-a:active,
-button:active,
-.btn:active,
-.card:active,
-.subject-card:active {
-  transform: scale(0.98);
-  opacity: 0.9;
-}
 
 ul {
   list-style: none;
@@ -1257,5 +1223,45 @@ input:focus-visible {
   body:has(#loginForm) .page-header,
   body:has(#registerForm) .page-header {
     padding-top: 2rem;
+  }
+
+  /* App-Like Enhancements (PWA Only) */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Hide Scrollbar but allow scrolling */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Prevent text selection on UI elements */
+  a,
+  button,
+  .btn,
+  .navbar,
+  .footer,
+  .card-header,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .stat-label,
+  .section-title,
+  .section-subtitle {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Active State (Touch Feedback) */
+  a:active,
+  button:active,
+  .btn:active,
+  .card:active,
+  .subject-card:active {
+    transform: scale(0.98);
+    opacity: 0.9;
   }
 }

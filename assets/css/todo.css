@@ -288,7 +288,7 @@
     display: flex;
     gap: 8px;
     flex-shrink: 0;
-    background: white;
+    background: transparent;
     /* Ensures buttons don't overlap text if overflowed */
     padding-right: 5px;
 }
