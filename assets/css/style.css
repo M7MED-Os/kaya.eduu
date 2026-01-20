@@ -52,6 +52,16 @@ html {
   scroll-behavior: smooth;
 }
 
+/* App-Like Enhancements (Part 1) */
+-webkit-tap-highlight-color: transparent;
+/* Remove tap highlight */
+}
+
+/* Hide Scrollbar but allow scrolling */
+::-webkit-scrollbar {
+  display: none;
+}
+
 body {
   font-family: 'Cairo', sans-serif;
   /* Arabic Friendly Font */
@@ -62,12 +72,47 @@ body {
   /* Right to Left for Arabic */
   text-align: right;
   overflow-x: hidden;
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+/* Prevent text selection on UI elements */
+a,
+button,
+.btn,
+.navbar,
+.footer,
+.card-header,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.stat-label,
+.section-title,
+.section-subtitle {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 a {
   text-decoration: none;
   color: inherit;
   transition: var(--transition);
+  cursor: pointer;
+}
+
+/* Active State (Touch Feedback) */
+a:active,
+button:active,
+.btn:active,
+.card:active,
+.subject-card:active {
+  transform: scale(0.98);
+  opacity: 0.9;
 }
 
 ul {
