@@ -3,10 +3,11 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>المادة الدراسية | ثانوية.كوم</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="assets/css/bottom-nav.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 </head>
@@ -78,14 +79,36 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="copyright">
-                <p>&copy; 2026 ثانوية.كوم - جميع الحقوق محفوظة</p>
-            </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="bottom-nav-container">
+            <a href="dashboard.html" class="bottom-nav-item">
+                <i class="fas fa-home"></i>
+                <span>الرئيسية</span>
+            </a>
+            <a href="todo.html" class="bottom-nav-item">
+                <i class="fas fa-tasks"></i>
+                <span>المهام</span>
+            </a>
+            <a href="leaderboard.html" class="bottom-nav-item">
+                <i class="fas fa-trophy"></i>
+                <span>الأوائل</span>
+            </a>
+            <a href="profile.html" class="bottom-nav-item">
+                <i class="fas fa-user"></i>
+                <span>البروفايل</span>
+            </a>
+            <a href="#" id="bottomLogoutBtn" class="bottom-nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>خروج</span>
+            </a>
+            <a href="admin.html" id="bottomAdminBtn" class="bottom-nav-item admin-link" style="display: none;">
+                <i class="fas fa-shield-alt"></i>
+                <span>Admin</span>
+            </a>
         </div>
-    </footer>
+    </nav>
 
     <script src="assets/js/main.js"></script>
     <script type="module" src="assets/js/auth.js"></script>
