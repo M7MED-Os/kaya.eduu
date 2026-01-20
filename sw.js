@@ -1,9 +1,10 @@
-const CACHE_NAME = 'thanaweya-v3'; // Incremented version
+const CACHE_NAME = 'thanaweya-v4'; // Incremented version
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './login.html',
     './dashboard.html',
+    './offline.html',
     './assets/css/style.css',
     './assets/js/main.js',
     './assets/js/auth.js',
@@ -40,34 +41,63 @@ self.addEventListener('fetch', (event) => {
     }
 
     // 2. Images & Fonts -> Cache First (Save Data!)
-    // If found in cache, use it. If not, fetch from net and cache it.
     if (event.request.destination === 'image' || event.request.destination === 'font' || url.pathname.match(/\.(png|jpg|jpeg|svg|gif|woff2)$/)) {
         event.respondWith(
             caches.match(event.request).then((cachedResponse) => {
                 if (cachedResponse) return cachedResponse;
-                return fetch(event.request).then((networkResponse) => {
-                    return caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(event.request, networkResponse.clone());
-                        return networkResponse;
+                return fetch(event.request)
+                    .then((networkResponse) => {
+                        return caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, networkResponse.clone());
+                            return networkResponse;
+                        });
+                    })
+                    .catch(() => {
+                        // Return nothing or a placeholder if image fails
+                        return new Response('', { status: 404, statusText: 'Not Found' });
                     });
-                });
             })
         );
         return;
     }
 
-    // 3. HTML, JS, CSS -> Network First (Ensure Updates)
-    // Try network. If fails (offline), use cache.
+    // 3. HTML (Navigation) -> Network First, Fallback to Offline Page
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request)
+                .then((networkResponse) => {
+                    return caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, networkResponse.clone());
+                        return networkResponse;
+                    });
+                })
+                .catch(() => {
+                    return caches.match(event.request).then((cachedResponse) => {
+                        if (cachedResponse) return cachedResponse;
+                        return caches.match('./offline.html');
+                    });
+                })
+        );
+        return;
+    }
+
+    // 4. JS, CSS -> Network First
     event.respondWith(
         fetch(event.request)
             .then((networkResponse) => {
                 return caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, networkResponse.clone()); // Update cache with new version
+                    cache.put(event.request, networkResponse.clone());
                     return networkResponse;
                 });
             })
             .catch(() => {
-                return caches.match(event.request); // Fallback to offline cache
+                return caches.match(event.request).then((cachedResponse) => {
+                    // If not in cache, returning undefined here causes the error.
+                    // We should return a 404 or empty response if it's not critical, 
+                    // or ensure critical assets are undoubtedly in cache.
+                    if (cachedResponse) return cachedResponse;
+                    return new Response('', { status: 408, statusText: 'Request Timeout' });
+                });
             })
     );
 });

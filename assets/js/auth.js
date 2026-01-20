@@ -494,9 +494,15 @@ async function loadUserProfile() {
             if (profile.role === 'admin') {
                 const adminBtn = document.getElementById('adminNavBtn');
                 if (adminBtn) adminBtn.style.display = 'block';
+
+                const pwaAdminBtn = document.getElementById('pwaAdminBtn');
+                if (pwaAdminBtn) pwaAdminBtn.classList.add('is-admin');
             } else {
                 const adminBtn = document.getElementById('adminNavBtn');
                 if (adminBtn) adminBtn.remove();
+
+                const pwaAdminBtn = document.getElementById('pwaAdminBtn');
+                if (pwaAdminBtn) pwaAdminBtn.remove();
             }
         }
 

@@ -49,8 +49,9 @@
     }
 
     /* Hide standard mobile menu in dashboard if using bottom nav */
-    body.app-mode .navbar .menu-toggle {
-        display: none;
+    body.app-mode .navbar .menu-toggle,
+    body.app-mode .menu-toggle {
+        display: none !important;
     }
 
     /* Add padding to body so content isn't hidden behind nav */
@@ -61,5 +62,20 @@
     /* Hide footer on mobile app mode to feel infinite scrolling/app-like */
     body.app-mode .footer {
         display: none;
+    }
+
+    /* PWA Header Admin Button */
+    .pwa-header-admin-btn {
+        display: none !important;
+        margin-right: auto;
+        /* Push to left in RTL */
+        margin-left: 20px;
+        font-size: 1.4rem;
+        color: var(--secondary-color);
+        transition: transform 0.2s;
+    }
+
+    body.app-mode .pwa-header-admin-btn.is-admin {
+        display: block !important;
     }
 }
