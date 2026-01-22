@@ -806,9 +806,69 @@
                 font-size: 0.9rem;
             }
 
+
             .breadcrumbs {
                 font-size: 1rem;
                 max-width: 220px;
+            }
+
+            /* Charts Responsive */
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+
+        /* Prevent horizontal scroll globally */
+        .main-content {
+            overflow-x: hidden;
+            max-width: 100%;
+        }
+
+        .charts-grid {
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .chart-section {
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            min-height: 300px;
+        }
+
+        /* Charts Grid Responsive - Below 1000px stack vertically */
+        @media (max-width: 1000px) {
+            .charts-grid {
+                grid-template-columns: 1fr !important;
+                gap: 1.5rem !important;
+            }
+
+            .chart-section {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            .chart-container {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            /* Pie chart container */
+            .chart-section div[style*="width: 200px"] {
+                width: 250px !important;
+                height: 250px !important;
+                margin: 0 auto;
+            }
+        }
+
+        /* Above 1000px - Keep side by side but make responsive */
+        @media (min-width: 1001px) and (max-width: 1553px) {
+            .charts-grid {
+                grid-template-columns: 1.5fr 1fr !important;
             }
         }
 
@@ -1047,7 +1107,8 @@
                 </div>
 
                 <!-- Analysis Grid -->
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <div class="charts-grid"
+                    style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
                     <div class="chart-section">
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
