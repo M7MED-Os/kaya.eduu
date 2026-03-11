@@ -4,16 +4,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تواصل | ثانوية.كوم</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="manifest" href="manifest.json">
+
     <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="48x48" href="assets/images/favicon-48x48.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
-    <title>تواصل معنا | ثانوية.كوم</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        .contact-section {
+            padding: 4rem 0;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .contact-card {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .contact-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #03A9F4 0%, #0288D1 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1.5rem;
+        }
+
+        .contact-card.whatsapp .contact-icon {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+        }
+
+        .contact-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .contact-card p {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .contact-link {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-card.whatsapp .contact-link {
+            color: #25D366;
+        }
+
+        .faq-section {
+            background: #f8fafc;
+            padding: 4rem 0;
+        }
+
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .faq-item h4 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .faq-item p {
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+    </style>
 </head>
 
 <body>
@@ -22,7 +124,7 @@
     <nav class="navbar">
         <div class="container">
             <a href="index.html" class="logo">
-                <img src="assets/images/logo-icon.jpeg" alt="Logo" class="brand-icon">
+                <img src="assets/images/logo-icon.webp" alt="Logo" class="brand-icon">
                 <span class="logo-text">ثانوية<span class="logo-accent">.كوم</span></span>
             </a>
             <div class="menu-toggle">
@@ -30,89 +132,84 @@
             </div>
             <ul class="nav-links">
                 <li><a href="index.html">الرئيسية</a></li>
-                <li><a href="about.html">عن المنصة</a></li>
-                <li><a href="pricing.html">الأسعار</a></li>
-                <li><a href="contact.html" class="active">تواصل معنا</a></li>
+                <li><a href="pricing.html">الاشتراكات</a></li>
+                <li><a href="contact.html" class="active">تواصل</a></li>
                 <li><a href="login.html" class="btn btn-primary">تسجيل الدخول</a></li>
             </ul>
         </div>
     </nav>
 
-    <!-- Page Header -->
+    <!-- Hero -->
     <header class="page-header">
         <div class="container">
-            <h1>تواصل معنا</h1>
-            <p>احنا هنا عشان نساعدك و نجاوب على استفساراتك</p>
+            <h1>تواصل</h1>
+            <p>لو عندك اي سؤال ابعت تليجرام او واتس</p>
         </div>
     </header>
 
     <!-- Contact Section -->
-    <section class="section">
+    <section class="contact-section">
         <div class="container">
-            <div class="grid-2 contact-grid">
-                <!-- Contact Info -->
-                <div class="contact-info">
-                    <h2 class="section-title">بيانات الاتصال</h2>
-                    <p class="mb-4">تقدر تتواصل معانا بالطرق دي:</p>
 
-                    <div class="info-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <div>
-                            <h4>العنوان</h4>
-                            <p>123 شارع التحرير، الدقي، القاهرة</p>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-phone"></i>
-                        <div>
-                            <h4>الهاتف</h4>
-                            <p>01000000000</p>
-                            <p>01100000000</p>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-envelope"></i>
-                        <div>
-                            <h4>البريد الإلكتروني</h4>
-                            <p>support@thanaweya.com</p>
-                        </div>
-                    </div>
+            <div class="contact-grid">
 
-                    <div class="social-links mt-4">
-                        <a href="#"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-youtube"></i></a>
+                <!-- Telegram -->
+                <div class="contact-card">
+                    <div class="contact-icon">
+                        <i class="fab fa-telegram"></i>
                     </div>
+                    <h3>تليجرام</h3>
+                    <p>لو عندك اي سؤال او في حاجه مش واضحه كلمني تليجرام</p>
+                    <a href="https://t.me/M7_KAYA" target="_blank" class="contact-link">
+                        @M7_KAYA
+                    </a>
+                    <a href="https://t.me/M7_KAYA" target="_blank" class="btn btn-primary" style="width: 100%;">
+                        <i class="fab fa-telegram"></i> تواصل دلوقتي
+                    </a>
                 </div>
 
-                <!-- Contact Form -->
-                <div class="contact-form-wrapper card">
-                    <form id="contactForm">
-                        <div class="form-group">
-                            <label for="name">الاسم بالكامل</label>
-                            <input type="text" id="name" class="form-control" placeholder="أحمد محمد" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="email">البريد الإلكتروني</label>
-                            <input type="email" id="email" class="form-control" placeholder="example@email.com"
-                                required>
-                        </div>
-                        <div class="form-group">
-                            <label for="subject">الموضوع</label>
-                            <select id="subject" class="form-control">
-                                <option value="inquiry">استفسار عام</option>
-                                <option value="support">دعم فني</option>
-                                <option value="sales">المبيعات والاشتراكات</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="message">الرسالة</label>
-                            <textarea id="message" rows="5" class="form-control" placeholder="اكتب رسالتك هنا..."
-                                required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary full-width">إرسال الرسالة</button>
-                    </form>
+                <!-- WhatsApp -->
+                <div class="contact-card whatsapp">
+                    <div class="contact-icon">
+                        <i class="fab fa-whatsapp"></i>
+                    </div>
+                    <h3>واتساب</h3>
+                    <p>لو اشتركت ودفعت ابعتلي على الواتس الايميل اللي سجلت بيه</p>
+                    <a href="https://wa.me/201117691093" target="_blank" class="contact-link">
+                        01117691093
+                    </a>
+                    <a href="https://wa.me/201117691093" target="_blank" class="btn btn-primary"
+                        style="width: 100%; background: #25D366;">
+                        <i class="fab fa-whatsapp"></i>تواصل دلوقتي
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="container">
+            <div class="text-center" style="margin-bottom: 3rem;">
+                <h2 class="section-title">الأسئلة الشائعة</h2>
+                <p class="section-subtitle">إجابات سريعة على شوية أسئلة</p>
+            </div>
+
+            <div class="faq-container">
+                <div class="faq-item">
+                    <h4><i class="fas fa-question-circle"></i> ادفع ازاي؟</h4>
+                    <p>تقدر تدفع عن طريق فودافون كاش او اي محفظة، أو انستا باي (InstaPay) بكل سهولة.</p>
+                </div>
+                <div class="faq-item">
+                    <h4><i class="fas fa-question-circle"></i> إزاي أحمل التطبيق؟</h4>
+                    <p>لما تفتح اللينك على كروم(لو على التليجرام خد لينك المنصة كوبي وانسخه في كروم)، هتلاقي زرار
+                        التنزيل ظهر اتكى تثبيت هينزل على طول و مش بياخد مساحة من
+                        موبايلك.</p>
+                </div>
+                <div class="faq-item">
+                    <h4><i class="fas fa-question-circle"></i> مش عارف اعمل اكونت؟</h4>
+                    <p>كلمني على التليجرام أو الواتس، وهخليك تعمل الاكونت و افعلك الحساب على طول.</p>
                 </div>
             </div>
         </div>
@@ -123,35 +220,36 @@
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-col">
-                    <h3>عن ثانوية.كوم</h3>
-                    <p>منصة تعليمية للامتحانات متكاملة تهدف لتطوير مستوى طلاب الثانوية العامة في مصر وتقديم تجربة
-                        تعليمية فريدة.
-                    </p>
+                    <div class="logo">
+                        <img src="assets/images/logo-icon.webp" alt="Logo" class="brand-icon">
+                        <span class="logo-text">ثانوية<span class="logo-accent">.كوم</span></span>
+                    </div>
+                    <p style="margin-top:1rem; opacity:0.8;">منصة تعليمية متكاملة لطلاب الثانوية العامة</p>
                 </div>
                 <div class="footer-col">
                     <h3>روابط سريعة</h3>
                     <ul class="footer-links">
-                        <li><a href="about.html">من نحن</a></li>
-                        <li><a href="pricing.html">خطط الاشتراك</a></li>
-                        <li><a href="contact.html">اتصل بنا</a></li>
+                        <li><a href="pricing.html">الاشتراكات</a></li>
+                        <li><a href="contact.html">تواصل</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
-                    <h3>تواصل معنا</h3>
+                    <h3>تواصل</h3>
                     <ul class="footer-links">
-                        <li><i class="fas fa-phone"></i> 01000000000</li>
-                        <li><i class="fas fa-envelope"></i> thanaweya@gmail.com</li>
-                        <li><i class="fas fa-map-marker-alt"></i> القليوبية، مصر</li>
+                        <li><a href="https://t.me/M7_KAYA" target="_blank"><i class="fab fa-telegram"></i> @M7_KAYA</a>
+                        </li>
+                        <li><a href="https://wa.me/201117691093" target="_blank"><i class="fab fa-whatsapp"></i>
+                                01117691093</a></li>
                     </ul>
                 </div>
             </div>
             <div class="copyright">
-                <p>&copy; 2026 ثانوية.كوم - جميع الحقوق محفوظة</p>
+                <p style="direction: ltr;">&copy; 2026 Thanawya.com. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
-    <script src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/main.js"></script>
 </body>
 
 </html>

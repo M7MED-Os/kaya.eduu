@@ -4,15 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنشاء حساب جديد | ثانوية.كوم</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="manifest" href="manifest.json">
+
     <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="48x48" href="assets/images/favicon-48x48.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
-    <title>إنشاء حساب جديد | ثانوية.كوم</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         .auth-card {
             max-width: 500px;
@@ -27,7 +29,7 @@
     <nav class="navbar">
         <div class="container">
             <a href="index.html" class="logo">
-                <img src="assets/images/logo-icon.jpeg" alt="Logo" class="brand-icon">
+                <img src="assets/images/logo-icon.webp" alt="Logo" class="brand-icon">
                 <span class="logo-text">ثانوية<span class="logo-accent">.كوم</span></span>
             </a>
             <div class="menu-toggle">
@@ -35,9 +37,8 @@
             </div>
             <ul class="nav-links">
                 <li><a href="index.html">الرئيسية</a></li>
-                <li><a href="about.html">عن المنصة</a></li>
-                <li><a href="pricing.html">الأسعار</a></li>
-                <li><a href="contact.html">تواصل معنا</a></li>
+                <li><a href="pricing.html">الاشتراكات</a></li>
+                <li><a href="contact.html">تواصل</a></li>
                 <li><a href="login.html" class="btn btn-primary">تسجيل الدخول</a></li>
             </ul>
         </div>
@@ -46,8 +47,8 @@
     <!-- Page Header -->
     <header class="page-header">
         <div class="container">
-            <h1>إنشاء حساب جديد</h1>
-            <p>انضم لينا النهاردة وابدأ رحلة التفوق</p>
+            <h1>حساب جديد</h1>
+            <p>الخطوات سهله و سريعة لو مش عارف كلمني</p>
         </div>
     </header>
 
@@ -63,32 +64,30 @@
 
                     <div class="row" style="display: flex; gap: 1rem;">
                         <div class="form-group" style="flex: 1;">
-                            <label for="grade">السنة الدراسية</label>
-                            <select id="grade" class="form-control" required>
+                            <label for="academicYear">السنة الدراسية</label>
+                            <select id="academicYear" class="form-control" required>
                                 <option value="" disabled selected>اختر السنة</option>
-                                <option value="1" disabled>أولى ثانوي</option>
-                                <option value="2" disabled>تانية ثانوي</option>
-                                <option value="3">تالتة ثانوي</option>
+                                <option value="first_year">سنة أولى ثانوي</option>
+                                <option value="second_year">سنة تانية ثانوي</option>
+                                <option value="third_year">سنة تالتة ثانوي</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="form-group" id="termGroup" style="display: none;">
-                        <label for="term">الترم</label>
-                        <select id="term" class="form-control">
+                        <label for="currentTerm">الترم</label>
+                        <select id="currentTerm" class="form-control">
                             <option value="" disabled selected>اختر الترم</option>
-                            <option value="1" disabled>الترم الأول</option>
-                            <option value="2" disabled>الترم الثاني</option>
+                            <option value="first_term">الترم الأول</option>
+                            <option value="second_term">الترم الثاني</option>
                         </select>
                     </div>
 
-                    <div class="form-group" id="streamGroup" style="display: none;">
-                        <label for="stream">الشعبة</label>
-                        <select id="stream" class="form-control">
+                    <div class="form-group" id="departmentGroup" style="display: none;">
+                        <label for="department">الشعبة</label>
+                        <select id="department" class="form-control">
                             <option value="" disabled selected>اختر الشعبة</option>
-                            <option value="science_bio">علمي علوم</option>
-                            <option value="science_math">علمي رياضة</option>
-                            <option value="literature">أدبي</option>
+                            <!-- Options will be populated dynamically by JS based on year -->
                         </select>
                     </div>
 
@@ -119,35 +118,36 @@
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-col">
-                    <h3>عن ثانوية.كوم</h3>
-                    <p>منصة تعليمية للامتحانات متكاملة تهدف لتطوير مستوى طلاب الثانوية العامة في مصر وتقديم تجربة
-                        تعليمية فريدة.
-                    </p>
+                    <div class="logo">
+                        <img src="assets/images/logo-icon.webp" alt="Logo" class="brand-icon">
+                        <span class="logo-text">ثانوية<span class="logo-accent">.كوم</span></span>
+                    </div>
+                    <p style="margin-top:1rem; opacity:0.8;">منصة تعليمية متكاملة لطلاب الثانوية العامة</p>
                 </div>
                 <div class="footer-col">
                     <h3>روابط سريعة</h3>
                     <ul class="footer-links">
-                        <li><a href="about.html">من نحن</a></li>
-                        <li><a href="pricing.html">خطط الاشتراك</a></li>
-                        <li><a href="contact.html">اتصل بنا</a></li>
+                        <li><a href="pricing.html">الاشتراكات</a></li>
+                        <li><a href="contact.html">تواصل</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
-                    <h3>تواصل معنا</h3>
+                    <h3>تواصل</h3>
                     <ul class="footer-links">
-                        <li><i class="fas fa-phone"></i> 01000000000</li>
-                        <li><i class="fas fa-envelope"></i> thanaweya@gmail.com</li>
-                        <li><i class="fas fa-map-marker-alt"></i> القليوبية، مصر</li>
+                        <li><a href="https://t.me/M7_KAYA" target="_blank"><i class="fab fa-telegram"></i> @M7_KAYA</a>
+                        </li>
+                        <li><a href="https://wa.me/201117691093" target="_blank"><i class="fab fa-whatsapp"></i>
+                                01117691093</a></li>
                     </ul>
                 </div>
             </div>
             <div class="copyright">
-                <p>&copy; 2026 ثانوية.كوم - جميع الحقوق محفوظة</p>
+                <p style="direction: ltr;">&copy; 2026 Thanawya.com. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
-    <script src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/main.js"></script>
     <script type="module" src="assets/js/auth.js"></script>
 
 </body>

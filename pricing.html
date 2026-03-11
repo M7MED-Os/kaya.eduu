@@ -4,15 +4,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الاشتراكات | ثانوية.كوم</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="manifest" href="manifest.json">
+
     <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="48x48" href="assets/images/favicon-48x48.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
-    <title>باقات الاشتراك | ثانوية.كوم</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        .pricing-section {
+            padding: 4rem 0;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3.5rem 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .pricing-card.featured {
+            border-color: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .pricing-card.featured::before {
+            content: 'لعدد محدود';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #03A9F4 0%, #0288D1 100%);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .pricing-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .price {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--primary-color);
+            margin: 1rem 0;
+        }
+
+        .price small {
+            font-size: 1rem;
+            color: var(--text-light);
+            font-weight: 400;
+        }
+
+        .old-price {
+            text-decoration: line-through;
+            color: #ef4444;
+            font-size: 1.1rem;
+            /* Smaller font size */
+            margin-top: -0.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            opacity: 0.8;
+        }
+
+        .discount-badge {
+            display: inline-block;
+            background: #FFC107;
+            color: #000;
+            padding: 0.3rem 1rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .features-list {
+            list-style: none;
+            padding: 0;
+            margin: 2rem 0;
+            text-align: right;
+        }
+
+        .features-list li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .features-list li:last-child {
+            border-bottom: none;
+        }
+
+        .features-list i {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+
+        .cta-note {
+            background: #f8fafc;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        .cta-note h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+    </style>
 </head>
 
 <body>
@@ -21,7 +150,7 @@
     <nav class="navbar">
         <div class="container">
             <a href="index.html" class="logo">
-                <img src="assets/images/logo-icon.jpeg" alt="Logo" class="brand-icon">
+                <img src="assets/images/logo-icon.webp" alt="Logo" class="brand-icon">
                 <span class="logo-text">ثانوية<span class="logo-accent">.كوم</span></span>
             </a>
             <div class="menu-toggle">
@@ -29,124 +158,139 @@
             </div>
             <ul class="nav-links">
                 <li><a href="index.html">الرئيسية</a></li>
-                <li><a href="about.html">عن المنصة</a></li>
-                <li><a href="pricing.html" class="active">الأسعار</a></li>
-                <li><a href="contact.html">تواصل معنا</a></li>
+                <li><a href="pricing.html" class="active">الاشتراكات</a></li>
+                <li><a href="contact.html">تواصل</a></li>
                 <li><a href="login.html" class="btn btn-primary">تسجيل الدخول</a></li>
             </ul>
         </div>
     </nav>
 
-    <!-- Page Header -->
+    <!-- Hero -->
     <header class="page-header">
         <div class="container">
-            <h1>خطط الأسعار</h1>
-            <p>اختر الباقة المناسبة لاحتياجاتك وابدأ رحلة التفوق</p>
+            <h1>الاشتراكات</h1>
+            <p>المنصة دلوقتي ببلاش سجل حساب و كلمني افعله لك</p>
         </div>
     </header>
 
     <!-- Pricing Section -->
-    <section class="section">
+    <section class="pricing-section">
         <div class="container">
-            <!-- Toggle Period (Optional for future JS) -->
-            <div class="pricing-toggle text-center">
-                <!-- Placeholder for Monthly/Yearly toggle -->
-            </div>
+            <div class="pricing-grid">
 
-            <div class="grid-3 pricing-grid">
-                <!-- Basic Plan: Free -->
-                <div class="card pricing-card">
-                    <div class="card-header">
-                        <h3>جرب مجاناً</h3>
-                        <p>حل على أول درس بس من كل مادة</p>
-                    </div>
+                <!-- Free Trial -->
+                <div class="pricing-card">
+                    <h3>تجربة مجانية</h3>
                     <div class="price">
-                        <span class="currency">ج.م</span>
-                        <span class="amount">0</span>
+                        مجاناً
                     </div>
-                    <ul class="pricing-features">
-                        <li><i class="fas fa-check"></i> حل أسئلة أول درس</li>
-                        <li><i class="fas fa-check"></i> جرب نظام الامتحان</li>
-                        <li><i class="fas fa-check"></i> تصحيح في وقتها</li>
+                    <!-- <p style="color: var(--text-light); margin-bottom: 1.5rem;">لمدة...</p> -->
+                    <ul class="features-list">
+                        <li><i class="fas fa-check-circle"></i> أسئلة و امتحانات</li>
+                        <li><i class="fas fa-check-circle"></i> بنك الاخطاء</li>
+                        <li><i class="fas fa-check-circle"></i> تقديرك (في كل مادة و العام)</li>
+                        <li><i class="fas fa-check-circle"></i> محاضرات مترجمه</li>
+                        <li><i class="fas fa-check-circle"></i> تابع جدول الحصص والمحاضرات (Todo list)</li>
+                        <li><i class="fas fa-check-circle"></i> ذاكر مع صحابك في الشلة</li>
+                        <li><i class="fas fa-check-circle"></i> Todo list و Pomodoro</li>
+                        <li><i class="fas fa-check-circle"></i> نافس زمايلك (الاوائل)</li>
                     </ul>
-                    <a href="register.html" class="btn btn-outline full-width">ابدأ مجانًا</a>
+                    <a href="register.html" class="btn btn-outline" style="width: 100%;">
+                        <i class="fas fa-rocket"></i> ابدأ دلوقتي
+                    </a>
+                </div>
+
+                <!-- Term Plan -->
+                <div class="pricing-card featured">
+                    <h3>الترم كامل</h3>
+                    <div class="price">
+                        50 <small>جنيه/ترم</small>
+                    </div>
+                    <div class="old-price">80 جنيه</div>
+                    <p style="color: var(--primary-color); font-weight: 700; margin-bottom: 1.5rem;">
+                        <i class="fas fa-gift"></i> وفر 30 جنيه!
+                    </p>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check-circle"></i> أسئلة و امتحانات</li>
+                        <li><i class="fas fa-check-circle"></i> بنك الاخطاء</li>
+                        <li><i class="fas fa-check-circle"></i> تقديرك (في كل مادة و العام)</li>
+                        <li><i class="fas fa-check-circle"></i> محاضرات مترجمه</li>
+                        <li><i class="fas fa-check-circle"></i> تابع جدول الحصص والمحاضرات (Todo list)</li>
+                        <li><i class="fas fa-check-circle"></i> ذاكر مع صحابك في الشلة</li>
+                        <li><i class="fas fa-check-circle"></i> Todo list و Pomodoro</li>
+                        <li><i class="fas fa-check-circle"></i> نافس زمايلك (الاوائل)</li>
+                    </ul>
+                    <a href="https://t.me/M7_KAYA" class="btn btn-primary" style="width: 100%;">
+                        <i class="fas fa-star"></i> اشترك دلوقتي
+                    </a>
+                </div>
+
+                <!-- Three Friends Plan -->
+                <div class="pricing-card featured">
+                    <h3>عرض الصحاب</h3>
+                    <div class="price">
+                        120 <small>جنيه/للـ 3</small>
+                    </div>
+                    <div class="old-price">240 جنيه</div>
+                    <p style="color: var(--primary-color); font-weight: 700; margin-bottom: 1.5rem;">
+                        <i class="fas fa-gift"></i> وفر 120 جنيه!
+                    </p>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check-circle"></i> أسئلة و امتحانات</li>
+                        <li><i class="fas fa-check-circle"></i> بنك الاخطاء</li>
+                        <li><i class="fas fa-check-circle"></i> تقديرك (في كل مادة و العام)</li>
+                        <li><i class="fas fa-check-circle"></i> محاضرات مترجمه</li>
+                        <li><i class="fas fa-check-circle"></i> تابع جدول الحصص والمحاضرات (Todo list)</li>
+                        <li><i class="fas fa-check-circle"></i> ذاكر مع صحابك في الشلة</li>
+                        <li><i class="fas fa-check-circle"></i> Todo list و Pomodoro</li>
+                        <li><i class="fas fa-check-circle"></i> نافس زمايلك (الاوائل)</li>
+                    </ul>
+                    <a href="https://t.me/M7_KAYA" class="btn btn-primary"
+                        style="width: 100%; background: #10b981; border-color: #10b981;">
+                        <i class="fas fa-user-plus"></i> اشتركوا سوا
+                    </a>
                 </div>
 
                 <!-- Monthly Plan -->
-                <div class="card pricing-card">
-                    <div class="card-header">
-                        <h3>اشتراك شهري</h3>
-                        <p>حل براحتك في كل المواد</p>
+                <div class="pricing-card">
+                    <h3>الشهر</h3>
+                    <div class="price">
+                        30 <small>جنيه/شهر</small>
                     </div>
-                    <div class="price" style="flex-direction: column; gap: 0;">
-                        <div>
-                            <span class="amount">50</span>
-                            <span class="currency">ج.م</span>
-                            <span class="period" style="font-size: 0.8rem">/ شهر</span>
-                        </div>
-                        <div
-                            style="font-size: 1rem; font-weight: normal; color: var(--text-light); margin-top: 0.5rem;">
-                            بدل 70 ج.م
-                        </div>
-                    </div>
-                    <ul class="pricing-features">
-                        <li><i class="fas fa-check"></i> بنك أسئلة لكل المواد</li>
-                        <li><i class="fas fa-check"></i> أسئلة تغطي كل الدروس</li>
-                        <li><i class="fas fa-check"></i> امتحانات ملهاش حصر</li>
-                        <li><i class="fas fa-check"></i> اعرف الصح وليه</li>
+                    <!-- <div class="old-price">40 جنيه</div> -->
+                    <ul class="features-list">
+                        <li><i class="fas fa-check-circle"></i> أسئلة و امتحانات</li>
+                        <li><i class="fas fa-check-circle"></i> بنك الاخطاء</li>
+                        <li><i class="fas fa-check-circle"></i> تقديرك (في كل مادة و العام)</li>
+                        <li><i class="fas fa-check-circle"></i> محاضرات مترجمه</li>
+                        <li><i class="fas fa-check-circle"></i> تابع جدول الحصص والمحاضرات (Todo list)</li>
+                        <li><i class="fas fa-check-circle"></i> ذاكر مع صحابك في الشلة</li>
+                        <li><i class="fas fa-check-circle"></i> Todo list و Pomodoro</li>
+                        <li><i class="fas fa-check-circle"></i> نافس زمايلك (الاوائل)</li>
                     </ul>
-                    <p style="font-size: 0.8rem; color: #666; margin-bottom: 1rem;">يتم تجديد الاشتراك شهريًا</p>
-                    <a href="register.html" class="btn btn-primary full-width">اشترك الآن</a>
-                </div>
-
-                <!-- 3 Months Plan (Featured) -->
-                <div class="card pricing-card featured">
-                    <div class="badge">الأكثر توفيرًا</div>
-                    <div class="card-header">
-                        <h3>عرض 3 شهور</h3>
-                        <p>ركز ووفر فلوسك</p>
-                    </div>
-                    <div class="price" style="flex-direction: column; gap: 0;">
-                        <div>
-                            <span class="amount">150</span>
-                            <span class="currency">ج.م</span>
-                        </div>
-                        <div style="font-size: 1rem; text-decoration: line-through; color: #999; margin-top: 0.5rem;">
-                            بدل 210 ج.م
-                        </div>
-                    </div>
-                    <ul class="pricing-features">
-                        <li><i class="fas fa-check"></i> حسابك شغال 3 شهور</li>
-                        <li><i class="fas fa-check"></i> حل من غير حساب</li>
-                        <li><i class="fas fa-check"></i> امتحانات شاملة وجزئية</li>
-                        <li><i class="fas fa-check"></i> تابع مستواك أول بأول</li>
-                    </ul>
-                    <a href="register.html" class="btn btn-secondary full-width">وفر واشترك</a>
+                    <a href="https://t.me/M7_KAYA" class="btn btn-primary" style="width: 100%;">
+                        <i class="fas fa-shopping-cart"></i> اشترك دلوقتي
+                    </a>
                 </div>
             </div>
-        </div>
-    </section>
 
-    <!-- FAQ Section -->
-    <section class="section bg-light">
-        <div class="container">
-            <h2 class="section-title text-center">أسئلة شائعة</h2>
-            <div class="faq-grid">
-                <!-- <div class="faq-item">
-                    <h4>ينفع ألغي الاشتراك؟</h4>
-                    <p>أه طبعاً، في أي وقت من إعدادات حسابك.</p>
-                </div> -->
-                <div class="faq-item">
-                    <h4>أدفع ازاي؟</h4>
-                    <p>متاح فودافون كاش، فوري، أو أي كارت بنكي.</p>
-                </div>
-                <div class="faq-item">
-                    <h4>المحتوى ده لأي شعبة؟</h4>
-                    <p>لكل الشعب: علمي علوم، علمي رياضة، وأدبي.</p>
-                </div>
-                <div class="faq-item">
-                    <h4>لو عندي مشكلة أكلم مين؟</h4>
-                    <p>كلمنا شات على الموقع أو ابعتلنا على صفحة اتصل بنا.</p>
+            <!-- CTA Note -->
+            <div class="cta-note">
+                <h3><i class="fas fa-info-circle"></i> ملاحظة مهمة</h3>
+                <p style="font-size: 1.1rem; color: var(--text-dark); margin-bottom: 1rem;">
+                    كل الاشتراكات شاملة المحتوى كامل و كل المميزات
+                </p>
+                <p style="color: var(--text-light);">
+                    للاشتراك أو الاستفسار، كلمنا على:
+                </p>
+                <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap;">
+                    <a href="https://t.me/M7_KAYA" target="_blank" class="btn btn-primary">
+                        <i class="fab fa-telegram"></i> تليجرام
+                    </a>
+                    <a href="https://wa.me/201117691093" target="_blank" class="btn btn-primary"
+                        style="background: #25D366;">
+                        <i class="fab fa-whatsapp"></i> واتساب
+                    </a>
                 </div>
             </div>
         </div>
@@ -157,35 +301,37 @@
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-col">
-                    <h3>عن ثانوية.كوم</h3>
-                    <p>منصة تعليمية للامتحانات متكاملة تهدف لتطوير مستوى طلاب الثانوية العامة في مصر وتقديم تجربة
-                        تعليمية فريدة.
-                    </p>
+                    <div class="logo">
+                        <img src="assets/images/logo-icon.webp" alt="Logo" class="brand-icon">
+                        <span class="logo-text">ثانوية<span class="logo-accent">.كوم</span></span>
+                    </div>
+                    <p style="margin-top:1rem; opacity:0.8;">منصة تعليمية متكاملة لطلاب الثانوية العامة</p>
                 </div>
                 <div class="footer-col">
                     <h3>روابط سريعة</h3>
                     <ul class="footer-links">
-                        <li><a href="about.html">من نحن</a></li>
-                        <li><a href="pricing.html">خطط الاشتراك</a></li>
-                        <li><a href="contact.html">اتصل بنا</a></li>
+                        <li><a href="pricing.html">الاشتراكات</a></li>
+                        <li><a href="contact.html">تواصل</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
-                    <h3>تواصل معنا</h3>
+                    <h3>تواصل</h3>
                     <ul class="footer-links">
-                        <li><i class="fas fa-phone"></i> 01000000000</li>
-                        <li><i class="fas fa-envelope"></i> thanaweya@gmail.com</li>
-                        <li><i class="fas fa-map-marker-alt"></i> القليوبية، مصر</li>
+                        <li><a href="https://t.me/M7_KAYA" target="_blank"><i class="fab fa-telegram"></i>
+                                @M7_KAYA</a>
+                        </li>
+                        <li><a href="https://wa.me/201117691093" target="_blank"><i class="fab fa-whatsapp"></i>
+                                01117691093</a></li>
                     </ul>
                 </div>
             </div>
             <div class="copyright">
-                <p>&copy; 2026 ثانوية.كوم - جميع الحقوق محفوظة</p>
+                <p style="direction: ltr;">&copy; 2026 Thanawya.com. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
-    <script src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/main.js"></script>
 </body>
 
 </html>

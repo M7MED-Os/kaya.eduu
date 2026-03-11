@@ -4,31 +4,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>المهام | ثانوية.كوم</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="assets/css/todo.css">
+    <link rel="stylesheet" href="assets/css/todo-header.css">
+    <link rel="stylesheet" href="assets/css/todo-chips.css">
+    <link rel="stylesheet" href="assets/css/bottom-nav.css">
+
     <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="48x48" href="assets/images/favicon-48x48.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
-    <title>منظم المهام | ثانوية.كوم</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="assets/css/todo.css">
-    <link rel="stylesheet" href="assets/css/bottom-nav.css">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 
-<body>
-
+<body class="todo-page-body">
+    <div class="zen-bg-decoration">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
     <!-- Navbar -->
     <nav class="navbar">
         <div class="container">
             <a href="dashboard.html" class="logo">
-                <img src="assets/images/logo-icon.jpeg" alt="Logo" class="brand-icon">
+                <img src="assets/images/logo-icon.webp" alt="Logo" class="brand-icon">
                 <span class="logo-text">ثانوية<span class="logo-accent">.كوم</span></span>
             </a>
 
@@ -42,50 +51,70 @@
 
             <ul class="nav-links">
                 <li><a href="dashboard.html">الرئيسية</a></li>
+                <li><a href="curriculum.html">المحاضرات</a></li>
+                <li><a href="squad.html">الشلة</a></li>
                 <li><a href="todo.html" class="active">المهام</a></li>
-                <li><a href="leaderboard.html">المتصدرين</a></li>
+                <li><a href="leaderboard.html">الأوائل</a></li>
                 <li id="adminNavBtn" style="display: none;">
                     <a href="admin.html" style="color: var(--secondary-color); font-weight: bold;">
                         <i class="fas fa-shield-alt"></i> Admin
                     </a>
                 </li>
-                <li><a href="profile.html" id="navUserName">البروفايل</a></li>
+                <li><a href="profile.html">البروفايل</a></li>
                 <li><button id="logoutBtn" class="btn btn-outline" style="padding: 0.5rem 1rem;">خروج</button></li>
             </ul>
         </div>
     </nav>
 
+    <!-- Simple Personal Header -->
+    <header class="todo-simple-header">
+        <div class="container header-flex">
+            <div>
+                <h1 class="simple-title" id="greetingTitle">مهامي اليومية 📝</h1>
+                <p class="simple-date" id="currentDateDisplay">...</p>
+            </div>
+            <div class="header-quote">
+                "وَأَنْ لَيْسَ لِلْإِنْسَانِ إِلَّا مَا سَعَى * وَأَنَّ سَعْيَهُ سَوْفَ يُرَى"
+            </div>
+        </div>
+
+    </header>
     <div class="todo-page">
         <div class="todo-container">
-            <!-- Header Section -->
-            <header class="todo-header">
-                <div class="header-content">
-                    <h1 id="greetingText">مرحباً بك يا بطل! 🚀</h1>
-                    <p id="motivationalMessage">كل خطوة صغيرة النهاردة بتقربك لحلمك الكبير بكرة.</p>
+            <!-- Pomodoro Section -->
+            <div class="pomodoro-box">
+                <div class="timer-icon-area">
+                    <i class="fas fa-clock"></i>
                 </div>
+                <div class="timer-display" id="pomodoroTimer">25:00</div>
+                <button id="startPomodoroBtn"
+                    style="padding: 0.8rem 2rem; font-weight: 700; background-color: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; display: block; margin: 0 auto; min-width: 200px;">ابدأ
+                    المذاكرة</button>
+            </div>
 
-                <!-- Overall Progress Card -->
-                <div class="global-progress-card">
-                    <div class="progress-header">
-                        <span>إجمالي الإنجاز اليومي</span>
-                        <span id="progressPercentage">0%</span>
-                    </div>
-                    <div class="progress-bar-outer">
-                        <div id="progressBarFill" class="progress-bar-inner"></div>
-                    </div>
-                    <div id="taskCountSummary" class="task-summary">0 مهام منجزة</div>
+            <!-- Overall Progress Card -->
+            <div class="global-progress-card" style="margin-bottom: 2rem;">
+                <div class="progress-header">
+                    <span>خلصت قد اي من اللي محدده؟</span>
+                    <span id="progressPercentage">0%</span>
                 </div>
-            </header>
+                <div class="progress-bar-outer">
+                    <div id="progressBarFill" class="progress-bar-inner"></div>
+                </div>
+                <div id="taskCountSummary" class="task-summary">0 مهام منجزة</div>
+            </div>
 
             <!-- Input Section -->
             <div class="task-input-section">
                 <div class="input-wrapper">
-                    <input type="text" id="mainTaskInput" placeholder="ماذا تريد أن تنجز الآن؟" autocomplete="off">
-                    <button id="addTaskBtn" class="btn-add-task" title="إضافة مهمة">
+                    <input type="text" id="mainTaskInput" placeholder="عاوز تخلص اي انهارده؟" autocomplete="off">
+                    <button id="addTaskBtn" class="btn-add-task" title="ضيف مهمة">
                         <i class="fas fa-plus"></i>
                     </button>
                 </div>
             </div>
+
+
 
             <!-- List Section -->
             <div id="todoList" class="todo-list">
@@ -95,9 +124,10 @@
             <!-- Empty State -->
             <div id="emptyState" class="empty-state">
                 <h3><i class="fas fa-clipboard-list"
-                        style="display: block; margin-bottom: 1rem; font-size: 3rem; color: #E2E8F0;"></i>قائمة المهام
-                    فارغة</h3>
-                <p>ابدأ بإضافة أول هدف لك لهذا اليوم ودعنا نحتفل بإنجازك!</p>
+                        style="display: block; margin-bottom: 1rem; font-size: 3rem; color: #E2E8F0;"></i>
+                    مفيش مهمات
+                </h3>
+                <p>ضيف اول هدف ليك و ابدأ مذاكرة!</p>
             </div>
         </div>
     </div>
@@ -120,7 +150,7 @@
     <!-- Edit Modal -->
     <div id="editModal" class="modal-overlay">
         <div class="modal-box">
-            <div class="modal-icon" style="background: #E0F2FE; color: #0284C7;">
+            <div class="modal-icon" style="background: #E0F2FE; color: #0288D1;">
                 <i class="fas fa-edit"></i>
             </div>
             <h3>تعديل المهمة</h3>
@@ -136,6 +166,62 @@
         </div>
     </div>
 
+    <!-- Add Subtask Modal -->
+    <div id="addSubModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-icon" style="background: #DCFCE7; color: #16A34A;">
+                <i class="fas fa-plus"></i>
+            </div>
+            <h3>إضافة مهمة فرعية</h3>
+            <div class="form-group" style="margin: 1.5rem 0;">
+                <input type="text" id="addSubInput" class="form-control" style="text-align: right;"
+                    placeholder="اكتب المهمة الفرعية هنا...">
+            </div>
+            <div class="modal-buttons">
+                <button id="confirmAddSub" class="btn-modal" style="background: var(--todo-primary); color: white;">
+                    إضافة
+                </button>
+                <button id="cancelAddSub" class="btn-modal cancel">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Pomodoro Duration Selection Modal -->
+    <div id="durationModal" class="modal-overlay">
+        <div class="modal-box duration-modal-box">
+            <div class="modal-icon" style="background: #FFF1F2; color: #E11D48;">
+                <i class="fas fa-stopwatch"></i>
+            </div>
+            <h3>مدة المذاكرة؟ ⏱️</h3>
+            <p>اختار الوقت اللي عاوز تذاكره</p>
+
+            <div class="duration-grid">
+                <button class="duration-chip recommended" onclick="window.selectDuration(25)">
+                    <span>25د</span>
+                </button>
+                <button class="duration-chip" onclick="window.selectDuration(50)">
+                    <span>50د</span>
+                </button>
+                <button class="duration-chip" onclick="window.selectDuration(60)">
+                    <span>1س</span>
+                </button>
+                <button class="duration-chip" onclick="window.selectDuration(90)">
+                    <span>1.5س</span>
+                </button>
+                <button class="duration-chip" onclick="window.selectDuration(120)">
+                    <span>2س</span>
+                </button>
+                <button class="duration-chip" onclick="window.selectDuration(180)">
+                    <span>3س</span>
+                </button>
+            </div>
+
+            <div class="modal-buttons" style="margin-top: 1.5rem;">
+                <button id="cancelDuration" class="btn-modal cancel" style="width: 100%;">إلغاء</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">
@@ -157,6 +243,14 @@
                 <i class="fas fa-tasks"></i>
                 <span>المهام</span>
             </a>
+            <a href="squad.html" class="bottom-nav-item">
+                <i class="fas fa-users"></i>
+                <span>الشلة</span>
+            </a>
+            <a href="curriculum.html" class="bottom-nav-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>المحاضرات</span>
+            </a>
             <a href="leaderboard.html" class="bottom-nav-item">
                 <i class="fas fa-trophy"></i>
                 <span>الأوائل</span>
@@ -165,10 +259,6 @@
                 <i class="fas fa-user"></i>
                 <span>البروفايل</span>
             </a>
-            <!-- <a href="#" id="bottomLogoutBtn" class="bottom-nav-item">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>خروج</span>
-            </a> -->
             <a href="admin.html" id="bottomAdminBtn" class="bottom-nav-item admin-link" style="display: none;">
                 <i class="fas fa-shield-alt"></i>
                 <span>Admin</span>
@@ -180,10 +270,19 @@
 
     <!-- Confetti Script -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/main.js"></script>
     <script type="module" src="assets/js/auth.js"></script>
+    <script type="module" src="assets/js/squad-notifications.js"></script>
     <script type="module" src="assets/js/todo.js"></script>
-
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dateEl = document.getElementById('currentDateDisplay');
+            if (dateEl) {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                dateEl.textContent = new Date().toLocaleDateString('ar-EG', options);
+            }
+        });
+    </script>
 </body>
 
 </html>

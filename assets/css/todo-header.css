@@ -1,0 +1,55 @@
+/* Todo Simple Header Styles */
+.todo-simple-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 3rem 0 2rem 0;
+    /* Slightly more padding for the gradient look */
+    border-radius: 0 0 2rem 2rem;
+    margin-bottom: 2rem;
+    border-bottom: none;
+}
+
+.header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.simple-title {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: white;
+    margin-bottom: 0.2rem;
+}
+
+.simple-date {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: 'Cairo', sans-serif;
+}
+
+.header-quote {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.8rem 1.2rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.95);
+    font-style: italic;
+    border-right: 4px solid rgba(255, 255, 255, 0.5);
+    max-width: 400px;
+    backdrop-filter: blur(5px);
+}
+
+@media (max-width: 768px) {
+    .header-flex {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .header-quote {
+        width: 100%;
+        max-width: none;
+    }
+}

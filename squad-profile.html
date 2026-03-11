@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بروفايل الشلة | ثانوية.كوم</title>
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="48x48" href="assets/images/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
+
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        .squad-profile-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .squad-header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem 2rem;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        }
+
+        .squad-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .squad-avatar-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1rem;
+            z-index: 1;
+        }
+
+        .squad-avatar {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid white;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .squad-level-badge {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            z-index: 10;
+        }
+
+        .squad-name {
+            font-size: 2rem;
+            font-weight: 900;
+            margin: 0.5rem 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .squad-meta {
+            font-size: 1rem;
+            opacity: 0.95;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .squad-bio-container {
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .squad-bio {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-height: 45px;
+        }
+
+        .bio-text {
+            flex: 1;
+            text-align: center;
+        }
+
+        .bio-text.empty {
+            opacity: 0.7;
+            font-style: normal;
+        }
+
+        .bio-edit-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 0.4rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .bio-edit-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .squad-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+            direction: rtl;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #10b981, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--text-dark);
+            margin: 0.5rem 0;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            font-weight: 600;
+            direction: rtl;
+        }
+
+        .members-section {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            direction: rtl;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            direction: rtl;
+        }
+
+        .section-title i {
+            color: #10b981;
+        }
+
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .member-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-light);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            direction: rtl;
+            text-align: right;
+        }
+
+        .member-card:hover {
+            background: white;
+            border-color: #10b981;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        .member-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .member-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .member-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .member-points {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        .member-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .member-stat i.fa-trophy {
+            color: #fbbf24;
+        }
+
+        .member-stat i.fa-star {
+            color: #8b5cf6;
+        }
+
+        .owner-badge {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.7rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: white;
+            color: #10b981;
+            border: 2px solid #10b981;
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .action-btn:hover {
+            background: #10b981;
+            color: white;
+        }
+
+        .action-btn.secondary {
+            border-color: #64748b;
+            color: #64748b;
+        }
+
+        .action-btn.secondary:hover {
+            background: #64748b;
+            color: white;
+        }
+
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: var(--radius-md);
+        }
+
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .squad-header {
+                padding: 1.5rem 1rem;
+            }
+
+            .squad-avatar {
+                width: 100px;
+                height: 100px;
+            }
+
+            .squad-name {
+                font-size: 1.5rem;
+            }
+
+            .squad-meta {
+                font-size: 0.85rem;
+                gap: 1rem;
+            }
+
+            .members-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="squad-profile-container">
+        <div class="action-buttons">
+            <a href="javascript:history.back()" class="action-btn secondary">
+                <i class="fas fa-arrow-right"></i>
+                رجوع
+            </a>
+        </div>
+
+        <!-- Squad Header -->
+        <div class="squad-header" id="squadHeader">
+            <div class="loading-skeleton" style="width: 130px; height: 130px; border-radius: 50%; margin: 0 auto 1rem;">
+            </div>
+            <div class="loading-skeleton" style="width: 250px; height: 35px; margin: 0 auto 0.5rem;"></div>
+            <div class="loading-skeleton" style="width: 200px; height: 20px; margin: 0 auto;"></div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="squad-stats" id="squadStats">
+            <!-- Will be populated by JS -->
+        </div>
+
+        <!-- Members Section -->
+        <div class="members-section">
+            <h3 class="section-title">
+                <i class="fas fa-users"></i>
+                أعضاء الشلة
+            </h3>
+            <div class="members-grid" id="membersGrid">
+                <!-- Will be populated by JS -->
+            </div>
+        </div>
+
+        <!-- Level Progress Section -->
+        <div class="members-section" id="levelSection">
+            <h3 class="section-title">
+                <i class="fas fa-chart-line"></i>
+                مستوى تقدم الشلة
+            </h3>
+            <div id="levelProgress"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './assets/js/supabaseClient.js';
+        import { generateAvatar, calculateLevel, getLevelColor, calculateSquadLevel } from './assets/js/avatars.js';
+        import { createLevelBadge, createSquadLevelBadge, createLevelProgress, createSquadLevelProgress } from './assets/js/level-badge.js';
+        import { ACADEMIC_YEARS, DEPARTMENTS, getAcademicYearLabel, getDepartmentLabel } from './assets/js/constants.js';
+        import { checkAuth } from './assets/js/auth.js';
+        import { isVisible, createLockedElement, createLockedAvatar, isSquadMember, shouldShowAvatar } from './assets/js/privacy.js';
+
+        let currentSquad = null;
+        let isOwner = false;
+        let currentUser = null;
+
+        // Wait for DOM
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        async function init() {
+            // Get squad ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const squadId = urlParams.get('id');
+
+            if (!squadId) {
+                window.location.href = 'leaderboard.html';
+                return;
+            }
+
+            await loadSquadProfile(squadId);
+        }
+
+        async function loadSquadProfile(squadId) {
+            try {
+                // Check if user is logged in
+                const auth = await checkAuth({ forceRefresh: false });
+                currentUser = auth ? auth.user : null;
+
+                // Fetch squad data
+                const { data: squad, error } = await supabase
+                    .from('squads')
+                    .select('*')
+                    .eq('id', squadId)
+                    .single();
+
+                if (error) throw error;
+
+                currentSquad = squad;
+
+                // Check relationship
+                isOwner = currentUser && squad.owner_id === currentUser.id;
+                const isMember = currentUser ? await isSquadMember(squad.id, currentUser.id) : false;
+
+                // Store privacy context
+                window.squadPrivacyContext = {
+                    isOwner,
+                    isMember,
+                    privacySettings: {
+                        avatar: squad.privacy_avatar || 'public',
+                        bio: squad.privacy_bio || 'public',
+                        stats: squad.privacy_stats || 'public',
+                        members: squad.privacy_members || 'public',
+                        progress: squad.privacy_progress || 'public'
+                    }
+                };
+
+                // Render squad header
+                renderSquadHeader(squad);
+
+                // Fetch and render stats
+                await renderStats(squad);
+
+                // Fetch and render members
+                await renderMembers(squad);
+
+                // Render level progress
+                renderLevelProgress(squad.points);
+
+            } catch (err) {
+                console.error('Error loading squad profile:', err);
+                const headerEl = document.getElementById('squadHeader');
+                if (headerEl) {
+                    headerEl.innerHTML = `
+                        <div style="text-align: center; color: white; padding: 2rem;">
+                            <i class="fas fa-exclamation-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                            <p>عذراً، لم نتمكن من تحميل بروفايل الشلة</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function renderSquadHeader(squad) {
+            const ctx = window.squadPrivacyContext;
+            const showAvatar = ctx && isVisible(ctx.privacySettings.avatar, ctx.isOwner, ctx.isMember);
+            const showBio = ctx && isVisible(ctx.privacySettings.bio, ctx.isOwner, ctx.isMember);
+
+            const level = calculateSquadLevel(squad.points || 0);
+            const levelColor = getLevelColor(level);
+            const levelBadgeHTML = createSquadLevelBadge(squad.points || 0, 'large');
+
+            const bioText = squad.bio || 'مفيش بايو';
+            const bioClass = squad.bio ? '' : 'empty';
+            const editBtnDisplay = isOwner ? '' : 'style="display: none;"';
+
+            const headerEl = document.getElementById('squadHeader');
+            if (headerEl) {
+                // Privacy check for level badge
+                const showProgress = ctx && isVisible(ctx.privacySettings.progress, ctx.isOwner, ctx.isMember);
+
+                // Avatar & Level Badge HTML
+                let avatarHTML;
+                const badgeHTML = showProgress ? `<div class="squad-level-badge">${levelBadgeHTML}</div>` : '';
+
+                if (showAvatar) {
+                    const avatarUrl = squad.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(squad.name)}&background=10b981&color=fff&size=200`;
+                    avatarHTML = `
+                    <div class="squad-avatar-container">
+                        <img src="${avatarUrl}" alt="${squad.name}" class="squad-avatar" style="border-color: ${levelColor};">
+                        ${badgeHTML}
+                    </div>
+                `;
+                } else {
+                    avatarHTML = `
+                    <div class="squad-avatar-container">
+                        ${createLockedAvatar()}
+                        ${badgeHTML}
+                    </div>
+                `;
+                }
+
+                // Bio HTML
+                let bioHTML;
+                if (showBio) {
+                    bioHTML = `
+                        <div class="squad-bio">
+                            <span class="bio-text ${bioClass}">${bioText}</span>
+                        </div>
+                    `;
+                } else {
+                    bioHTML = createLockedElement('bio');
+                }
+
+                headerEl.innerHTML = `
+                    ${avatarHTML}
+                    <h1 class="squad-name">${squad.name}</h1>
+                    <div class="squad-meta">
+                        <span><i class="fas fa-graduation-cap"></i> ${getAcademicYearLabel(squad.academic_year) || squad.academic_year}</span>
+                        <span><i class="fas fa-book"></i> ${getDepartmentLabel(squad.department) || squad.department}</span>
+                    </div>
+                    
+                    <div class="squad-bio-container">
+                        ${bioHTML}
+                    </div>
+                `;
+            }
+        }
+
+        async function renderStats(squad) {
+            const ctx = window.squadPrivacyContext;
+            const showStats = ctx && isVisible(ctx.privacySettings.stats, ctx.isOwner, ctx.isMember);
+
+            const statsEl = document.getElementById('squadStats');
+            if (!statsEl) return;
+
+            if (!showStats) {
+                statsEl.innerHTML = `
+                    <div style="grid-column: 1/-1;">
+                        ${createLockedElement('stats')}
+                    </div>
+                `;
+                return;
+            }
+
+            const level = calculateSquadLevel(squad.points || 0);
+
+            // Get member count
+            const { count: memberCount } = await supabase
+                .from('squad_members')
+                .select('*', { count: 'exact', head: true })
+                .eq('squad_id', squad.id);
+
+            // Get completed challenges count
+            const { count: challengesCount } = await supabase
+                .from('squad_exam_challenges')
+                .select('*', { count: 'exact', head: true })
+                .eq('squad_id', squad.id)
+                .eq('status', 'completed');
+
+            statsEl.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+                    <div class="stat-value">${squad.points || 0}</div>
+                    <div class="stat-label">نقطة ✨</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-star"></i></div>
+                    <div class="stat-value">${level}</div>
+                    <div class="stat-label">مستوى الشلة</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-value">${memberCount || 0}</div>
+                    <div class="stat-label">عدد الأعضاء</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-value">${challengesCount || 0}</div>
+                    <div class="stat-label">تحديات منجزة</div>
+                </div>
+            `;
+        }
+
+        async function renderMembers(squad) {
+            const ctx = window.squadPrivacyContext;
+            const showMembers = ctx && isVisible(ctx.privacySettings.members, ctx.isOwner, ctx.isMember);
+
+            const gridEl = document.getElementById('membersGrid');
+            if (!gridEl) return;
+
+            if (!showMembers) {
+                gridEl.innerHTML = `
+                    <div style="grid-column: 1/-1;">
+                        ${createLockedElement('members')}
+                    </div>
+                `;
+                return;
+            }
+
+            const { data: members } = await supabase
+                .from('squad_members')
+                .select('profile_id, profiles(full_name, points, avatar_url, privacy_avatar, privacy_stats)')
+                .eq('squad_id', squad.id)
+                .order('profiles(points)', { ascending: false });
+
+            if (!members || members.length === 0) {
+                gridEl.innerHTML = `
+                    <div style="text-align: center; color: var(--text-light); padding: 2rem; grid-column: 1/-1;">
+                        <i class="fas fa-users-slash" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                        <p>لا يوجد أعضاء في هذه الشلة</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const membersHTML = members.map(m => {
+                const profile = m.profiles;
+                const isSquadOwner = m.profile_id === squad.owner_id;
+                const currentUserId = currentUser ? currentUser.id : null;
+
+                // Privacy Checks
+                const showAvatar = shouldShowAvatar(
+                    profile.privacy_avatar,
+                    m.profile_id,
+                    currentUserId,
+                    squad.id,
+                    ctx.isMember ? squad.id : null
+                );
+
+                const showMemberStats = isVisible(
+                    profile.privacy_stats || 'public',
+                    m.profile_id === currentUserId,
+                    ctx.isMember
+                );
+
+                const avatarUrl = profile.avatar_url || generateAvatar(profile.full_name, 'initials');
+                const level = calculateLevel(profile.points || 0);
+                const levelColor = getLevelColor(level);
+
+                const avatarHTML = showAvatar
+                    ? `<img src="${avatarUrl}" alt="${profile.full_name}" class="member-avatar" style="border: 3px solid ${levelColor};">`
+                    : `<div class="member-avatar locked" style="border: 3px solid ${levelColor}; background: #1e293b; display: flex; align-items: center; justify-content: center;">
+                         <i class="fas fa-lock" style="color: rgba(255,255,255,0.3);"></i>
+                       </div>`;
+
+                const pointsHTML = showMemberStats
+                    ? `<i class="fas fa-trophy"></i> ${profile.points || 0} نقطة`
+                    : `<i class="fas fa-lock" style="font-size: 0.7rem; opacity: 0.5;"></i> مخفي`;
+
+                const levelHTML = showMemberStats
+                    ? `<i class="fas fa-star" style="color: ${levelColor}"></i> مستوى ${level}`
+                    : `<i class="fas fa-lock" style="font-size: 0.7rem; opacity: 0.5;"></i> مخفي`;
+
+                return `
+                    <a href="student-profile.html?id=${m.profile_id}" class="member-card">
+                        ${avatarHTML}
+                        <div class="member-info">
+                            <div class="member-name">${profile.full_name}</div>
+                            <div class="member-points">
+                                <div class="member-stat">
+                                    ${pointsHTML}
+                                </div>
+                                <div class="member-stat">
+                                    ${levelHTML}
+                                </div>
+                            </div>
+                        </div>
+                        ${isSquadOwner ? '<span class="owner-badge" style="display: none;"><i class="fas fa-crown"></i> المالك</span>' : ''}
+                    </a>
+                `;
+            }).join('');
+
+            gridEl.innerHTML = membersHTML;
+        }
+
+        function renderLevelProgress(points) {
+            const ctx = window.squadPrivacyContext;
+            const showProgress = ctx && isVisible(ctx.privacySettings.progress, ctx.isOwner, ctx.isMember);
+
+            const progressEl = document.getElementById('levelProgress');
+            const levelSection = document.getElementById('levelSection');
+
+            if (!progressEl || !levelSection) return;
+
+            if (!showProgress) {
+                progressEl.innerHTML = createLockedElement('progress');
+            } else {
+                const progressHTML = createSquadLevelProgress(points);
+                progressEl.innerHTML = progressHTML;
+            }
+        }
+
+        // Edit bio function
+        window.editBio = async function () {
+            if (!isOwner) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'غير مسموح',
+                    text: 'مالك الشلة بس تعديل النبذة',
+                    confirmButtonColor: '#10b981'
+                });
+                return;
+            }
+
+            const { value: newBio } = await Swal.fire({
+                title: 'تعديل نبذة الشلة',
+                input: 'textarea',
+                inputPlaceholder: 'صلي على النبي',
+                inputValue: currentSquad.bio || '',
+                inputAttributes: {
+                    maxlength: 200,
+                    'aria-label': 'نبذة الشلة'
+                },
+                showCancelButton: true,
+                confirmButtonText: 'حفظ',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#10b981',
+                inputValidator: (value) => {
+                    if (value && value.length > 200) {
+                        return 'النبذة طويلة جداً! الحد الأقصى 200 حرف';
+                    }
+                }
+            });
+
+            if (newBio !== undefined) {
+                try {
+                    const { error } = await supabase
+                        .from('squads')
+                        .update({ bio: newBio || null })
+                        .eq('id', currentSquad.id);
+
+                    if (error) throw error;
+
+                    currentSquad.bio = newBio;
+
+                    // Update UI
+                    const bioTextEl = document.querySelector('.bio-text');
+                    if (bioTextEl) {
+                        bioTextEl.textContent = newBio || 'ضيف بايو';
+                        bioTextEl.className = newBio ? 'bio-text' : 'bio-text empty';
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'تم التحديث!',
+                        text: 'تم تحديث نبذة الشلة بنجاح',
+                        confirmButtonColor: '#10b981',
+                        timer: 2000
+                    });
+                } catch (err) {
+                    console.error('Error updating bio:', err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'خطأ',
+                        text: 'حدث خطأ أثناء التحديث',
+                        confirmButtonColor: '#10b981'
+                    });
+                }
+            }
+        };
+    </script>
+</body>
+
+</html>

@@ -1,4 +1,9 @@
 import { supabase } from "./supabaseClient.js";
+import { clearCache } from "./utils.js";
+import { APP_CONFIG } from "./constants.js";
+import { showErrorAlert, showSuccessAlert, showConfirmDialog, showInfoAlert } from "./utils/alerts.js";
+import { subscriptionService, initSubscriptionService, showSubscriptionPopup } from "./subscription.js";
+import { checkAuth } from "./auth.js";
 
 const urlParams = new URLSearchParams(window.location.search);
 const examId = urlParams.get('id');
@@ -7,11 +12,18 @@ let currentQuestions = [];
 let currentQuestionIndex = 0;
 let userAnswers = {}; // { questionId: 'a' }
 let examTitle = "";
-let hierarchyInfo = { chapter: "", lesson: "" };
+let hierarchyInfo = { subject: "", chapter: "", lesson: "" };
 let flaggedQuestions = new Set();
 let timerInterval = null;
 let timeElapsed = 0; // in seconds
 let totalTime = 0; // calculated based on questions
+let squadId = urlParams.get('squad_id');
+let challengeId = urlParams.get('challenge_id');
+
+// Mistakes Mode Params
+const mode = urlParams.get('mode');
+const isMistakesMode = mode === 'mistakes';
+const subjectIdForMistakes = urlParams.get('subject_id');
 
 const loadingEl = document.getElementById("loading");
 const examView = document.getElementById("examView");
@@ -34,86 +46,104 @@ const desktopNavGrid = document.getElementById("desktopNavGrid");
 const mobileNavGrid = document.getElementById("mobileNavGrid");
 
 // Check Auth & ID
-if (!examId) {
-    Swal.fire({
-        icon: 'error',
-        title: 'خطأ',
-        text: 'امتحان غير موجود',
-        confirmButtonText: 'عودة'
-    }).then(() => {
+if (!examId && !isMistakesMode) {
+    showErrorAlert('خطأ', 'امتحان غير موجود').then(() => {
         window.location.href = "dashboard.html";
     });
 }
 
 async function initExam() {
     try {
-        // 1. Fetch Exam Details
-        const { data: exam, error: examError } = await supabase
-            .from('exams')
-            .select('*')
-            .eq('id', examId)
-            .single();
-
-        if (examError || !exam) throw new Error("Exam not found");
-        examTitle = exam.title;
-        if (examTitleMobile) examTitleMobile.textContent = "الامتحان";
-
-        // Fetch hierarchy: Chapter and Lesson
-        if (exam.lesson_id) {
-            const { data: lesson } = await supabase.from('lessons').select('title, chapter_id').eq('id', exam.lesson_id).single();
-            if (lesson) {
-                hierarchyInfo.lesson = lesson.title;
-                const { data: chapter } = await supabase.from('chapters').select('title').eq('id', lesson.chapter_id).single();
-                if (chapter) hierarchyInfo.chapter = chapter.title;
-            }
-        } else if (exam.chapter_id) {
-            const { data: chapter } = await supabase.from('chapters').select('title').eq('id', exam.chapter_id).single();
-            if (chapter) hierarchyInfo.chapter = chapter.title;
-        }
-
-        // 2. Fetch Questions
-        const { data: questions, error: qError } = await supabase
-            .from('questions')
-            .select('*')
-            .eq('exam_id', examId);
-
-        if (qError) throw qError;
-
-        if (!questions || questions.length === 0) {
-            loadingEl.innerHTML = "<p>عفواً، لا توجد أسئلة في هذا الامتحان.</p>";
+        // ✅ 1. Auth Check
+        const { user, profile } = await checkAuth();
+        if (!user || !profile) {
+            showErrorAlert('خطأ', 'يجب تسجيل الدخول أولاً').then(() => window.location.href = 'login.html');
             return;
         }
 
-        // Shuffle questions for randomized order
-        currentQuestions = shuffleArray(questions);
+        // 2. Init Subscription
+        await initSubscriptionService(profile);
+        window.currentUserProfile = profile;
 
-        // Smart Timer: 1 minute per question
-        totalTime = questions.length * 60; // seconds
+        if (isMistakesMode) {
+            // --- Mistakes Exam Mode ---
+            if (!subscriptionService.canAccessFeature('mistakes_bank')) {
+                loadingEl.innerHTML = '';
+                await showSubscriptionPopup();
+                window.location.href = `subject.html?id=${subjectIdForMistakes}`;
+                return;
+            }
 
-        renderQuestions();
-        renderNavigator();
-        showQuestion(0);
-        startTimer();
+            if (!subjectIdForMistakes) throw new Error('Missing subject ID');
+            const { data: sData } = await supabase.from('subjects').select('name_ar').eq('id', subjectIdForMistakes).single();
+            examTitle = `مراجعة أخطاء: ${sData?.name_ar || 'المادة'}`;
+            hierarchyInfo = { subject: sData?.name_ar || '', chapter: 'بنك الأخطاء', lesson: 'مراجعة أخطاء' };
 
-        loadingEl.style.display = "none";
-        examView.style.display = "block";
+            const { data: mData, error: mError } = await supabase.from('user_mistakes').select('questions(*)').eq('user_id', user.id).eq('subject_id', subjectIdForMistakes);
+            if (mError) throw mError;
+            if (!mData || mData.length === 0) {
+                showInfoAlert('مبروك!', 'معندكش أخطاء').then(() => window.location.href = `subject.html?id=${subjectIdForMistakes}`);
+                return;
+            }
+            currentQuestions = mData.map(m => m.questions).filter(q => q !== null);
+            currentQuestions = shuffleArray(currentQuestions);
+        } else {
+            // --- Standard Mode ---
+            const accessCheck = await subscriptionService.validateExamAccess(examId);
+            if (!accessCheck.canAccess) {
+                loadingEl.innerHTML = '';
+                await showSubscriptionPopup();
+                return;
+            }
+            const exam = accessCheck.exam;
+            examTitle = exam.title;
+
+            // Hierarchy from RPC metadata
+            hierarchyInfo.subject = exam.subject_name_ar || "";
+            hierarchyInfo.chapter = exam.chapter_title || "";
+            hierarchyInfo.lesson = exam.lesson_title || "";
+
+            const qs = await subscriptionService.fetchExamQuestions(examId);
+            if (!qs || qs.length === 0) {
+                loadingEl.innerHTML = "<p>لا توجد أسئلة.</p>";
+                return;
+            }
+            currentQuestions = shuffleArray(qs);
+
+            // Restore
+            const sa = localStorage.getItem(`exam_progress_${examId}`);
+            if (sa) userAnswers = JSON.parse(sa);
+            const st = localStorage.getItem(`exam_timer_${examId}`);
+            if (st) timeElapsed = parseInt(st, 10) || 0;
+        }
+
+        // Common Finish
+        if (loadingEl) loadingEl.style.display = "none";
+        if (examView) examView.style.display = "block";
         if (examFooter) examFooter.style.display = "flex";
 
+        // Set mobile header title
+        if (examTitleMobile) examTitleMobile.textContent = examTitle;
+        totalTime = currentQuestions.length * 60;
+        renderQuestions();
+        renderNavigator();
+        startTimer();
+        showQuestion(currentQuestionIndex);
+
     } catch (err) {
-        console.error("Error:", err);
-        loadingEl.innerHTML = `<p style="color:red">حدث خطأ: ${err.message}</p>`;
+        console.error('Init error:', err);
+        if (loadingEl) loadingEl.innerHTML = `<p style="color:red">خطأ: ${err.message}</p>`;
     }
 }
 
-// Utility: Fisher-Yates Shuffle
+// Fixed Utility
 function shuffleArray(array) {
-    let currentIndex = array.length, randomIndex;
-    while (currentIndex != 0) {
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex--;
-        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+    const newArr = [...array];
+    for (let i = newArr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
     }
-    return array;
+    return newArr;
 }
 
 function renderQuestions() {
@@ -128,25 +158,29 @@ function renderQuestions() {
         card.innerHTML = `
             <div class="q-meta">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span class="q-tag">سؤال ${index + 1}</span>
+                    <span class="q-tag">سؤال ${index + 1} من ${currentQuestions.length}</span>
                     <button class="flag-btn" onclick="toggleFlag(${index})" id="flag-btn-${index}">
-                        <i class="far fa-bookmark"></i> علم السؤال
+                        <i class="far fa-bookmark"></i> <span>علامة</span>
                     </button>
                 </div>
-                <span style="color: #718096; font-size: 0.9rem;">${currentQuestions.length} سؤال كلي</span>
             </div>
             <div class="question-text">${q.question_text || ''}</div>
             ${q.question_image ? `<img src="${q.question_image}" class="question-img" alt="سؤال" onclick="openLightbox(this.src)">` : ''}
             <div class="options-list">
-                ${['a', 'b', 'c', 'd'].map(opt => `
-                    <label class="option-label" id="label-${q.id}-${opt}">
-                         <input type="radio" name="q_${q.id}" value="${opt}" class="option-radio" onchange="handleAnswerChange('${q.id}', '${opt}', ${index})">
+                ${['a', 'b', 'c', 'd'].filter(opt => q[`choice_${opt}`] || q[`choice_${opt}_image`]).map(opt => {
+            const isChecked = userAnswers[q.id] === opt;
+            return `
+                    <label class="option-label ${isChecked ? 'checked' : ''}" id="label-${q.id}-${opt}">
+                         <input type="radio" name="q_${q.id}" value="${opt}" class="option-radio" 
+                                ${isChecked ? 'checked' : ''} 
+                                onchange="handleAnswerChange('${q.id}', '${opt}', ${index})">
                          <div class="option-content">
                             <span class="option-text">${q[`choice_${opt}`] || ''}</span>
                             ${q[`choice_${opt}_image`] ? `<img src="${q[`choice_${opt}_image`]}" class="choice-img" alt="خيار" onclick="event.preventDefault(); openLightbox(this.src)">` : ''}
                          </div>
                     </label>
-                `).join('')}
+                `;
+        }).join('')}
             </div>
         `;
         questionsContainer.appendChild(card);
@@ -203,12 +237,12 @@ window.toggleFlag = (index) => {
     if (flaggedQuestions.has(index)) {
         flaggedQuestions.delete(index);
         btn.classList.remove('active');
-        btn.innerHTML = '<i class="far fa-bookmark"></i> علم السؤال';
+        btn.innerHTML = '<i class="far fa-bookmark"></i> <span>علامة</span>';
         dots.forEach(dot => dot.classList.remove('flagged'));
     } else {
         flaggedQuestions.add(index);
         btn.classList.add('active');
-        btn.innerHTML = '<i class="fas fa-bookmark"></i> مُعلّم';
+        btn.innerHTML = '<i class="fas fa-bookmark"></i> <span>علامة</span>';
         dots.forEach(dot => dot.classList.add('flagged'));
     }
 }
@@ -220,8 +254,9 @@ function showSaveIndicator() {
     setTimeout(() => badge.classList.remove('show'), 1500);
 }
 
-window.saveAnswer = (qId, answer) => {
+window.saveAnswer = async (qId, answer) => {
     userAnswers[qId] = answer;
+    localStorage.setItem(`exam_progress_${examId}`, JSON.stringify(userAnswers));
 };
 
 function showQuestion(index) {
@@ -251,10 +286,15 @@ function showQuestion(index) {
     if (index === currentQuestions.length - 1) {
         nextBtn.style.display = "none";
         submitBtn.style.display = "inline-block";
+        submitBtn.innerHTML = `<i class="fas fa-paper-plane"></i> <span class="nav-btn-text">سلم الامتحان</span>`;
     } else {
         nextBtn.style.display = "inline-block";
         submitBtn.style.display = "none";
     }
+
+    // Update question counter in footer
+    const qCountEl = document.getElementById('qCount');
+    if (qCountEl) qCountEl.textContent = `${index + 1} / ${currentQuestions.length}`;
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -264,6 +304,9 @@ function startTimer() {
     timerInterval = setInterval(() => {
         timeElapsed++;
         updateTimerDisplay();
+
+        // Persist time
+        localStorage.setItem(`exam_timer_${examId}`, timeElapsed);
 
         // Warning when 2 minutes left
         if (totalTime - timeElapsed <= 120 && totalTime - timeElapsed > 0) {
@@ -299,11 +342,28 @@ nextBtn.addEventListener("click", () => showQuestion(currentQuestionIndex + 1));
 function handleFinishExam() {
     const totalQ = currentQuestions.length;
     const answeredQ = Object.keys(userAnswers).length;
+    const hasFlagged = flaggedQuestions.size > 0;
 
-    if (answeredQ < totalQ) {
+    if (answeredQ < totalQ || hasFlagged) {
         // Show Warning Modal
-        document.getElementById('warningModal').style.display = 'flex';
-        document.getElementById('warningOverlay').style.display = 'block';
+        const warningModal = document.getElementById('warningModal');
+        const warningOverlay = document.getElementById('warningOverlay');
+        const warningTitle = warningModal.querySelector('h3');
+        const warningText = warningModal.querySelector('p');
+
+        if (answeredQ < totalQ && hasFlagged) {
+            warningTitle.textContent = 'في أسئلة محلتهاش ومعلم عليها!';
+            warningText.textContent = `لسه في ${totalQ - answeredQ} سؤال محلتهمش و ${flaggedQuestions.size} سؤال معلم عليهم. عايز ترجع تكمل ولا تسلم الامتحان؟`;
+        } else if (answeredQ < totalQ) {
+            warningTitle.textContent = 'في أسئلة محلتهاش!';
+            warningText.textContent = `لسه في ${totalQ - answeredQ} سؤال محلتهمش. عايز ترجع تكمل ولا تسلم الامتحان؟`;
+        } else {
+            warningTitle.textContent = 'في أسئلة معلم عليها!';
+            warningText.textContent = `لسه في ${flaggedQuestions.size} سؤال معلم عليهم. عايز ترجع تكمل ولا تسلم الامتحان؟`;
+        }
+
+        warningModal.style.display = 'flex';
+        warningOverlay.style.display = 'block';
     } else {
         calculateResult();
     }
@@ -327,7 +387,7 @@ document.getElementById('confirmSubmitAnywayBtn').addEventListener('click', () =
 });
 
 async function calculateResult() {
-    clearInterval(timerInterval);
+    if (timerInterval) clearInterval(timerInterval);
 
     // UI Cleanup
     if (examFooter) examFooter.style.display = "none";
@@ -335,146 +395,198 @@ async function calculateResult() {
     const progressWrapper = document.querySelector('.progress-wrapper');
     if (progressWrapper) progressWrapper.style.display = "none";
     const sidebar = document.querySelector('.nav-sidebar');
-    const mobileToggle = document.querySelector('.mobile-nav-toggle');
+    const mobileToggles = document.querySelectorAll('.mobile-nav-toggle');
     if (sidebar) sidebar.style.display = "none";
-    if (mobileToggle) mobileToggle.style.display = "none";
+    mobileToggles.forEach(t => t.style.display = "none");
 
     // Show Loading inside result view
-    examView.style.display = "none";
-    resultView.style.display = "block";
+    if (examView) examView.style.display = "none";
+    if (resultView) resultView.style.display = "block";
     const scoreValEl = document.getElementById("scoreValue");
-    scoreValEl.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i>';
+    if (scoreValEl) scoreValEl.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i>';
 
     try {
-        // --- CLIENT SIDE CALCULATION ---
-        let score = 0;
-        let totalQuestions = currentQuestions.length;
-
-        currentQuestions.forEach(q => {
-            const userAnswer = userAnswers[q.id];
-            if (userAnswer && userAnswer === q.correct_answer) {
-                score++;
-            }
-        });
-
-        const percentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
-
-        // 1. Get User ID
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("User not authenticated");
 
-        // 2. Insert Result
-        // Note: 'percentage' is a generated column in DB, so we don't send it. 
-        // We only send score and total_questions.
-        const { error: insertError } = await supabase
-            .from('results')
-            .insert({
-                user_id: user.id,
-                exam_id: examId,
-                score: score,
-                total_questions: totalQuestions,
-                answers: userAnswers,
-                time_spent: timeElapsed
+        let resultData;
+        if (isMistakesMode) {
+            // 1. Submit via Mistakes Practice RPC
+            const { data, error } = await supabase.rpc('submit_mistakes_practice', {
+                p_subject_id: subjectIdForMistakes,
+                p_answers: userAnswers,
+                p_time_spent: timeElapsed
             });
+            if (error) throw error;
+            resultData = data;
 
-        if (insertError) throw insertError;
-
-        // 3. Update Points (First Attempt Only)
-        try {
-            // Check if this is the first time solving this exam
-            const { data: previousAttempts, error: checkError } = await supabase
-                .from('results')
-                .select('id')
-                .eq('user_id', user.id)
-                .eq('exam_id', examId)
-                .limit(1);
-
-            if (checkError) throw checkError;
-
-            // Only award points if NO previous record exists
-            if (!previousAttempts || previousAttempts.length === 0) {
-                const { data: profile } = await supabase.from('profiles').select('points').eq('id', user.id).single();
-                const newPoints = (profile?.points || 0) + score;
-                await supabase.from('profiles').update({ points: newPoints }).eq('id', user.id);
-                console.log(`Points awarded: ${score}. First attempt detected.`);
-            } else {
-                console.log("No points awarded. Not the first attempt.");
+            // Clean specific mistakes cache if any (optional)
+        } else {
+            // 2. Standard Exam submission logic
+            if (challengeId) {
+                const { data: chall } = await supabase.from('squad_exam_challenges').select('created_at, status').eq('id', challengeId).single();
+                if (chall) {
+                    let joinMins = 60, graceMins = 45;
+                    const { data: config } = await supabase.from('app_configs').select('value').eq('key', 'squad_settings').maybeSingle();
+                    if (config?.value) {
+                        joinMins = config.value.join_mins || 60;
+                        graceMins = config.value.grace_mins || 45;
+                    }
+                    const startTime = new Date(chall.created_at).getTime();
+                    const totalWindow = (joinMins + graceMins) * 60 * 1000;
+                    if (Date.now() > (startTime + totalWindow) && chall.status !== 'completed') {
+                        challengeId = null;
+                    }
+                }
             }
-        } catch (pointErr) {
-            console.warn("Points update logic failed:", pointErr);
+
+            const { data, error } = await supabase.rpc('submit_exam_secure', {
+                p_exam_id: examId,
+                p_answers: userAnswers,
+                p_time_spent: timeElapsed,
+                p_challenge_id: challengeId
+            });
+            if (error) throw error;
+            resultData = data;
+
+            // Clear exam-specific storage
+            localStorage.removeItem(`exam_progress_${examId}`);
+            localStorage.removeItem(`exam_timer_${examId}`);
+            if (examId) clearCache(`exam_cache_${examId}`);
         }
 
-        // --- UI UPDATES ---
-        document.getElementById("correctCount").textContent = score;
-        document.getElementById("wrongCount").textContent = totalQuestions - score;
-        document.getElementById("timeSpent").textContent = formatTime(timeElapsed);
+        const score = resultData.score;
+        const totalQuestions = resultData.total;
+        const totalEarned = resultData.total_earned || 0;
+        const percentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
 
-        // Show Hierarchy and Original Title
+        // UI Updates
+        if (scoreValEl) scoreValEl.textContent = `${percentage}%`;
+        const scoreSub = document.getElementById("scoreSubtext");
+        if (scoreSub) scoreSub.textContent = `حللت ${score} من ${totalQuestions} أسئلة`;
+
+        // Clear user stats cache (forces fresh sync on dashboard)
+        clearCache(`user_stats_${user.id}`);
+
+        // --- UI Details ---
+        const correctCountEl = document.getElementById("correctCount");
+        const wrongCountEl = document.getElementById("wrongCount");
+        const timeSpentEl = document.getElementById("timeSpent");
+
+        if (correctCountEl) correctCountEl.textContent = score;
+        if (wrongCountEl) wrongCountEl.textContent = totalQuestions - score;
+        if (timeSpentEl) timeSpentEl.textContent = formatTime(timeElapsed);
+
         const hierarchyEl = document.getElementById("examHierarchy");
         if (hierarchyEl) {
-            let hText = "";
-            if (hierarchyInfo.chapter) hText += hierarchyInfo.chapter;
-            if (hierarchyInfo.lesson) hText += " ❯ " + hierarchyInfo.lesson;
-            hText += " ❯ " + examTitle;
-            hierarchyEl.textContent = hText;
+            let hParts = [];
+            if (hierarchyInfo.subject) hParts.push(`<span style="color:var(--primary-color)">${hierarchyInfo.subject}</span>`);
+            if (hierarchyInfo.chapter) hParts.push(hierarchyInfo.chapter);
+            if (hierarchyInfo.lesson) hParts.push(hierarchyInfo.lesson);
+            hParts.push(`<span style="font-weight:800; color:#1e293b">${examTitle}</span>`);
+            hierarchyEl.innerHTML = hParts.join(" <i class='fas fa-chevron-left' style='font-size:0.7rem; margin:0 5px; opacity:0.5'></i> ");
         }
 
         if (examTitleMobile) {
-            examTitleMobile.innerHTML = `${examTitle} <span style="font-size:0.75rem; color:var(--primary-color); font-weight:normal; margin-right:5px;">(مراجعة)</span>`;
-        }
-
-        if (timerBox) {
-            timerBox.style.display = "flex";
-            timerBox.innerHTML = `<i class="fas fa-chart-line" style="font-size:0.8rem;"></i> <span style="font-weight:900;">${percentage}%</span>`;
+            examTitleMobile.innerHTML = `${examTitle} <span style="font-size:0.75rem; color:var(--primary-color); font-weight:normal; margin-right:5px;">(${isMistakesMode ? 'تمرين' : 'مراجعة'})</span>`;
         }
 
         // Animate Score
         let currentCountAnim = 0;
-        scoreValEl.textContent = "0%";
-        const animTimer = setInterval(() => {
-            if (percentage === 0) {
-                scoreValEl.textContent = "0%";
-                clearInterval(animTimer);
-                return;
-            }
-            currentCountAnim += 1;
-            scoreValEl.textContent = `${currentCountAnim}%`;
-            if (currentCountAnim >= percentage) clearInterval(animTimer);
-        }, 15);
+        if (scoreValEl) {
+            scoreValEl.textContent = "0%";
+            const animTimer = setInterval(() => {
+                if (percentage === 0) {
+                    scoreValEl.textContent = "0%";
+                    clearInterval(animTimer);
+                    handleExamCompletionFlow(totalEarned, percentage, resultData);
+                    return;
+                }
+                currentCountAnim += 1;
+                scoreValEl.textContent = `${currentCountAnim}%`;
+                if (currentCountAnim >= percentage) {
+                    clearInterval(animTimer);
+                    handleExamCompletionFlow(totalEarned, percentage, resultData);
+                }
+            }, 15);
+        }
 
         const resultTitle = document.getElementById("resultTitle");
         const resultMsg = document.getElementById("resultMessage");
 
-        if (percentage >= 85) {
-            resultTitle.textContent = "ممتاز يا بطل! 🥇";
-            resultTitle.style.color = "var(--primary-color)";
-            resultMsg.textContent = `جبت ${score} من ${totalQuestions}. أداء رائع، كمل بنفس المستوى!`;
-        } else if (percentage >= 50) {
-            resultTitle.textContent = "جيد جداً 👍";
-            resultTitle.style.color = "var(--secondary-color)";
-            resultMsg.textContent = `جبت ${score} من ${totalQuestions}. محتاج شوية تركيز المرة الجاية.`;
-        } else {
-            resultTitle.textContent = "محتاج تذاكر تاني 📚";
-            resultTitle.style.color = "#EF4444";
-            resultMsg.textContent = `جبت ${score} من ${totalQuestions}. راجع الدرس وحاول تاني.`;
+        if (resultTitle && resultMsg) {
+            if (percentage >= 85) {
+                resultTitle.textContent = "ممتاز! 🥇";
+                resultTitle.style.color = "var(--primary-color)";
+                resultMsg.textContent = `جبت ${score} من ${totalQuestions}. كمل بنفس المستوى!`;
+            } else if (percentage >= 50) {
+                resultTitle.textContent = "جيد جداً";
+                resultTitle.style.color = "var(--secondary-color)";
+                resultMsg.textContent = `جبت ${score} من ${totalQuestions}. محتاج شوية تركيز المرة الجاية.`;
+            } else {
+                resultTitle.textContent = "محتاج تذاكر تاني";
+                resultTitle.style.color = "#EF4444";
+                resultMsg.textContent = `جبت ${score} من ${totalQuestions}. راجع المحاضرة وحاول تاني.`;
+            }
         }
 
     } catch (err) {
         console.error("Submission Error:", err);
-        Swal.fire({
-            icon: 'error',
-            title: 'خطأ',
-            text: 'فشل في إرسال النتيجة. تأكد من اتصال الإنترنت.',
-            confirmButtonText: 'حسناً'
-        });
-        scoreValEl.innerHTML = '<span style="color:red; font-size:1rem;">فشل الإرسال</span>';
+        showErrorAlert('خطأ', 'فشل في إرسال النتيجة: ' + err.message);
+        if (scoreValEl) scoreValEl.innerHTML = '<span style="color:red; font-size:1rem;">فشل الإرسال</span>';
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Note: saveResultToDatabase is now handled server-side via RPC submit_exam
+async function handleExamCompletionFlow(totalEarned, percentage, resultData) {
+    // 1. Squad Mode: ask to share result
+    if (squadId && !isMistakesMode) {
+        const { isConfirmed } = await Swal.fire({
+            title: 'عرض نتيجتك؟',
+            text: 'تحب تشارك درجتك مع صحابك في الشلة؟ (درجتك هتظهر جوه كارت الامتحان)',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'ماشي',
+            cancelButtonText: 'لا',
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#64748b'
+        });
+        const signal = isConfirmed ? `[CMD:FINISH:${percentage}]` : '[CMD:FINISH:HIDDEN]';
+        await shareResultInSquadChat(signal);
+    }
 
+    // 2. Standard Exam: show points reward popup
+    if (!isMistakesMode && totalEarned > 0) {
+        let breakdownHtml = `<div style="text-align:right;direction:rtl;font-size:0.95rem;">`;
+        if (resultData.points_exam > 0) breakdownHtml += `<span style="color:#64748b">من حلك للامتحان:</span> <b>${resultData.points_exam} نقطة</b><br>`;
+        if (resultData.bonus_perfect > 0) breakdownHtml += `<span style="color:#10b981">بونص التقفيل:</span> <b>+${resultData.bonus_perfect} نقطة</b><br>`;
+        if (resultData.bonus_streak > 0) breakdownHtml += `<span style="color:#f59e0b">بونص الاستمرارية:</span> <b>+${resultData.bonus_streak} نقطة</b><br>`;
+        breakdownHtml += `</div>`;
+        const isFunny = Math.random() < 0.2;
+        await Swal.fire({
+            title: isFunny ? `عاش يا قلبي 😘 خدت ${totalEarned} نقطة` : `عاش عليك. خدت ${totalEarned} نقط`,
+            html: breakdownHtml,
+            icon: 'success',
+            confirmButtonText: isFunny ? 'ماشي يقلبي 😂' : 'ماشي',
+            confirmButtonColor: 'var(--primary-color)',
+            timer: totalEarned > 15 ? 15000 : 8000
+        });
+    }
+}
+async function shareResultInSquadChat(text) {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        await supabase.from('squad_chat_messages').insert({
+            squad_id: squadId,
+            sender_id: user.id,
+            challenge_id: challengeId,
+            text: text // text is the [CMD:...] signal
+        });
+    } catch (err) {
+        console.error("Shared result error:", err);
+    }
+}
 
 // Review Functions
 function renderReview() {

@@ -4,28 +4,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>الأوائل | ثانوية.كوم</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="assets/css/bottom-nav.css">
+
     <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="48x48" href="assets/images/favicon-48x48.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
-    <title>لوحة المتصدرين | ثانوية.كوم</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="assets/css/bottom-nav.css">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        .leaderboard-hero {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-            color: white;
-            padding: clamp(2rem, 8vw, 4rem) 0;
-            text-align: center;
-            margin-bottom: -3rem;
-            position: relative;
-            z-index: 1;
-        }
+        /* Use global .page-header */
 
         .leaderboard-hero h1 {
             font-size: clamp(1.8rem, 5vw, 3rem);
@@ -108,8 +102,8 @@
         }
 
         .user-avatar {
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             background: #f1f5f9;
             border-radius: 50%;
             display: flex;
@@ -120,6 +114,7 @@
             border: 2px solid white;
             box-shadow: var(--shadow-sm);
             flex-shrink: 0;
+            object-fit: cover;
         }
 
         .user-name-box b {
@@ -164,11 +159,6 @@
         }
 
         @media (max-width: 480px) {
-            .user-avatar {
-                display: none;
-                /* Hide avatar on tiny screens to fit name */
-            }
-
             .rank-cell {
                 width: 40px;
             }
@@ -188,6 +178,536 @@
                 margin-top: 1rem;
             }
         }
+
+        /* Filter Buttons Simple Style */
+        .filter-btn {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 700;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .filter-btn:hover {
+            color: var(--primary-color);
+            background: rgba(3, 169, 244, 0.05);
+        }
+
+        .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(3, 169, 244, 0.3);
+        }
+
+        .leaderboard-container {
+            max-width: 800px;
+            margin: -2.5rem auto 4rem auto;
+            position: relative;
+            z-index: 10;
+            padding: 0 1rem;
+        }
+
+        /* Premium Pedestal Podium Styles */
+        .podium-section {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 0;
+            margin: 4rem auto 6rem auto;
+            max-width: 800px;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .pedestal {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+
+        .pedestal-base {
+            width: 100%;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            z-index: 1;
+        }
+
+        /* Rank Specific Bases (Logical Metallic Colors) */
+        .rank-1 .pedestal-base {
+            height: 200px;
+            background: linear-gradient(to bottom, #FFD700, #DAA520);
+            box-shadow: 0 15px 40px rgba(218, 165, 32, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+        }
+
+        .rank-2 .pedestal-base {
+            height: 145px;
+            background: linear-gradient(to bottom, #E8E8E8, #A9A9A9);
+            box-shadow: 0 12px 30px rgba(169, 169, 169, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-right-radius: 0;
+            border-bottom-left-radius: 20px;
+        }
+
+        .rank-3 .pedestal-base {
+            height: 110px;
+            background: linear-gradient(to bottom, #CD7F32, #8B4513);
+            box-shadow: 0 10px 25px rgba(139, 69, 19, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-left-radius: 0;
+            border-bottom-right-radius: 20px;
+        }
+
+        .pedestal-rank-num {
+            font-size: 5rem;
+            font-weight: 1000;
+            color: rgba(255, 255, 255, 0.4);
+            position: absolute;
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .pedestal-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 0px;
+            /* Sit right on top of base */
+            width: 100%;
+            z-index: 2;
+            animation: pedestalFloat 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+            padding-bottom: 15px;
+            /* Create space from pedestal top */
+        }
+
+        @keyframes pedestalFloat {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .rank-2 .pedestal-content {
+            animation-delay: 0s;
+        }
+
+        .rank-1 .pedestal-content {
+            animation-delay: 0.2s;
+        }
+
+        .rank-3 .pedestal-content {
+            animation-delay: 0.4s;
+        }
+
+        .pedestal-avatar-container {
+            position: relative;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pedestal-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            object-fit: cover;
+            background: white;
+            transition: all 0.3s ease;
+            z-index: 5;
+        }
+
+        .rank-1 .pedestal-avatar {
+            width: 110px;
+            height: 110px;
+            border-width: 6px;
+        }
+
+        /* Rank 1 Aura Fix */
+        .rank-1 .pedestal-avatar-container::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, #fbbf24 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(15px);
+            z-index: 1;
+            animation: pulseAura 2.5s infinite alternate;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        @keyframes pulseAura {
+            from {
+                transform: translate(-50%, -50%) scale(0.7);
+                opacity: 0.4;
+            }
+
+            to {
+                transform: translate(-50%, -50%) scale(1.25);
+                opacity: 0.8;
+            }
+        }
+
+        /* Crown Icon Fix */
+        .rank-1 .pedestal-avatar-container::after {
+            content: '\f521';
+            font-family: "Font Awesome 6 Free", "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fbbf24;
+            font-size: 2.5rem;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+            animation: crownFloat 2s ease-in-out infinite;
+            z-index: 10;
+        }
+
+        .pedestal-name {
+            font-weight: 900;
+            font-size: 1.1rem;
+            color: #0f172a !important;
+            /* High contrast Dark Slate */
+            margin-bottom: 4px;
+            text-shadow: none;
+            max-width: 170px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            unicode-bidi: plaintext;
+            /* CRITICAL: Handles logical end for ellipsis dots (...) */
+            direction: ltr;
+            /* Default LTR for dots placement, plaintext handles script swap */
+            text-align: center;
+            z-index: 6;
+            display: block;
+        }
+
+        .pedestal-points {
+            background: #f8fafc;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 1000;
+            color: var(--primary-color) !important;
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 6;
+            margin-bottom: 4px;
+        }
+
+        .pedestal-points span {
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+
+        .pedestal-subinfo {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 700;
+            z-index: 6;
+        }
+
+        /* Hover Effects */
+        .pedestal:hover {
+            transform: translateY(-8px);
+            z-index: 10;
+        }
+
+        .pedestal:hover .pedestal-avatar {
+            transform: scale(1.08);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Premium Effects & Animations */
+        @keyframes shineSweep {
+            0% {
+                transform: translateX(-100%) skewX(-15deg);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: translateX(250%) skewX(-15deg);
+                opacity: 0;
+            }
+        }
+
+        .pedestal-base::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 60%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: skewX(-15deg);
+            animation: shineSweep 4s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes crownFloat {
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(-10px);
+            }
+        }
+
+        /* Premium Effects & Animations */
+        @keyframes rotateAura {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg) scale(1);
+                opacity: 0.3;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) rotate(180deg) scale(1.1);
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg) scale(1);
+                opacity: 0.3;
+            }
+        }
+
+        .rank-1 .pedestal-avatar-container::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 140px;
+            height: 140px;
+            background: conic-gradient(from 0deg, #fbbf24, #f59e0b, #fbbf24);
+            border-radius: 50%;
+            filter: blur(15px);
+            z-index: -1;
+            animation: rotateAura 4s linear infinite;
+        }
+
+        @keyframes shineSweep {
+            0% {
+                transform: translateX(-100%) skewX(-15deg);
+            }
+
+            100% {
+                transform: translateX(200%) skewX(-15deg);
+            }
+        }
+
+        .pedestal-base::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transform: skewX(-15deg);
+            animation: shineSweep 3s infinite;
+        }
+
+        @keyframes crownFloat {
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(-8px);
+            }
+        }
+
+
+        /* Pinned Rank Bar */
+        .pinned-rank-bar {
+            position: fixed;
+            bottom: 70px;
+            /* Above bottom nav */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 500px;
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 50px;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 999;
+            border: 2px solid var(--primary-color);
+            animation: slideUpBar 0.5s ease-out;
+        }
+
+        @keyframes slideUpBar {
+            from {
+                transform: translateX(-50%) translateY(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .pinned-rank-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .pinned-rank-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 2px solid var(--primary-color);
+        }
+
+        .pinned-rank-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pinned-rank-text b {
+            font-size: 0.9rem;
+            color: #0f172a;
+        }
+
+        .pinned-rank-text span {
+            font-size: 0.7rem;
+            color: #64748b;
+            font-weight: 700;
+        }
+
+        .pinned-rank-score {
+            text-align: center;
+        }
+
+        .pinned-rank-score b {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            display: block;
+            line-height: 1;
+        }
+
+        .pinned-rank-score span {
+            font-size: 0.6rem;
+            color: #94a3b8;
+            font-weight: 800;
+        }
+
+        /* Row Interactions */
+        .leaderboard-table tr {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .leaderboard-table tr:hover {
+            background: rgba(3, 169, 244, 0.03) !important;
+            transform: scale(1.01);
+            box-shadow: inset 0 0 0 1px rgba(3, 169, 244, 0.1);
+        }
+
+        @media (max-width: 600px) {
+            .podium-section {
+                gap: 0;
+                margin-top: 3rem;
+                padding: 0 0.5rem;
+            }
+
+            .pedestal-avatar {
+                width: 60px;
+                height: 60px;
+                border-width: 3px;
+            }
+
+            .rank-1 .pedestal-avatar {
+                width: 80px;
+                height: 80px;
+            }
+
+            .pedestal-name {
+                font-size: 0.8rem;
+                max-width: 100px;
+            }
+
+            .pedestal-points {
+                font-size: 0.7rem;
+                padding: 3px 8px;
+            }
+
+            .pedestal-subinfo {
+                font-size: 0.6rem;
+                display: none;
+            }
+
+            .rank-1 .pedestal-base {
+                height: 160px;
+            }
+
+            .rank-2 .pedestal-base {
+                height: 110px;
+            }
+
+            .rank-3 .pedestal-base {
+                height: 85px;
+            }
+
+            .pedestal-rank-num {
+                font-size: 2.5rem;
+            }
+        }
     </style>
 </head>
 
@@ -204,8 +724,8 @@
     <nav class="navbar">
         <div class="container">
             <a href="dashboard.html" class="logo">
-                <img src="assets/images/logo-icon.jpeg" alt="Logo" class="brand-icon">
-                <span class="logo-text">ثانوية<span class="logo-accent">.كوم</span></span>
+                <img src="assets/images/logo-icon.webp" alt="Logo" class="brand-icon">
+                <span class="logo-text">ثانوية <span class="logo-accent">.كوم</span></span>
             </a>
 
             <div class="menu-toggle">
@@ -218,29 +738,57 @@
 
             <ul class="nav-links">
                 <li><a href="dashboard.html">الرئيسية</a></li>
+                <li><a href="curriculum.html">المحاضرات</a></li>
+                <li><a href="squad.html">الشلة</a></li>
                 <li><a href="todo.html">المهام</a></li>
-                <li><a href="leaderboard.html" class="active">المتصدرين</a></li>
+                <li><a href="leaderboard.html" class="active">الأوائل</a></li>
                 <li id="adminNavBtn" style="display: none;">
                     <a href="admin.html" style="color: var(--secondary-color); font-weight: bold;">
                         <i class="fas fa-shield-alt"></i> Admin
                     </a>
                 </li>
-                <li><a href="profile.html" id="navUserName">البروفايل</a></li>
+                <li><a href="profile.html">البروفايل</a></li>
                 <li><button id="logoutBtn" class="btn btn-outline" style="padding: 0.5rem 1rem;">خروج</button></li>
             </ul>
         </div>
     </nav>
 
     <!-- Header Section -->
-    <header class="leaderboard-hero">
+    <header class="page-header">
         <div class="container">
-            <h1>🏆 لوحة الشرف</h1>
+            <h1>قايمة الاوائل</h1>
             <p>أفضل الطلاب على مستوى المنصة كفاحاً وتقديراً</p>
         </div>
     </header>
 
     <!-- Leaderboard Table -->
     <div class="container leaderboard-container">
+        <!-- Leaderboard Controls -->
+        <div class="leaderboard-controls" style="text-align: center; margin-bottom: 2rem;">
+
+            <!-- Type Switcher (Students vs Squads) -->
+            <div
+                style="display: inline-flex; gap: 5px; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 50px; margin-bottom: 1rem;">
+                <button class="filter-btn active" id="tabStudents" onclick="window.switchView('students')"
+                    style="border-radius: 50px; padding: 0.5rem 1.5rem; border: none;">
+                    <i class="fas fa-user-graduate"></i> الطلاب
+                </button>
+                <button class="filter-btn" id="tabSquads" onclick="window.switchView('squads')"
+                    style="border-radius: 50px; padding: 0.5rem 1.5rem; border: none;">
+                    <i class="fas fa-users"></i> الشلل
+                </button>
+            </div>
+
+            <!-- Stream Filters -->
+            <div id="filterContainer" style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                <!-- Injected via JS -->
+            </div>
+
+        </div>
+
+        <!-- Podium Container -->
+        <div id="podiumContainer" class="podium-section"></div>
+
         <div class="full-leaderboard-card">
             <table class="leaderboard-table">
                 <thead>
@@ -255,7 +803,7 @@
                     <tr>
                         <td colspan="3" style="text-align: center; padding: 4rem;">
                             <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--primary-color);"></i>
-                            <p style="margin-top: 1rem; color: var(--text-light);">جاري ترتيب الأبطال...</p>
+                            <p style="margin-top: 1rem; color: var(--text-light);">جاري ترتيب الاوائل...</p>
                         </td>
                     </tr>
                 </tbody>
@@ -284,6 +832,14 @@
                 <i class="fas fa-tasks"></i>
                 <span>المهام</span>
             </a>
+            <a href="squad.html" class="bottom-nav-item">
+                <i class="fas fa-users"></i>
+                <span>الشلة</span>
+            </a>
+            <a href="curriculum.html" class="bottom-nav-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>المحاضرات</span>
+            </a>
             <a href="leaderboard.html" class="bottom-nav-item active">
                 <i class="fas fa-trophy"></i>
                 <span>الأوائل</span>
@@ -292,10 +848,6 @@
                 <i class="fas fa-user"></i>
                 <span>البروفايل</span>
             </a>
-            <!-- <a href="#" id="bottomLogoutBtn" class="bottom-nav-item">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>خروج</span>
-            </a> -->
             <a href="admin.html" id="bottomAdminBtn" class="bottom-nav-item admin-link" style="display: none;">
                 <i class="fas fa-shield-alt"></i>
                 <span>Admin</span>
@@ -305,73 +857,568 @@
 
 
 
-    <script src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/main.js"></script>
     <script type="module" src="assets/js/auth.js"></script>
+    <script type="module" src="assets/js/squad-notifications.js"></script>
 
     <script type="module">
         import { supabase } from "./assets/js/supabaseClient.js";
+        import { getCache, setCache } from "./assets/js/utils.js";
+        import { checkAuth } from "./assets/js/auth.js";
+        import { ACADEMIC_YEARS, DEPARTMENTS, getAcademicYearLabel, getDepartmentLabel } from "./assets/js/constants.js";
+        import { calculateLevel, getLevelColor, calculateSquadLevel } from "./assets/js/avatars.js";
+        import { createLevelBadge, createSquadLevelBadge } from "./assets/js/level-badge.js";
+        import { shouldShowAvatar, isVisible, isSquadMember } from "./assets/js/privacy.js";
 
-        async function loadLeaderboardPage() {
-            const body = document.getElementById('leaderboardBody');
+        // State
+        let currentUserInfo = null;
+        let currentView = 'students'; // 'students' or 'squads'
+        let currentFilterStream = 'all'; // 'all' or specific stream key
+        let settings = { top_students: 50, top_squads: 10, refresh_interval: 10 };
 
+        async function getLeaderboardSettings() {
             try {
-                // التحكم في العدد: غير الرقم (50) للعدد اللي تحبه
+                // Return cached settings if available for performance
+                let cached = getCache('app_leaderboard_settings');
+                if (cached) return cached;
+
                 const { data, error } = await supabase
-                    .from('profiles')
-                    .select('full_name, points, grade, role')
-                    .eq('show_on_leaderboard', true)
-                    .order('points', { ascending: false })
-                    .limit(10);
+                    .from('app_configs')
+                    .select('value')
+                    .eq('key', 'leaderboard_settings')
+                    .maybeSingle();
 
-                if (error) throw error;
-
-                const gradeMap = { "1": "أولى ثانوي", "2": "تانية ثانوي", "3": "تالتة ثانوي" };
-
-                body.innerHTML = data.map((s, i) => {
-                    const rank = i + 1;
-                    let rankDisplay = rank;
-                    let rankClass = `rank-${rank}`;
-
-                    if (rank === 1) rankDisplay = '<i class="fas fa-crown medal-icon"></i>';
-                    else if (rank === 2) rankDisplay = '<i class="fas fa-medal medal-icon" style="color:#d97706"></i>'; // Gold
-                    else if (rank === 3) rankDisplay = '<i class="fas fa-medal medal-icon" style="color:#94a3b8"></i>'; // Silver
-                    else rankClass = '';
-
-                    return `
-                        <tr>
-                            <td class="rank-cell ${rankClass}">${rankDisplay}</td>
-                            <td>
-                                <div class="user-info-cell">
-                                    <div class="user-avatar">${s.full_name[0]}</div>
-                                    <div class="user-name-box">
-                                        <b>${s.full_name}</b>
-                                        <span>${gradeMap[s.grade] || '-'}</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="points-cell">
-                                ${s.points || 0}
-                                <span class="points-label">نقطة</span>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-
-            } catch (err) {
-                console.error(err);
-                body.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red; padding: 2rem;">فشل في تحميل البيانات</td></tr>';
-            } finally {
-                // Safety: Ensure any global loading spinner is hidden
-                const globalLoading = document.getElementById('loading');
-                if (globalLoading) {
-                    globalLoading.style.opacity = '0';
-                    setTimeout(() => { if (globalLoading.parentNode) globalLoading.remove(); }, 500);
-                }
+                const val = data?.value || { top_students: 50, top_squads: 10, refresh_interval: 10 };
+                // Cache settings for 1 minute for reactivity
+                setCache('app_leaderboard_settings', val, 1);
+                return val;
+            } catch (e) {
+                return { top_students: 50, top_squads: 10, refresh_interval: 10 };
             }
         }
 
-        window.addEventListener('DOMContentLoaded', loadLeaderboardPage);
+        // Init
+        document.addEventListener('DOMContentLoaded', async () => {
+            const auth = await checkAuth();
+            if (auth) {
+                currentUserInfo = auth.profile;
+
+                // 3. SECURE IDENTITY - Fetch user's squad_id for privacy checks
+                const { data: squadMember } = await supabase
+                    .from('squad_members')
+                    .select('squad_id')
+                    .eq('profile_id', currentUserInfo.id)
+                    .maybeSingle();
+
+                if (squadMember) {
+                    currentUserInfo.squad_id = squadMember.squad_id;
+                }
+
+                // 4. FREEMIUM CHECK - Unified Access Logic
+                const { subscriptionService, initSubscriptionService } = await import("./assets/js/subscription.js");
+                await initSubscriptionService(currentUserInfo);
+
+                if (!subscriptionService.canAccessFeature('leaderboard')) {
+                    await subscriptionService.showUpgradePrompt('feature');
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+
+                // Senior State Management: Sync UI on point changes
+                window.addEventListener('profileUpdated', (e) => {
+                    // Merge new data with existing one to preserve joined fields (like squad_id)
+                    currentUserInfo = { ...currentUserInfo, ...e.detail };
+                    if (currentView === 'students') loadLeaderboardData();
+                });
+
+                // Fetch settings
+                settings = await getLeaderboardSettings();
+
+                // Default filter: User's department
+                if ((currentUserInfo.academic_year === 'third_year' || currentUserInfo.academic_year === 'fourth_year') && currentUserInfo.department) {
+                    currentFilterStream = currentUserInfo.department;
+                } else {
+                    currentFilterStream = 'all';
+                }
+
+                setupFilters();
+                await loadLeaderboardData();
+
+                // Auto Refresh Interval
+                setInterval(() => {
+                    if (currentView === 'students') loadLeaderboardData(true);
+                    else loadSquadLeaderboardData(true);
+                }, (settings.refresh_interval || 10) * 60000);
+            }
+
+            const loadingGlobal = document.getElementById('loading');
+            if (loadingGlobal) {
+                loadingGlobal.style.opacity = '0';
+                setTimeout(() => { if (loadingGlobal.parentNode) loadingGlobal.remove(); }, 500);
+            }
+        });
+
+        function setupFilters() {
+            const container = document.getElementById('filterContainer');
+            if (!container || !currentUserInfo) return;
+
+            // Use secondary school schema
+            const academic_year = currentUserInfo.academic_year;
+            let buttons = [];
+
+            if (academic_year === 'third_year' || academic_year === '3') {
+                buttons = [
+                    { label: 'الكل', value: 'all' },
+                    { label: 'علمي علوم', value: 'science_science' },
+                    { label: 'علمي رياضة', value: 'science_math' },
+                    { label: 'أدبي', value: 'literary' }
+                ];
+            } else {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'flex';
+            container.innerHTML = buttons.map(btn => `
+                <button class="filter-btn ${btn.value === currentFilterStream ? 'active' : ''}" 
+                        onclick="window.changeFilter('${btn.value}')">
+                    ${btn.label}
+                </button>
+            `).join('');
+        }
+
+        window.changeFilter = (val) => {
+            currentFilterStream = val;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                const onClickStr = btn.getAttribute('onclick');
+                if (onClickStr && onClickStr.includes(`window.changeFilter('${val}')`)) {
+                    btn.classList.add('active');
+                } else if (onClickStr && onClickStr.includes('window.changeFilter')) {
+                    btn.classList.remove('active');
+                }
+            });
+
+            if (currentView === 'students') loadLeaderboardData();
+            else loadSquadLeaderboardData();
+        };
+
+        window.switchView = (view) => {
+            currentView = view;
+            document.getElementById('tabStudents').classList.toggle('active', view === 'students');
+            document.getElementById('tabSquads').classList.toggle('active', view === 'squads');
+
+            const headerH1 = document.querySelector('.page-header h1');
+            const headerP = document.querySelector('.page-header p');
+
+            if (view === 'students') {
+                headerH1.textContent = 'أوائل الطلاب';
+                document.querySelector('thead tr th:nth-child(2)').textContent = 'الطالب';
+
+                // Show stream filters if applicable
+                const filterContainer = document.getElementById('filterContainer');
+                const academic_year = currentUserInfo.academic_year;
+                if (filterContainer && (academic_year === 'third_year' || academic_year === '3' || academic_year === 'fourth_year' || academic_year === '4')) {
+                    filterContainer.style.display = 'flex';
+                }
+
+                loadLeaderboardData();
+            } else {
+                headerH1.textContent = 'أوائل الشلل';
+                document.querySelector('thead tr th:nth-child(2)').textContent = 'الشلة';
+
+                // Hide stream filters for Squads
+                const filterContainer = document.getElementById('filterContainer');
+                if (filterContainer) filterContainer.style.display = 'none';
+
+                loadSquadLeaderboardData();
+            }
+        };
+
+        function renderPodium(items, type) {
+            const container = document.getElementById('podiumContainer');
+            if (!container) return;
+            if (!items || items.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            container.style.display = 'flex';
+
+            // Reorder for visual pedestal balanced for RTL: [3, 1, 2]
+            // This renders as 2 (Left), 1 (Middle), 3 (Right)
+            const podiumOrder = [];
+            if (items.length >= 3) podiumOrder.push({ ...items[2], visualRank: 3 });
+            if (items.length >= 1) podiumOrder.push({ ...items[0], visualRank: 1 });
+            if (items.length >= 2) podiumOrder.push({ ...items[1], visualRank: 2 });
+
+            container.innerHTML = podiumOrder.map(s => {
+                const name = type === 'students' ? s.full_name : s.name;
+                const avatarUrl = s.avatar_url || (type === 'students'
+                    ? `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=03A9F4&color=fff&size=100`
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Squad')}&background=10b981&color=fff&size=100`);
+
+                const profileLink = type === 'students' ? `student-profile.html?id=${s.id}` : `squad-profile.html?id=${s.id}`;
+
+                let subInfo = '';
+                if (type === 'students') {
+                    const dept = getDepartmentLabel(s.department);
+                    const year = getAcademicYearLabel(s.academic_year);
+                    subInfo = dept ? `${year} - ${dept}` : year;
+                } else {
+                    const dept = getDepartmentLabel(s.department);
+                    const year = getAcademicYearLabel(s.academic_year);
+                    // For squads: Show Year - Dept for 3rd/4th years, just year for others (no departments)
+                    if ((s.academic_year === 'third_year' || s.academic_year === 'fourth_year') && dept) {
+                        subInfo = `${year} - ${dept}`;
+                    } else if (s.academic_year === 'first_year' || s.academic_year === 'second_year') {
+                        subInfo = year;
+                    } else {
+                        subInfo = year || '';
+                    }
+                }
+
+                // Unified Privacy check for avatar
+                // Use s.squad_id or current user's lookup to be safe
+                const studentSquadId = s.squad_id || null;
+                const userSquadId = currentUserInfo?.squad_id || null;
+
+                const showAvatar = type === 'students' ? shouldShowAvatar(
+                    s.privacy_avatar,
+                    s.id,
+                    currentUserInfo?.id,
+                    studentSquadId,
+                    userSquadId
+                ) : true;
+
+                const avatarHTML = showAvatar
+                    ? `<img src="${avatarUrl}" class="pedestal-avatar">`
+                    : `<div class="pedestal-avatar" style="background: #e2e8f0; display: flex; align-items: center; justify-content: center; border-radius: 50%;"><i class="fas fa-lock" style="color: #94a3b8; font-size: 1.5rem;"></i></div>`;
+
+                const points = s.points || 0;
+
+                return `
+                    <div class="pedestal rank-${s.visualRank}" onclick="location.href='${profileLink}'">
+                        <div class="pedestal-content">
+                            <div class="pedestal-avatar-container">
+                                ${avatarHTML}
+                            </div>
+                            <span class="pedestal-name" title="${name}">${name}</span>
+                            <div class="pedestal-points"><div class="counter" data-target="${points}">0</div> <span>نقطة</span></div>
+                            <span class="pedestal-subinfo">${subInfo}</span>
+                        </div>
+                        <div class="pedestal-base">
+                            <div class="pedestal-rank-num">${s.visualRank}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Start counter animation
+            setTimeout(animateCounters, 100);
+        }
+
+        function animateCounters() {
+            const counters = document.querySelectorAll('.counter');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                if (isNaN(target)) return;
+
+                let current = 0;
+                const duration = 1500; // 1.5s
+                const stepTime = 30;
+                const increment = target / (duration / stepTime);
+
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        counter.innerText = target.toLocaleString();
+                        clearInterval(timer);
+                    } else {
+                        counter.innerText = Math.floor(current).toLocaleString();
+                    }
+                }, stepTime);
+            });
+        }
+
+        async function loadSquadLeaderboardData(skipCache = false) {
+            const body = document.getElementById('leaderboardBody');
+
+            // Only show loader if it's the first load or explicit refresh
+            if (body.innerHTML.includes('rank-cell') === false) {
+                body.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:4rem;"><i class="fas fa-spinner fa-spin fa-2x" style="color: var(--primary-color);"></i></td></tr>';
+            }
+
+            // Update Text Context
+            const headerP = document.querySelector('.page-header p');
+            const contextText = getAcademicYearLabel(currentUserInfo.academic_year) || '';
+            headerP.textContent = `أقوى الشلل في ${contextText}`;
+
+            const cacheKey = `squad_leaderboard_${currentUserInfo.academic_year}_limit${settings.top_squads || 10}`;
+            let squads = skipCache ? null : getCache(cacheKey);
+
+            try {
+                if (!squads) {
+                    const { data: rpcData, error } = await supabase.rpc('get_squad_leaderboard', {
+                        p_limit: settings.top_squads || 10,
+                        p_academic_year: currentUserInfo.academic_year
+                    });
+                    if (error) throw error;
+                    squads = rpcData;
+                    // Cache duration matches the admin refresh_interval
+                    setCache(cacheKey, squads, settings.refresh_interval || 1);
+                }
+
+                if (!squads || squads.length === 0) {
+                    body.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 2rem;">مفيش شلل لسة.. ابدأ شلتك دلوقتي!</td></tr>';
+                    document.getElementById('podiumContainer').style.display = 'none';
+                    return;
+                }
+
+                // Render Podium for top 3
+                const top3 = squads.slice(0, 3);
+                renderPodium(top3, 'squads');
+
+                // Render remaining in table
+                const remaining = squads.slice(3);
+                if (remaining.length === 0) {
+                    body.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 2rem; color: #94a3b8;">باقي القائمة يظهر هنا المركز 4+</td></tr>';
+                    return;
+                }
+
+                body.innerHTML = remaining.map((s, idx) => {
+                    const i = idx + 3; // Correct rank index
+                    const displayGrade = getAcademicYearLabel(s.academic_year) || s.academic_year || '';
+                    const displayDept = getDepartmentLabel(s.department) || s.department || '';
+
+                    // Build info text: Year - Department (for years 3-4 only)
+                    let infoText = displayGrade;
+                    if ((s.academic_year === 'third_year' || s.academic_year === 'fourth_year') && displayDept) {
+                        infoText = `${displayGrade} - ${displayDept}`;
+                    }
+
+                    // Squad avatar URL or fallback
+                    const avatarUrl = s.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name || 'Squad')}&background=10b981&color=fff&size=80`;
+
+                    // Calculate squad level and color
+                    const squadLevel = calculateSquadLevel(s.points || 0);
+                    const levelColor = getLevelColor(squadLevel);
+                    const levelBadgeHTML = createSquadLevelBadge(s.points || 0, 'xsmall');
+
+                    // Privacy Check for Squad Avatar
+                    const isMember = currentUserInfo.squad_id === s.id;
+                    const showAvatar = isVisible(s.privacy_avatar || 'public', false, isMember);
+
+                    const avatarHTML = showAvatar
+                        ? `<a href="squad-profile.html?id=${s.id}" style="display: block; width: 100%; height: 100%;">
+                               <img src="${avatarUrl}" alt="${s.name}" class="user-avatar" style="width: 100%; height: 100%; object-fit: cover; border: 3px solid ${levelColor}; box-shadow: 0 4px 12px ${levelColor}40; cursor: pointer;">
+                           </a>`
+                        : `<div class="user-avatar" style="width: 100%; height: 100%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; border: 3px solid ${levelColor};"><i class="fas fa-lock" style="color: #94a3b8; font-size: 1.2rem;"></i></div>`;
+
+                    return `
+                    <tr>
+                        <td class="rank-cell ${i < 3 ? 'rank-' + (i + 1) : ''}">
+                            ${i === 0 ? '<i class="fas fa-crown medal-icon"></i>' :
+                            i === 1 ? '<i class="fas fa-medal medal-icon" style="color:#d97706"></i>' :
+                                i === 2 ? '<i class="fas fa-medal medal-icon" style="color:#94a3b8"></i>' :
+                                    (i + 1)}
+                        </td>
+                        <td>
+                            <div class="user-info-cell">
+                                <div style="position: relative; display: inline-block; width: 45px; height: 45px; min-width: 45px; min-height: 45px;">
+                                    ${avatarHTML}
+                                    <div style="position: absolute; bottom: -2px; left: -2px; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); pointer-events: none;">${levelBadgeHTML}</div>
+                                </div>
+                                <div class="user-name-box">
+                                    <a href="squad-profile.html?id=${s.id}" style="text-decoration: none; color: inherit; font-weight: 700; transition: color 0.3s ease;" onmouseover="this.style.color='#10b981'" onmouseout="this.style.color='inherit'">${s.name}</a>
+                                    <span>${infoText}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="points-cell">
+                            ${s.points || 0}
+                            <span class="points-label">نقطة</span>
+                        </td>
+                    </tr>
+                `;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+                body.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">خطأ في التحميل</td></tr>';
+            }
+        }
+
+        function updatePinnedRankBar(userRank, data) {
+            // Remove existing bar if any
+            const existingBar = document.querySelector('.pinned-rank-bar');
+            if (existingBar) existingBar.remove();
+
+            // Logic Fix: Only show pinned bar if viewing 'all' or user's own department
+            const belongsToFilter = (currentFilterStream === 'all') || (currentFilterStream === currentUserInfo.department);
+            if (!belongsToFilter) return;
+
+            // Hide if view is squads or user ranks in top 3
+            if (currentView === 'squads' || (userRank > 0 && userRank <= 3)) return;
+
+            // If user not in the fetched list (e.g. not in top 50), we show their actual rank and points
+            // Note: userRank is calculated based on the returned data list
+            if (userRank === 0) {
+                // User is not in top students list
+                const motivationMsg = `حل امتحانات اكتر عشان تظهر في القايمة. باقيلك:`;
+
+                const bar = document.createElement('div');
+                bar.className = 'pinned-rank-bar';
+                bar.innerHTML = `
+                    <div class="pinned-rank-info">
+                        <img src="${currentUserInfo.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUserInfo.full_name) + '&background=03A9F4&color=fff'}" class="pinned-rank-avatar">
+                        <div class="pinned-rank-text">
+                            <b>${currentUserInfo.full_name}</b>
+                            <span>${motivationMsg}</span>
+                        </div>
+                    </div>
+                    <div class="pinned-rank-score">
+                        <b>${currentUserInfo.points || 0}</b>
+                        <span>نقطة</span>
+                    </div>
+                `;
+                document.body.appendChild(bar);
+                return;
+            }
+
+            // User is in top students but not top 3
+            const studentAbove = data[userRank - 2];
+            const diff = studentAbove.points - currentUserInfo.points;
+            const motivationMsg = diff === 0 ? `أنت متعادل مع ${studentAbove.full_name}!` : `باقي لك ${diff + 1} نقطة وتعدي ${studentAbove.full_name.split(' ')[0]}! 🚀`;
+
+            const bar = document.createElement('div');
+            bar.className = 'pinned-rank-bar';
+            bar.innerHTML = `
+                <div class="pinned-rank-info">
+                    <img src="${currentUserInfo.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUserInfo.full_name) + '&background=03A9F4&color=fff'}" class="pinned-rank-avatar">
+                    <div class="pinned-rank-text">
+                        <b>ترتيبك: #${userRank}</b>
+                        <span>${motivationMsg}</span>
+                    </div>
+                </div>
+                <div class="pinned-rank-score">
+                    <b>${currentUserInfo.points || 0}</b>
+                    <span>نقطة</span>
+                </div>
+            `;
+            document.body.appendChild(bar);
+        }
+
+        async function loadLeaderboardData(skipCache = false) {
+            const body = document.getElementById('leaderboardBody');
+
+            // Only show spinner if the table is empty or first load
+            if (body.innerHTML.includes('rank-cell') === false) {
+                body.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 4rem;"><i class="fas fa-spinner fa-spin fa-2x" style="color: var(--primary-color);"></i><p style="margin-top: 1rem; color: var(--text-light);">جاري تحديث القائمة...</p></td></tr>`;
+            }
+
+            const oldMsg = document.getElementById('motivationMsg');
+            if (oldMsg) oldMsg.remove();
+
+            const cacheKey = `leaderboard_${currentUserInfo.academic_year}_${currentUserInfo.current_term}_${currentFilterStream}_limit${settings.top_students || 50}`;
+            let data = skipCache ? null : getCache(cacheKey);
+
+            try {
+                if (!data) {
+                    const { data: rpcData, error } = await supabase.rpc('get_top_students', {
+                        p_limit: settings.top_students || 50,
+                        p_academic_year: currentUserInfo.academic_year,
+                        p_current_term: currentUserInfo.current_term,
+                        p_department: currentFilterStream === 'all' ? null : currentFilterStream
+                    });
+                    if (error) throw error;
+                    data = rpcData;
+                    // Cache duration matches the admin refresh_interval
+                    setCache(cacheKey, data, settings.refresh_interval || 10);
+                }
+
+                const headerP = document.querySelector('.page-header p');
+                let contextText = getAcademicYearLabel(currentUserInfo.academic_year) || '';
+                if (currentFilterStream === 'all') contextText += " (الدفعة كاملة)";
+                else if (getDepartmentLabel(currentFilterStream)) contextText += ` - ${getDepartmentLabel(currentFilterStream)}`;
+                headerP.textContent = `قائمة الأوائل لـ ${contextText}`;
+
+                if (!data || data.length === 0) {
+                    body.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 2rem;">لا يوجد متصدرين في هذا التصنيف.</td></tr>';
+                    document.getElementById('podiumContainer').style.display = 'none';
+                    return;
+                }
+
+                const filteredData = data.filter(s => s.show_on_leaderboard !== false);
+
+                // Find current user's rank
+                const userRank = data.findIndex(s => s.id === currentUserInfo.id) + 1;
+                const userInTop3 = userRank > 0 && userRank <= 3;
+
+                updatePinnedRankBar(userRank, data);
+
+                // Render Podium for top 3
+                const top3 = filteredData.slice(0, 3);
+                renderPodium(top3, 'students');
+
+                // Render remaining in table
+                const remaining = filteredData.slice(3);
+                if (remaining.length === 0) {
+                    body.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 2rem; color: #94a3b8;">باقي القائمة يظهر هنا من المركز الرابع</td></tr>';
+                    return;
+                }
+
+                body.innerHTML = remaining.map((s, idx) => {
+                    const rank = idx + 4; // Correct rank
+                    let rankDisplay = rank;
+                    let rankClass = ''; // No special medal icons in table if they are in podium
+
+                    const rowClass = s.id === currentUserInfo.id ? 'style="background-color: #f0f9ff;"' : '';
+                    const displayStream = getDepartmentLabel(s.department) || '';
+                    const subText = displayStream ? `<span style="font-size:0.8em; color:var(--primary-color);">(${displayStream})</span>` : (getAcademicYearLabel(s.academic_year) || '-');
+
+                    // Avatar URL or fallback
+                    const avatarUrl = s.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.full_name || 'User')}&background=03A9F4&color=fff&size=80`;
+
+                    // Calculate level and color
+                    const level = calculateLevel(s.points || 0);
+                    const levelColor = getLevelColor(level);
+                    const levelBadgeHTML = createLevelBadge(s.points || 0, 'xsmall');
+
+                    // Privacy check for avatar using helper function
+                    const showAvatar = shouldShowAvatar(
+                        s.privacy_avatar,
+                        s.id,
+                        currentUserInfo.id,
+                        s.squad_id,
+                        currentUserInfo.squad_id
+                    );
+
+                    const avatarHTML = showAvatar
+                        ? `<a href="student-profile.html?id=${s.id}" style="display: block; width: 100%; height: 100%;"><img src="${avatarUrl}" alt="${s.full_name}" class="user-avatar" style="width: 100%; height: 100%; object-fit: cover; border: 3px solid ${levelColor}; box-shadow: 0 4px 12px ${levelColor}40; cursor: pointer;"></a>`
+                        : `<div class="user-avatar" style="width: 100%; height: 100%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; border: 3px solid ${levelColor};"><i class="fas fa-lock" style="color: #94a3b8; font-size: 1.2rem;"></i></div>`;
+
+                    return `<tr ${rowClass}><td class="rank-cell ${rankClass}">${rankDisplay}</td><td><div class="user-info-cell"><div style="position: relative; display: inline-block; width: 45px; height: 45px; min-width: 45px; min-height: 45px;">${avatarHTML}<div style="position: absolute; bottom: -2px; left: -2px; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); pointer-events: none;">${levelBadgeHTML}</div></div><div class="user-name-box"><a href="student-profile.html?id=${s.id}" style="text-decoration: none; color: inherit; font-weight: 700; transition: color 0.3s ease;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='inherit'">${s.full_name} ${s.id === currentUserInfo.id ? '(أنت)' : ''}</a><span>${subText}</span></div></div></td><td class="points-cell">${s.points || 0}<span class="points-label">نقطة</span></td></tr>`;
+                }).join('');
+
+                const belongsToFilter = (currentFilterStream === 'all') || (currentFilterStream === currentUserInfo.department);
+                const isUserInTop10 = data.slice(0, 10).some(s => s.id === currentUserInfo.id);
+
+                if (belongsToFilter && !isUserInTop10 && data.length > 0) {
+                    const lastInListPoints = data[data.length - 1].points || 0;
+                    const diff = lastInListPoints - (currentUserInfo.points || 0);
+                    if (diff > 0) {
+                        const motivationMsg = document.createElement('div');
+                        motivationMsg.id = 'motivationMsg';
+                        motivationMsg.style.cssText = `background: white; padding: 1rem; margin-top: 1rem; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px dashed var(--primary-color); color: #475569;`;
+                        motivationMsg.innerHTML = `<i class="fas fa-rocket" style="color: var(--primary-color); font-size: 1.2rem;"></i><span style="font-weight: bold; margin: 0 5px;"></span>باقي لك <span style="color: var(--primary-color); font-weight: 900; font-size: 1.1rem;">${diff + 1}</span> نقطة وتبقى من الاوائل!`;
+                        document.querySelector('.full-leaderboard-card').after(motivationMsg);
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                body.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red; padding: 2rem;">خطأ في التحميل</td></tr>';
+            }
+        }
     </script>
+
 
 </body>
 

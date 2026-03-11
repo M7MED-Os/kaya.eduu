@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بروفايل الطالب | ثانوية.كوم</title>
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="48x48" href="assets/images/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
+
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        .profile-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .profile-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0288d1 100%);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem 2rem;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(3, 169, 244, 0.3);
+        }
+
+        .profile-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        .profile-avatar-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1rem;
+            z-index: 1;
+        }
+
+        .profile-avatar {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid white;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .profile-level-badge {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            z-index: 10;
+        }
+
+        .profile-name {
+            font-size: 2rem;
+            font-weight: 900;
+            margin: 0.5rem 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .profile-grade {
+            font-size: 1.05rem;
+            opacity: 0.95;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .profile-bio-container {
+            max-width: 500px;
+            margin: 1rem auto 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .profile-bio {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-height: 45px;
+            transition: all 0.3s ease;
+        }
+
+        .profile-bio:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .bio-text {
+            flex: 1;
+            text-align: center;
+        }
+
+        .bio-text.empty {
+            opacity: 0.7;
+            font-style: normal;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+            direction: rtl;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary-color), #0288d1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--text-dark);
+            margin: 0.5rem 0;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            font-weight: 600;
+            direction: rtl;
+        }
+
+        .profile-section {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            direction: rtl;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            direction: rtl;
+        }
+
+        .section-title i {
+            color: var(--primary-color);
+        }
+
+        .squad-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-light);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+            direction: rtl;
+        }
+
+        .squad-link:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateX(-5px);
+        }
+
+        .squad-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .squad-info {
+            flex: 1;
+            text-align: right;
+        }
+
+        .squad-name {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .squad-meta {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: var(--radius-md);
+        }
+
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: white;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .action-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .action-btn.secondary {
+            border-color: #64748b;
+            color: #64748b;
+        }
+
+        .action-btn.secondary:hover {
+            background: #64748b;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .profile-header {
+                padding: 1.5rem 1rem;
+            }
+
+            .profile-avatar {
+                width: 110px;
+                height: 110px;
+            }
+
+            .profile-name {
+                font-size: 1.5rem;
+            }
+
+            .profile-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="profile-container">
+        <div class="action-buttons">
+            <a href="javascript:history.back()" class="action-btn secondary">
+                <i class="fas fa-arrow-right"></i>
+                رجوع
+            </a>
+        </div>
+
+        <!-- Profile Header -->
+        <div class="profile-header" id="profileHeader">
+            <div class="loading-skeleton" style="width: 130px; height: 130px; border-radius: 50%; margin: 0 auto 1rem;">
+            </div>
+            <div class="loading-skeleton" style="width: 200px; height: 30px; margin: 0 auto 0.5rem;"></div>
+            <div class="loading-skeleton" style="width: 150px; height: 20px; margin: 0 auto;"></div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="profile-stats" id="profileStats">
+            <!-- Will be populated by JS -->
+        </div>
+
+        <!-- Squad Section -->
+        <div class="profile-section" id="squadSection" style="display: none;">
+            <h3 class="section-title">
+                <i class="fas fa-users"></i>
+                الشلة الحالية
+            </h3>
+            <div id="squadContent"></div>
+        </div>
+
+        <!-- Level Progress Section -->
+        <div class="profile-section" id="levelSection">
+            <h3 class="section-title">
+                <i class="fas fa-chart-line"></i>
+                مستوى التقدم
+            </h3>
+            <div id="levelProgress"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './assets/js/supabaseClient.js';
+        import { generateAvatar, calculateLevel, getLevelColor } from './assets/js/avatars.js';
+        import { createLevelBadge, createLevelProgress } from './assets/js/level-badge.js';
+        import { ACADEMIC_YEARS, DEPARTMENTS, getAcademicYearLabel, getDepartmentLabel, getTermLabel } from './assets/js/constants.js';
+        import { isInSameSquad, isVisible, createLockedElement, createLockedAvatar } from './assets/js/privacy.js';
+
+        // Wait for DOM
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        async function init() {
+            // Get student ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const studentId = urlParams.get('id');
+
+            if (!studentId) {
+                window.location.href = 'leaderboard.html';
+                return;
+            }
+
+            await loadStudentProfile(studentId);
+        }
+
+        async function loadStudentProfile(studentId) {
+            try {
+                // Fetch student data with privacy settings
+                const { data: student, error } = await supabase
+                    .from('profiles')
+                    .select('*, privacy_avatar, privacy_bio, privacy_stats, privacy_progress, privacy_squad')
+                    .eq('id', studentId)
+                    .single();
+
+                if (error) throw error;
+
+                // Get current user
+                const { data: { user } } = await supabase.auth.getUser();
+
+                // Check relationship
+                const isOwner = user && user.id === studentId;
+                const isSameSquad = user ? await isInSameSquad(studentId, user.id) : false;
+
+                // Store privacy context globally
+                window.privacyContext = {
+                    isOwner,
+                    isSameSquad,
+                    privacySettings: {
+                        avatar: student.privacy_avatar || 'public',
+                        bio: student.privacy_bio || 'public',
+                        stats: student.privacy_stats || 'public',
+                        progress: student.privacy_progress || 'public',
+                        squad: student.privacy_squad || 'public'
+                    }
+                };
+
+                // Render profile header (with privacy checks)
+                renderProfileHeader(student);
+
+                // Fetch and render stats (with privacy checks)
+                await renderStats(student);
+
+                // Fetch and render squad info
+                await renderSquad(student.id);
+
+                // Render level progress (with privacy checks)
+                renderLevelProgress(student.points);
+
+            } catch (err) {
+                console.error('Error loading profile:', err);
+                const headerEl = document.getElementById('profileHeader');
+                if (headerEl) {
+                    headerEl.innerHTML = `
+                        <div style="text-align: center; color: white; padding: 2rem;">
+                            <i class="fas fa-exclamation-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                            <p>عذراً، لم نتمكن من تحميل البروفايل</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function renderProfileHeader(student) {
+            const level = calculateLevel(student.points || 0);
+            const levelColor = getLevelColor(level);
+            const levelBadgeHTML = createLevelBadge(student.points || 0, 'large');
+
+            const gradeText = getAcademicYearLabel(student.academic_year) || student.academic_year || 'غير محدد';
+            let additionalInfo = '';
+
+            if (student.academic_year === 'third_year' || student.academic_year === 'fourth_year') {
+                additionalInfo = getDepartmentLabel(student.department) || student.department || '';
+            } else if (student.current_term) {
+                additionalInfo = `الترم ${student.current_term === 'first_term' ? '1' : '2'}`;
+            }
+
+            // Check privacy for avatar
+            const ctx = window.privacyContext;
+            const showAvatar = ctx && isVisible(ctx.privacySettings.avatar, ctx.isOwner, ctx.isSameSquad);
+            const showBio = ctx && isVisible(ctx.privacySettings.bio, ctx.isOwner, ctx.isSameSquad);
+
+            // Privacy check for level badge
+            const showProgress = ctx && isVisible(ctx.privacySettings.progress, ctx.isOwner, ctx.isSameSquad);
+
+            // Avatar HTML
+            let avatarHTML;
+            if (showAvatar) {
+                const avatarUrl = student.avatar_url || generateAvatar(student.full_name, 'initials');
+                avatarHTML = `
+                    <div class="profile-avatar-container">
+                        <img src="${avatarUrl}" alt="${student.full_name}" class="profile-avatar" style="border-color: ${levelColor};">
+                        <div class="profile-level-badge">
+                            ${showProgress ? levelBadgeHTML : ''}
+                        </div>
+                    </div>
+                `;
+            } else {
+                avatarHTML = `
+                    <div class="profile-avatar-container">
+                        ${createLockedAvatar()}
+                        <div class="profile-level-badge">
+                            ${showProgress ? levelBadgeHTML : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Bio HTML
+            let bioHTML;
+            if (showBio) {
+                const bioText = student.bio || 'مفيش بايو';
+                const bioClass = student.bio ? '' : 'empty';
+                bioHTML = `
+                    <div class="profile-bio-container">
+                        <div class="profile-bio">
+                            <span class="bio-text ${bioClass}">${bioText}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                bioHTML = `
+                    <div class="profile-bio-container">
+                        ${createLockedElement('bio')}
+                    </div>
+                `;
+            }
+
+            const headerEl = document.getElementById('profileHeader');
+            if (headerEl) {
+                headerEl.innerHTML = `
+                    ${avatarHTML}
+                    <h1 class="profile-name">${student.full_name}</h1>
+                    <p class="profile-grade">${gradeText}${additionalInfo ? ' - ' + additionalInfo : ''}</p>
+                    ${bioHTML}
+                `;
+            }
+        }
+
+        async function renderStats(student) {
+            const ctx = window.privacyContext;
+            const showStats = ctx && isVisible(ctx.privacySettings.stats, ctx.isOwner, ctx.isSameSquad);
+
+            const statsEl = document.getElementById('profileStats');
+            if (!statsEl) return;
+
+            if (!showStats) {
+                statsEl.innerHTML = createLockedElement('stats');
+                return;
+            }
+
+            const { data: statsData } = await supabase.rpc('get_user_stats', { p_user_id: student.id });
+            const stats = (statsData && statsData.length > 0) ? statsData[0] : {};
+
+            const level = calculateLevel(student.points || 0);
+            const totalExams = stats.total_exams || 0;
+            const totalQuestions = stats.total_solved_questions || 0;
+            const accuracy = totalQuestions > 0
+                ? Math.round((stats.total_solved_questions / stats.total_possible_questions) * 100)
+                : 0;
+
+            statsEl.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+                    <div class="stat-value">${student.points || 0}</div>
+                    <div class="stat-label">نقطة ✨</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-star"></i></div>
+                    <div class="stat-value">${level}</div>
+                    <div class="stat-label">المستوى الحالي</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+                    <div class="stat-value">${totalExams}</div>
+                    <div class="stat-label">امتحانات محلولة</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-bullseye"></i></div>
+                    <div class="stat-value"><i class="fas fa-question-circle" style="font-size: 1.4rem; color: #94a3b8;"></i></div>
+                    <div class="stat-label">التقدير</div>
+                </div>
+            `;
+        }
+
+        async function renderSquad(userId) {
+            const ctx = window.privacyContext;
+            const showSquad = ctx && isVisible(ctx.privacySettings.squad, ctx.isOwner, ctx.isSameSquad);
+
+            const sectionEl = document.getElementById('squadSection');
+            const contentEl = document.getElementById('squadContent');
+
+            if (!sectionEl || !contentEl) return;
+
+            if (!showSquad) {
+                sectionEl.style.display = 'block';
+                contentEl.innerHTML = createLockedElement('squad');
+                return;
+            }
+
+            const { data: membership } = await supabase
+                .from('squad_members')
+                .select('squad_id, squads(*)')
+                .eq('profile_id', userId)
+                .limit(1)
+                .single();
+
+            if (membership && membership.squads) {
+                const squad = membership.squads;
+
+                // Privacy check for squad avatar
+                // Check if viewer is in this squad
+                const { data: viewerMembership } = await supabase
+                    .from('squad_members')
+                    .select('squad_id')
+                    .eq('profile_id', (await supabase.auth.getUser()).data.user?.id)
+                    .eq('squad_id', squad.id)
+                    .maybeSingle();
+
+                const isMemberOfSquad = !!viewerMembership;
+                const showSquadAvatar = isVisible(squad.privacy_avatar || 'public', ctx.isOwner, isMemberOfSquad);
+
+                let squadAvatarHTML;
+                if (showSquadAvatar) {
+                    const avatarUrl = squad.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(squad.name)}&background=10b981&color=fff&size=100`;
+                    squadAvatarHTML = `<img src="${avatarUrl}" alt="${squad.name}" class="squad-avatar">`;
+                } else {
+                    squadAvatarHTML = `
+                        <div class="squad-avatar-locked" style="width: 50px; height: 50px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: #94a3b8;">
+                            <i class="fas fa-lock" style="font-size: 1.2rem;"></i>
+                        </div>
+                    `;
+                }
+
+                const { count: memberCount } = await supabase
+                    .from('squad_members')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('squad_id', squad.id);
+
+                sectionEl.style.display = 'block';
+                contentEl.innerHTML = `
+                    <a href="squad-profile.html?id=${squad.id}" class="squad-link">
+                        ${squadAvatarHTML}
+                        <div class="squad-info">
+                            <div class="squad-name">${squad.name}</div>
+                            <div class="squad-meta">
+                                <i class="fas fa-users"></i> ${memberCount || 0} عضو
+                                • <i class="fas fa-trophy"></i> ${squad.points || 0} نقطة
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                `;
+            }
+        }
+
+        function renderLevelProgress(points) {
+            const ctx = window.privacyContext;
+            const showProgress = ctx && isVisible(ctx.privacySettings.progress, ctx.isOwner, ctx.isSameSquad);
+
+            const progressEl = document.getElementById('levelProgress');
+            if (!progressEl) return;
+
+            if (!showProgress) {
+                progressEl.innerHTML = createLockedElement('progress');
+                return;
+            }
+
+            const progressHTML = createLevelProgress(points);
+            progressEl.innerHTML = progressHTML;
+        }
+    </script>
+</body>
+
+</html>

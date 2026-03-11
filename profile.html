@@ -4,22 +4,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>الملف الشخصي | ثانوية.كوم</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/profile.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="assets/css/bottom-nav.css">
+
     <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="48x48" href="assets/images/favicon-48x48.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
-    <title>الملف الشخصي | ثانوية.كوم</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="assets/css/bottom-nav.css">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         .auth-card {
-            max-width: 600px;
+            max-width: 700px;
             margin: 2rem auto;
+        }
+
+        /* Subscription Card Styles */
+        .sub-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 2rem;
+            margin: 1.5rem;
+            border-radius: 24px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sub-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .sub-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.4);
+            flex-shrink: 0;
+        }
+
+        .sub-info-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .sub-item {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 1rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .sub-dates-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .sub-timer-box {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(14, 165, 233, 0.2) 100%);
+            padding: 1.25rem;
+            border-radius: 12px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .time-pill {
+            background: rgba(56, 189, 248, 0.3);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #38bdf8;
+            white-space: normal;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 480px) {
+            .sub-card {
+                padding: 1.5rem 1rem;
+                margin: 1rem;
+            }
+
+            .sub-dates-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sub-timer-box {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .time-pill {
+                width: 100%;
+            }
+
+            .sub-header h3 {
+                font-size: 1.1rem;
+            }
         }
     </style>
 </head>
@@ -30,7 +132,7 @@
     <nav class="navbar">
         <div class="container">
             <a href="dashboard.html" class="logo">
-                <img src="assets/images/logo-icon.jpeg" alt="Logo" class="brand-icon">
+                <img src="assets/images/logo-icon.webp" alt="Logo" class="brand-icon">
                 <span class="logo-text">ثانوية<span class="logo-accent">.كوم</span></span>
             </a>
 
@@ -44,134 +146,197 @@
 
             <ul class="nav-links">
                 <li><a href="dashboard.html">الرئيسية</a></li>
+                <li><a href="curriculum.html">المحاضرات</a></li>
+                <li><a href="squad.html">الشلة</a></li>
                 <li><a href="todo.html">المهام</a></li>
-                <li><a href="leaderboard.html">المتصدرين</a></li>
+                <li><a href="leaderboard.html">الأوائل</a></li>
                 <li id="adminNavBtn" style="display: none;">
                     <a href="admin.html" style="color: var(--secondary-color); font-weight: bold;">
                         <i class="fas fa-shield-alt"></i> Admin
                     </a>
                 </li>
-                <li><a href="profile.html" id="navUserName" class="active">البروفايل</a></li>
+                <li><a href="profile.html" class="active">البروفايل</a></li>
                 <li><button id="logoutBtn" class="btn btn-outline" style="padding: 0.5rem 1rem;">خروج</button></li>
             </ul>
         </div>
     </nav>
 
-    <!-- Page Header -->
-    <header class="page-header">
-        <div class="container">
-            <h1>الملف الشخصي</h1>
-            <p>تعديل بيانات الحساب</p>
-        </div>
-    </header>
+    <!-- Profile Page Content -->
+    <div class="profile-page-content">
+        <!-- Cover Photo Section -->
+        <section class="profile-cover-section">
+            <div class="profile-cover-photo">
+            </div>
 
-    <!-- Profile Form -->
-    <section class="section">
-        <div class="container">
-            <div class="card auth-card">
-                <form id="profileForm">
-                    <div class="form-group" style="margin-bottom: 2rem;">
-                        <label for="fullname" style="font-weight: 700;">الاسم بالكامل</label>
-                        <input type="text" id="fullname" class="form-control" placeholder="اكتب اسمك هنا..." required>
-                        <small style="color: #64748b; margin-top: 0.5rem; display: block;">هذا هو الاسم الذي سيظهر في
-                            شهاداتك وتقاريرك.</small>
+            <!-- Profile Info Container -->
+            <div class="profile-info-container">
+                <!-- Avatar -->
+                <div class="profile-avatar-wrapper">
+                    <img id="profileAvatar" class="profile-avatar"
+                        src="https://ui-avatars.com/api/?name=User&background=667eea&color=fff&size=140" alt="صورتك">
+
+                    <!-- Level Badge -->
+                    <div id="profileLevelBadge" class="avatar-level-badge">
+                        <!-- Will be filled by JS -->
                     </div>
 
-                    <!-- Info Display Container (Common for everyone) -->
-                    <div id="userInfoDisplay"
-                        style="background: #f8fafc; padding: 1.25rem; border-radius: 12px; margin-bottom: 2rem; border: 1px solid #e2e8f0;">
-                        <h4
-                            style="margin-bottom: 1rem; color: var(--primary-color); font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-user-shield"></i> بيانات الحساب الرسمية
-                        </h4>
-                        <div id="infoRows" style="font-size: 0.95rem; color: #1e293b; display: grid; gap: 0.75rem;">
-                            <!-- Filled by JS -->
-                        </div>
-                        <div id="adminNotice"
-                            style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #cbd5e1; font-size: 0.85rem; color: #64748b;">
-                            * لتعديل هذه البيانات، يرجى التواصل مع الدعم الفني.
-                        </div>
+                    <!-- Edit Avatar Button -->
+                    <button id="changeAvatarBtn" class="avatar-edit-btn" title="تغيير الصورة">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                </div>
+
+                <!-- Name & Bio Section -->
+                <div class="profile-name-section">
+                    <!-- Name with Edit -->
+                    <div class="profile-name-wrapper">
+                        <h1 id="profileDisplayName" class="profile-name">اسم الطالب</h1>
+                        <button id="editNameBtn" class="edit-name-icon" title="تعديل الاسم">
+                            <i class="fas fa-pen"></i>
+                        </button>
                     </div>
 
-                    <!-- Subscription Plan Card -->
-                    <div id="subscriptionCard"
-                        style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 1.5rem; border-radius: 20px; margin-bottom: 2rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; overflow: hidden;">
-                        <div
-                            style="position: absolute; top: -20px; right: -20px; font-size: 8rem; color: rgba(255,255,255,0.05);">
-                            <i class="fas fa-crown"></i>
-                        </div>
-                        <h4
-                            style="margin-bottom: 1.25rem; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; color: #38bdf8;">
-                            <i class="fas fa-gem"></i> خطة الاشتراك الحالية
-                        </h4>
-                        <div style="display: grid; gap: 1rem;">
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="opacity: 0.7;">الخطة:</span>
-                                <span id="planName" style="font-weight: 900;">-</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="opacity: 0.7;">تاريخ البدء:</span>
-                                <span id="subStart" style="font-family: 'Cairo';">-</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="opacity: 0.7;">تاريخ الانتهاء:</span>
-                                <span id="subEnd"
-                                    style="font-family: 'Cairo'; color: #fbbf24; font-weight: bold;">-</span>
-                            </div>
-                            <div
-                                style="display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
-                                <span style="opacity: 0.7;">باقي لك:</span>
-                                <span id="timeLeft"
-                                    style="background: rgba(56, 189, 248, 0.2); padding: 4px 10px; border-radius: 50px; font-size: 0.85rem; color: #38bdf8;">-</span>
-                            </div>
+                    <!-- Bio with Edit -->
+                    <div class="profile-bio-wrapper">
+                        <i class="fas fa-quote-right bio-quote-icon"></i>
+                        <p id="profileBioDisplay" class="profile-bio-text">ضيف بايو</p>
+                        <button id="editBioBtn" class="edit-bio-icon" title="تعديل النبذة">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                    </div>
+
+                    <!-- Meta Info (Email, Academic Info) -->
+                    <div class="profile-meta-info">
+                        <div class="profile-meta-item">
+                            <i class="fas fa-envelope"></i>
+                            <span id="profileEmailDisplay">email@example.com</span>
                         </div>
                     </div>
 
-                    <!-- Hidden Admin Fields (Keep for logic/admin override if needed later, but hidden now) -->
-                    <div id="adminAcademicFields" style="display: none;">
-                        <div class="form-group">
-                            <label>البريد الإلكتروني (أدمن)</label>
-                            <input type="email" id="email" class="form-control">
+                    <!-- Level Progress -->
+                    <div id="profileLevelProgress" class="profile-level-progress">
+                        <!-- Will be filled by JS -->
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="profile-action-buttons">
+                        <a href="#" id="previewProfileBtn" class="profile-action-btn primary">
+                            <i class="fas fa-eye"></i>
+                            <span>المعاينة</span>
+                        </a>
+                        <button id="showLevelGuideBtn" class="profile-action-btn secondary">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>المستويات</span>
+                        </button>
+                        <button onclick="openPrivacyModal()" class="profile-action-btn secondary">
+                            <i class="fas fa-lock"></i>
+                            <span>الخصوصية</span>
+                        </button>
+                        <a href="reset-password.html" class="profile-action-btn secondary">
+                            <i class="fas fa-key"></i>
+                            <span>كلمة المرور</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="profile-stats-section">
+            <div class="container">
+                <div id="profileStatsGrid" class="stats-grid">
+                    <!-- Will be filled by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Premium Subscription Card -->
+        <section class="container">
+            <div id="subscriptionCard" class="subscription-premium-card">
+                <div class="premium-card-header">
+                    <div class="premium-header-main">
+                        <i class="fas fa-crown premium-crown"></i>
+                        <h2 class="premium-title">خطة اشتراكك</h2>
+                    </div>
+                    <div id="subStatus" class="premium-status-badge">
+                        <span class="status-dot"></span>
+                        <span class="status-text">-</span>
+                    </div>
+                </div>
+
+                <div class="premium-card-content">
+                    <div class="premium-main-info">
+                        <div class="premium-info-block">
+                            <span class="premium-info-label">نوع الخطة الحالية</span>
+                            <span id="planName" class="premium-info-value">-</span>
                         </div>
-                        <div class="row" style="display: flex; gap: 1rem;">
-                            <div class="form-group" style="flex: 1;">
-                                <label for="grade">السنة الدراسية</label>
-                                <select id="grade" class="form-control">
-                                    <option value="1">أولى ثانوي</option>
-                                    <option value="2">تانية ثانوي</option>
-                                    <option value="3">تالتة ثانوي</option>
-                                </select>
+                        <div class="premium-info-block">
+                            <span class="premium-info-label">المدة المتبقية</span>
+                            <span id="timeLeft" class="premium-info-value highlight">-</span>
+                        </div>
+                    </div>
+
+                    <div class="premium-dates-grid">
+                        <div class="premium-date-item">
+                            <i class="far fa-calendar-check"></i>
+                            <div>
+                                <span class="date-label">تاريخ البداية</span>
+                                <span id="subStart" class="date-value">-</span>
                             </div>
                         </div>
-                        <div class="form-group" id="termGroup">
-                            <label for="term">الترم</label>
-                            <select id="term" class="form-control">
-                                <option value="1">الترم الأول</option>
-                                <option value="2">الترم الثاني</option>
-                            </select>
-                        </div>
-                        <div class="form-group" id="streamGroup">
-                            <label for="stream">الشعبة</label>
-                            <select id="stream" class="form-control">
-                                <option value="science_bio">علمي علوم</option>
-                                <option value="science_math">علمي رياضة</option>
-                                <option value="literature">أدبي</option>
-                            </select>
+                        <div class="premium-date-item">
+                            <i class="far fa-calendar-times"></i>
+                            <div>
+                                <span class="date-label">تاريخ النهاية</span>
+                                <span id="subEnd" class="date-value">-</span>
+                            </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </section>
 
-                    <button type="submit" class="btn btn-primary full-width">حفظ التعديلات</button>
 
-                    <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #eee;">
+        <!-- Hidden Form for Name Editing -->
+        <form id="profileForm" style="display: none;">
+            <input type="text" id="fullname" class="form-control">
+        </form>
 
-                    <div class="text-center">
-                        <a href="reset-password.html" class="btn btn-outline" style="margin-top: 1rem;">تغيير كلمة
-                            المرور</a>
-                    </div>
-                </form>
+        <!-- Hidden Admin Fields -->
+        <div id="adminAcademicFields" style="display: none;">
+            <div class="form-group">
+                <label>البريد الإلكتروني (أدمن)</label>
+                <input type="email" id="email" class="form-control">
+            </div>
+            <div class="row" style="display: flex; gap: 1rem;">
+                <div class="form-group" style="flex: 1;">
+                    <label for="grade">السنة الدراسية</label>
+                    <select id="grade" class="form-control">
+                        <option value="first_year">سنة أولى ثانوي</option>
+                        <option value="second_year">سنة تانية ثانوي</option>
+                        <option value="third_year">سنة تالتة ثانوي</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" id="termGroup">
+                <label for="term">الترم</label>
+                <select id="term" class="form-control">
+                    <option value="1">الترم الأول</option>
+                    <option value="2">الترم الثاني</option>
+                </select>
+            </div>
+            <div class="form-group" id="streamGroup">
+                <label for="stream">القسم</label>
+                <select id="stream" class="form-control">
+                    <option value="">-- اختر الشعبة --</option>
+                    <option value="general">عامة</option>
+                    <option value="science_science">علمي علوم (سنة تالتة)</option>
+                    <option value="science_math">علمي رياضة (سنة تالتة)</option>
+                    <option value="literary">أدبي (سنة تالتة)</option>
+                </select>
             </div>
         </div>
-    </section>
+    </div>
 
 
     <!-- Footer -->
@@ -194,6 +359,14 @@
                 <i class="fas fa-tasks"></i>
                 <span>المهام</span>
             </a>
+            <a href="squad.html" class="bottom-nav-item">
+                <i class="fas fa-users"></i>
+                <span>الشلة</span>
+            </a>
+            <a href="curriculum.html" class="bottom-nav-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>المحاضرات</span>
+            </a>
             <a href="leaderboard.html" class="bottom-nav-item">
                 <i class="fas fa-trophy"></i>
                 <span>الأوائل</span>
@@ -202,10 +375,6 @@
                 <i class="fas fa-user"></i>
                 <span>البروفايل</span>
             </a>
-            <!-- <a href="#" id="bottomLogoutBtn" class="bottom-nav-item">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>خروج</span>
-            </a> -->
             <a href="admin.html" id="bottomAdminBtn" class="bottom-nav-item admin-link" style="display: none;">
                 <i class="fas fa-shield-alt"></i>
                 <span>Admin</span>
@@ -215,10 +384,18 @@
 
 
 
-    <script src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/auth.js"></script>
+    <script type="module" src="assets/js/squad-notifications.js"></script>
     <script type="module" src="assets/js/profile.js"></script>
 
-
+    <!-- Privacy Modal Container -->
+    <div id="privacyModalContainer"></div>
+    <script>
+        fetch('components/privacy-modal.html')
+            .then(r => r.text())
+            .then(html => document.getElementById('privacyModalContainer').innerHTML = html);
+    </script>
 </body>
 
 </html>

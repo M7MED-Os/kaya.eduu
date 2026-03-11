@@ -1,64 +1,44 @@
 import { supabase } from "./supabaseClient.js";
+import { clearCacheByPattern } from "./utils.js";
+import { showSuccessAlert, showErrorAlert, showWarningAlert, showDeleteConfirmDialog, showLoadingAlert } from "./utils/alerts.js";
 
-// ==========================================
-// 1. STATE & AUTH
-// ==========================================
-let currentUser = null;
+// Import admin modules
+import { initAdminCore, checkAdminAuth, showView, currentContext, openModal, closeModal, triggerCelebration } from "./admin/admin-core.js";
+import { renderExamQuestions } from "./admin/admin-questions.js";
+import { showFreemiumSettingsView, saveFreemiumSettings } from "./admin/freemium.js";
+import "./admin/admin-subjects.js";
+import "./admin/admin-content.js";
+
+window.showFreemiumSettingsView = showFreemiumSettingsView;
+window.saveFreemiumSettings = saveFreemiumSettings;
+
+// Import Polls logic
+import "./admin/polls.js";
+
+// Local chart instances for student management (kept in main file)
 let enrollmentChartInstance = null;
 let statusPieChartInstance = null;
-let currentContext = {
-    grade: null,
-    termOrStream: null, // "term" for G1/2, "stream" for G3
-    subject: null
-};
-// Editor State
-let editingQuestionId = null;
-let existingQuestionImages = {}; // { qId: { q: url, a: url, ... } }
+
+// Online presence tracking
+let presenceChannel = null;
+let onlineUsers = new Set();
+
+// ==========================================
+// STUDENT & SQUAD MANAGEMENT (kept in main file)
+// ==========================================
+// Note: Subject/Question/Content management moved to admin/ modules
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await checkAdminAuth();
-    setupModalListeners();
+    // Initialize core admin functionality
+    const isAuthorized = await checkAdminAuth();
+    if (!isAuthorized) return;
 
+    initAdminCore();
 
-    // Responsive Sidebar Toggle
-    const mobileToggle = document.getElementById('mobileToggle');
-    const sidebar = document.querySelector('.sidebar');
+    // Set default view to Students
+    showStudentsView();
 
-    if (mobileToggle) {
-        mobileToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            sidebar.classList.toggle('mobile-open');
-        });
-    }
-
-    // Close button for sidebar
-    const closeSidebar = document.getElementById('closeSidebar');
-    if (closeSidebar) {
-        closeSidebar.addEventListener('click', () => {
-            sidebar.classList.remove('mobile-open');
-        });
-    }
-
-    // Close sidebar when clicking navigation items on mobile
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', () => {
-            if (window.innerWidth <= 1553) {
-                sidebar.classList.remove('mobile-open');
-            }
-        });
-    });
-
-    // Close sidebar when clicking outside on mobile
-    document.addEventListener('click', (e) => {
-        if (window.innerWidth <= 1553 &&
-            sidebar.classList.contains('mobile-open') &&
-            !sidebar.contains(e.target) &&
-            e.target !== mobileToggle) {
-            sidebar.classList.remove('mobile-open');
-        }
-    });
-
-    // Real-time student search and filters
+    // Setup student-specific filters (kept in main file)
     const filterControls = ['studentSearch', 'filterStatus', 'filterGrade', 'filterStream', 'filterSort'];
     filterControls.forEach(id => {
         const el = document.getElementById(id);
@@ -73,872 +53,164 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // Real-time squad search and filters
+    const squadFilterControls = ['squadSearch', 'filterSquadGrade', 'filterSquadDept'];
+    squadFilterControls.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', () => loadSquadsAdmin());
+            el.addEventListener('change', () => loadSquadsAdmin());
+        }
+    });
+
     function updateStreamFilter() {
         const grade = document.getElementById('filterGrade').value;
         const group = document.getElementById('streamFilterGroup');
         const select = document.getElementById('filterStream');
 
-        if (grade === 'all') {
+        if (grade === 'all' || grade === 'first_year' || grade === 'second_year' || grade === '1' || grade === '2') {
             group.style.display = 'none';
             return;
         }
 
         group.style.display = 'block';
-        let options = '<option value="all">كل الشعب/الترم</option>';
+        let options = '<option value="all">كل الشعب</option>';
 
-        if (grade === '3') {
+        if (grade === 'third_year' || grade === '3') {
             options += `
-                <option value="languages">اللغات</option>
-                <option value="scientific_common">مواد علمي مشترك</option>
-                <option value="science_bio">علمي علوم</option>
+                <option value="science_science">علمي علوم</option>
                 <option value="science_math">علمي رياضة</option>
-                <option value="literature">أدبي</option>
-                <option value="non_scoring">خارج المجموع</option>
-            `;
-        } else {
-            options += `
-                <option value="1">الترم الأول</option>
-                <option value="2">الترم الثاني</option>
+                <option value="literary">أدبي</option>
             `;
         }
         select.innerHTML = options;
     }
 
-    // Handle Logout
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.onclick = async () => {
-            await supabase.auth.signOut();
-            window.location.href = 'login.html';
-        };
-    }
+    // Initialize presence tracking for admin
+    initAdminPresence();
 });
 
-async function checkAdminAuth() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { window.location.href = 'login.html'; return; }
+// ==========================================
+// PRESENCE TRACKING FOR ADMIN
+// ==========================================
 
-        const { data: profile } = await supabase.from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single();
+function initAdminPresence() {
+    presenceChannel = supabase.channel('online-users');
 
-        if (!profile || profile.role !== 'admin') {
-            window.location.href = 'dashboard.html';
-            return;
+    presenceChannel
+        .on('presence', { event: 'sync' }, () => {
+            const state = presenceChannel.presenceState();
+            onlineUsers.clear();
+
+            // Collect all online user IDs
+            Object.keys(state).forEach(key => {
+                const presences = state[key];
+                presences.forEach(presence => {
+                    if (presence.user_id) {
+                        onlineUsers.add(presence.user_id);
+                    }
+                });
+            });
+
+            // Update counter
+            updateOnlineCounter();
+
+            // Instead of reloading EVERYTHING, just update the status icons in the table
+            refreshOnlineIcons();
+        })
+        .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+            const userName = newPresences[0]?.full_name || key;
+            console.log('[Admin Presence] User joined:', userName);
+        })
+        .subscribe();
+}
+
+function updateOnlineCounter() {
+    const counter = document.getElementById('statsOnline');
+    if (counter) {
+        counter.textContent = onlineUsers.size;
+    }
+}
+
+function getOnlineStatus(student) {
+    const userId = student.id;
+
+    if (onlineUsers.has(userId)) {
+        return { status: 'online', text: 'متصل الآن', color: '#16a34a', icon: 'fa-circle' };
+    }
+
+    // Check last_seen from student profile
+    const lastSeen = student.last_seen;
+    if (lastSeen) {
+        const lastSeenDate = new Date(lastSeen);
+        const now = new Date();
+        const diffMinutes = Math.floor((now - lastSeenDate) / (1000 * 60));
+
+        if (diffMinutes < 5) {
+            return { status: 'recent', text: `نشط منذ ${diffMinutes} دقيقة`, color: '#f59e0b', icon: 'fa-clock' };
+        } else if (diffMinutes < 60) {
+            return { status: 'away', text: `نشط منذ ${diffMinutes} دقيقة`, color: '#94a3b8', icon: 'fa-clock' };
+        } else if (diffMinutes < 1440) {
+            const hours = Math.floor(diffMinutes / 60);
+            return { status: 'away', text: `نشط منذ ${hours} ساعة`, color: '#94a3b8', icon: 'fa-clock' };
         }
-
-        currentUser = user;
-        document.getElementById('loading').style.display = 'none';
-
-        // Set default view to Students
-        showStudentsView();
-
-    } catch (err) {
-        console.error("Auth Fail", err);
-    }
-}
-
-// ==========================================
-// 2. NAVIGATION & VIEWS
-// ==========================================
-
-window.selectContext = async (grade, termOrStream) => {
-    // UI Update
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    // Ideally highlight the clicked one, but passed via onclick needs event target. 
-    // Simplified: visual feedback on content area.
-
-    currentContext.grade = grade;
-    currentContext.termOrStream = termOrStream;
-    currentContext.subject = null;
-
-    const label = getContextLabel(grade, termOrStream);
-    document.getElementById('pageTitle').textContent = `الرئيسية > ${label}`;
-
-    showView('subjectListView');
-    await loadSubjects();
-};
-
-function showView(viewId) {
-    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-    document.getElementById(viewId).classList.add('active');
-}
-
-function getContextLabel(grade, val) {
-    const grades = { '1': 'الصف الأول', '2': 'الصف الثاني', '3': 'الصف الثالث' };
-    const vals = {
-        '1': 'الترم الأول', '2': 'الترم الثاني',
-        'science_bio': 'علمي علوم', 'science_math': 'علمي رياضة', 'literature': 'أدبي',
-        'scientific_common': 'مواد علمي مشترك',
-        'languages': 'اللغات (مشترك)', 'non_scoring': 'مواد خارج المجموع'
-    };
-    return `${grades[grade]} - ${vals[val] || val}`;
-}
-
-// ==========================================
-// 3. SUBJECT LIST MANAGEMENT
-// ==========================================
-
-async function loadSubjects() {
-    const container = document.getElementById('subjectListView');
-    container.innerHTML = `<div class="spinner"></div>`;
-
-    // Filter Logic
-    let query = supabase.from('subjects').select('*').eq('grade', currentContext.grade).order('order_index');
-
-    if (currentContext.grade === '3') {
-        query = query.eq('stream', currentContext.termOrStream);
-    } else {
-        query = query.eq('term', currentContext.termOrStream);
     }
 
-    const { data: subjects, error } = await query;
+    return { status: 'offline', text: 'غير متصل', color: '#cbd5e1', icon: 'fa-circle' };
+}
 
-    if (error) {
-        container.innerHTML = `<p style="color:red">Error loading subjects</p>`;
-        return;
-    }
+/**
+ * Selective update of online status icons in the student table
+ * to avoid full page reloads when presence changes.
+ */
+function refreshOnlineIcons() {
+    const tableBody = document.getElementById('studentsTableBody');
+    if (!tableBody) return;
 
-    // Render Grid
-    let html = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-            <h2>المواد الدراسية</h2>
-            <button class="btn btn-primary" onclick="openAddSubjectModal()">
-                <i class="fas fa-plus"></i> إضافة مادة
-            </button>
-        </div>
-        <div class="subjects-grid">
-    `;
+    const rows = tableBody.querySelectorAll('tr');
+    rows.forEach(row => {
+        // Find the status cell (index 7 in the current table structure)
+        const studentId = row.querySelector('.btn-primary')?.getAttribute('href')?.split('=')[1];
+        if (!studentId) return;
 
-    if (subjects.length === 0) {
-        html += `<p class="empty-state" style="grid-column: 1/-1">لا توجد مواد مضافة في هذا القسم.</p>`;
-    } else {
-        subjects.forEach(sub => {
-            html += `
-                <div class="subject-card" onclick="openSubjectManager('${sub.id}')">
-                    <div class="card-actions">
-                         <button class="action-btn-sm" style="background:#e0f2fe; color:#0369a1;" 
-                            onclick="event.stopPropagation(); window.openEditSubjectModal(${JSON.stringify(sub).replace(/"/g, '&quot;')})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                         <button class="action-btn-sm" style="background:#fee2e2; color:#b91c1c;" 
-                            onclick="event.stopPropagation(); deleteSubject('${sub.id}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
+        const statusCell = row.querySelector('td[data-label="الحالة الآن"]');
+        if (statusCell) {
+            // Find the student's full data from the original list if possible
+            // For now, let's just get the icon and color based on ID
+            // Since we only need to know if they are in onlineUsers Set for "متصل الآن"
+            const isOnline = onlineUsers.has(studentId);
+
+            // If they are online, update icon to green circle
+            if (isOnline) {
+                statusCell.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:6px; justify-content:center;">
+                        <i class="fas fa-circle" style="color:#16a34a; font-size:0.5rem;"></i>
+                        <span style="font-size:0.8rem; color:#16a34a; font-weight:600;">متصل الآن</span>
                     </div>
-                    <div class="subject-icon">
-                        <i class="fas fa-book"></i>
-                    </div>
-                    <div class="subject-title">${sub.name_ar}</div>
-                    <div class="subject-meta">اضغط للإدارة</div>
-                </div>
-            `;
-        });
-    }
-
-    html += `</div>`;
-    container.innerHTML = html;
-}
-
-window.openAddSubjectModal = () => {
-    openModal({
-        title: 'إضافة مادة جديدة',
-        body: `
-            <div class="form-group">
-                <label>اسم المادة (بالعربية)</label>
-                <input type="text" id="subjectName" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label>الترتيب</label>
-                <input type="number" id="subjectOrder" class="form-control" value="0">
-            </div>
-        `,
-        onSave: async () => {
-            const name = document.getElementById('subjectName').value;
-            const order = document.getElementById('subjectOrder').value;
-            if (!name) return Swal.fire('تنبيه', 'الاسم مطلوب', 'warning');
-
-            const payload = {
-                name_ar: name,
-                grade: currentContext.grade,
-                order_index: order
-            };
-
-            if (currentContext.grade === '3') payload.stream = currentContext.termOrStream;
-            else payload.term = currentContext.termOrStream;
-
-            const { error } = await supabase.from('subjects').insert(payload);
-            if (error) Swal.fire('خطأ', error.message, 'error');
-            else { closeModal(); loadSubjects(); Swal.fire('تم', 'تمت إضافة المادة بنجاح', 'success'); }
-        }
-    });
-};
-
-window.openEditSubjectModal = (sub) => {
-    openModal({
-        title: 'تعديل بيانات المادة',
-        body: `
-            <div class="form-group">
-                <label>اسم المادة (بالعربية)</label>
-                <input type="text" id="editSubName" class="form-control" value="${sub.name_ar}">
-            </div>
-            <div class="form-group">
-                <label>الترتيب</label>
-                <input type="number" id="editSubOrder" class="form-control" value="${sub.order_index || 0}">
-            </div>
-        `,
-        onSave: async () => {
-            const name = document.getElementById('editSubName').value;
-            const order = document.getElementById('editSubOrder').value;
-            if (!name) return Swal.fire('تنبيه', 'الاسم مطلوب', 'warning');
-
-            const { error } = await supabase.from('subjects').update({
-                name_ar: name,
-                order_index: order
-            }).eq('id', sub.id);
-
-            if (error) Swal.fire('خطأ', error.message, 'error');
-            else { closeModal(); loadSubjects(); Swal.fire('تم', 'تم التعديل بنجاح', 'success'); }
-        }
-    });
-};
-
-window.deleteSubject = async (id) => {
-    const result = await Swal.fire({
-        title: 'هل أنت متأكد؟',
-        text: "حذف المادة سيحذف كل المحتوى بداخلها!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'نعم، احذفها',
-        cancelButtonText: 'إلغاء'
-    });
-
-    if (!result.isConfirmed) return;
-
-    const { error } = await supabase.from('subjects').delete().eq('id', id);
-    if (error) Swal.fire('خطأ', error.message, 'error');
-    else {
-        loadSubjects();
-        Swal.fire('تم الحذف!', 'تم حذف المادة بنجاح.', 'success');
-    }
-};
-
-
-// ==========================================
-// 4. SUBJECT MANAGER (TREE VIEW)
-// ==========================================
-
-window.openSubjectManager = async (subjectId) => {
-    // 1. Fetch Subject
-    const { data: subject } = await supabase.from('subjects').select('*').eq('id', subjectId).single();
-    if (!subject) return;
-
-    currentContext.subject = subject;
-    document.getElementById('pageTitle').textContent = `الرئيسية > ${subject.name_ar}`; // Breadcrumb update
-
-    showView('subjectManagerView');
-    await loadContentTree();
-};
-
-async function loadContentTree() {
-    const treeContainer = document.getElementById('contentTree');
-    treeContainer.innerHTML = '<div class="spinner" style="width:20px; height:20px;"></div>';
-
-    // Fetch Hierarchy: Chapters -> Lessons -> Exams
-    // Note: Exams can be under Chapters directly too.
-
-    // Fetch all for this subject
-    const { data: chapters } = await supabase.from('chapters')
-        .select('*').eq('subject_id', currentContext.subject.id).order('order_index');
-
-    const { data: lessons } = await supabase.from('lessons')
-        .select('*').in('chapter_id', chapters.map(c => c.id)).order('order_index');
-
-    // Fetch Exams related to this subject (via subject_id for speed)
-    const { data: exams } = await supabase.from('exams')
-        .select('*').eq('subject_id', currentContext.subject.id);
-
-    // Build Map
-    treeContainer.innerHTML = '';
-
-    if (chapters.length === 0) {
-        treeContainer.innerHTML = '<p class="empty-state" style="padding:1rem;">لا توجد أبواب.</p>';
-        return;
-    }
-
-    chapters.forEach(chapter => {
-        // --- Chapter Node ---
-        const chNode = createTreeNode({ type: 'chapter', data: chapter, label: chapter.title, icon: 'fa-folder' });
-        treeContainer.appendChild(chNode);
-
-        // Filter contents
-        const chLessons = lessons.filter(l => l.chapter_id === chapter.id);
-        const chExams = exams.filter(e => e.chapter_id === chapter.id); // Chapter Final Exams
-
-        // Render Lessons
-        chLessons.forEach(lesson => {
-            const lNode = createTreeNode({ type: 'lesson', data: lesson, label: lesson.title, icon: 'fa-book-open', indent: 1 });
-            treeContainer.appendChild(lNode);
-
-            // Lesson Exams
-            const lExams = exams.filter(e => e.lesson_id === lesson.id);
-            lExams.forEach(exam => {
-                const eNode = createTreeNode({ type: 'exam', data: exam, label: exam.title, icon: 'fa-file-alt', indent: 2 });
-                treeContainer.appendChild(eNode);
-            });
-        });
-
-        // Render Chapter Exams (Finals)
-        chExams.forEach(exam => {
-            const eNode = createTreeNode({ type: 'exam', data: exam, label: `${exam.title} (شامل)`, icon: 'fa-star', indent: 1, color: '#d97706' });
-            treeContainer.appendChild(eNode);
-        });
-    });
-}
-
-function createTreeNode({ type, data, label, icon, indent = 0, color = '' }) {
-    const div = document.createElement('div');
-    div.className = `tree-node indent-${indent}`;
-    if (color) div.style.color = color;
-
-    div.innerHTML = `
-        <div style="display:flex; align-items:center; flex:1;">
-            <i class="fas ${icon} node-icon"></i>
-            <span class="node-text">${label}</span>
-        </div>
-        <button class="action-btn-sm" style="background:transparent; color:#6b7280; opacity:0.5;" 
-            onclick="event.stopPropagation(); window.openEditNodeModal('${type}', ${JSON.stringify(data).replace(/"/g, '&quot;')})">
-            <i class="fas fa-pen" style="font-size:0.7rem;"></i>
-        </button>
-    `;
-
-    div.onclick = () => {
-        document.querySelectorAll('.tree-node').forEach(n => n.classList.remove('active'));
-        div.classList.add('active');
-        openEditor(type, data);
-    };
-
-    return div;
-}
-
-// ==========================================
-// 5. EDITORS & FORMS
-// ==========================================
-
-window.openAddChapterModal = () => {
-    if (!currentContext.subject) return Swal.fire('تنبيه', 'اختر مادة أولاً', 'warning');
-
-    openModal({
-        title: 'إضافة باب جديد',
-        body: `
-            <div class="form-group">
-                <label>عنوان الباب</label>
-                <input type="text" id="chTitle" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label>الترتيب</label>
-                <input type="number" id="chOrder" class="form-control" value="0">
-            </div>
-        `,
-        onSave: async () => {
-            const title = document.getElementById('chTitle').value;
-            const order = document.getElementById('chOrder').value;
-
-            const { error } = await supabase.from('chapters').insert({
-                subject_id: currentContext.subject.id,
-                title, order_index: order
-            });
-
-            if (error) Swal.fire('خطأ', error.message, 'error');
-            else { closeModal(); loadContentTree(); Swal.fire('تم', 'تمت الإضافة بنجاح', 'success'); }
-        }
-    });
-};
-
-function openEditor(type, data) {
-    const panel = document.getElementById('editorPanel');
-
-    // --- CHAPTER EDITOR ---
-    if (type === 'chapter') {
-        panel.innerHTML = `
-            <h3>تعديل الباب: ${data.title}</h3>
-            <div class="form-actions" style="margin-bottom:2rem;">
-                 <button class="btn btn-primary btn-sm" onclick="openAddLessonModal('${data.id}')">
-                    <i class="fas fa-plus"></i> إضافة درس
-                </button>
-                 <button class="btn btn-outline btn-sm" onclick="openAddExamModal('chapter', '${data.id}')">
-                    <i class="fas fa-plus"></i> إضافة امتحان شامل
-                </button>
-                 <button class="btn btn-outline btn-sm" style="color:red; float:left;" onclick="deleteItem('chapters', '${data.id}')">
-                    <i class="fas fa-trash"></i> حذف الباب
-                </button>
-            </div>
-        `;
-    }
-
-    // --- LESSON EDITOR ---
-    else if (type === 'lesson') {
-        panel.innerHTML = `
-            <h3>تعديل الدرس: ${data.title}</h3>
-            <div class="form-actions" style="margin-bottom:2rem;">
-                 <button class="btn btn-primary btn-sm" onclick="openAddExamModal('lesson', '${data.id}')">
-                    <i class="fas fa-plus"></i> إضافة امتحان
-                </button>
-                 <button class="btn btn-outline btn-sm" style="color:red; float:left;" onclick="deleteItem('lessons', '${data.id}')">
-                    <i class="fas fa-trash"></i> حذف الدرس
-                </button>
-            </div>
-        `;
-    }
-
-    // --- EXAM EDITOR (QUESTIONS) ---
-    else if (type === 'exam') {
-        renderExamQuestions(data);
-    }
-}
-
-// Helpers for Add Modals
-window.openAddLessonModal = (chapterId) => {
-    openModal({
-        title: 'إضافة درس',
-        body: `<div class="form-group"><label>العنوان</label><input id="lTitle" class="form-control"></div>`,
-        onSave: async () => {
-            await supabase.from('lessons').insert({
-                chapter_id: chapterId,
-                title: document.getElementById('lTitle').value
-            });
-            closeModal(); loadContentTree();
-        }
-    });
-}
-
-window.openAddExamModal = (parentType, parentId) => {
-    openModal({
-        title: 'إضافة امتحان',
-        body: `<div class="form-group"><label>العنوان</label><input id="eTitle" class="form-control"></div>`,
-        onSave: async () => {
-            const payload = {
-                title: document.getElementById('eTitle').value,
-                subject_id: currentContext.subject.id
-            };
-            if (parentType === 'lesson') payload.lesson_id = parentId;
-            else payload.chapter_id = parentId;
-
-            await supabase.from('exams').insert(payload);
-            closeModal(); loadContentTree();
-        }
-    });
-}
-
-window.deleteItem = async (table, id) => {
-    const result = await Swal.fire({
-        title: 'هل أنت متأكد؟',
-        text: "لا يمكن التراجع عن هذا الإجراء!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'نعم، احذف',
-        cancelButtonText: 'إلغاء'
-    });
-
-    if (!result.isConfirmed) return;
-
-    await supabase.from(table).delete().eq('id', id);
-    loadContentTree();
-    document.getElementById('editorPanel').innerHTML = ''; // Clear editor
-    Swal.fire('تم الحذف!', 'تم حذف العنصر بنجاح.', 'success');
-};
-
-window.openEditNodeModal = (type, data) => {
-    const labels = { 'chapter': 'الباب', 'lesson': 'الدرس', 'exam': 'الامتحان' };
-    const tables = { 'chapter': 'chapters', 'lesson': 'lessons', 'exam': 'exams' };
-
-    openModal({
-        title: `تعديل اسم ${labels[type]}`,
-        body: `
-            <div class="form-group">
-                <label>العنوان الجديد</label>
-                <input type="text" id="editNodeTitle" class="form-control" value="${data.title}">
-            </div>
-            <div class="form-group">
-                <label>الترتيب</label>
-                <input type="number" id="editNodeOrder" class="form-control" value="${data.order_index || 0}">
-            </div>
-        `,
-        onSave: async () => {
-            const newTitle = document.getElementById('editNodeTitle').value;
-            const newOrder = document.getElementById('editNodeOrder').value;
-            if (!newTitle) return Swal.fire('تنبيه', 'العنوان مطلوب', 'warning');
-
-            const { error } = await supabase.from(tables[type]).update({
-                title: newTitle,
-                order_index: newOrder
-            }).eq('id', data.id);
-
-            if (error) Swal.fire('خطأ', error.message, 'error');
-            else {
-                closeModal();
-                loadContentTree();
-                Swal.fire('تم', 'تم التعديل بنجاح', 'success');
+                `;
+            } else {
+                // If they were online and now offline, we might want to refresh the table 
+                // to get the correct "active X mins ago" from DB, but let's avoid it for now
+                // to prevent flickering. Or just leave it as is until next manual refresh.
+                // The user's main complaint was the flickering/reloading.
             }
         }
     });
-};
 
-// ==========================================
-// 6. QUESTION MANAGER (Inside Editor Panel)
-// ==========================================
-
-async function renderExamQuestions(exam) {
-    const panel = document.getElementById('editorPanel');
-    panel.innerHTML = `<div class="spinner"></div>`;
-
-    const { data: questions } = await supabase.from('questions').select('*').eq('exam_id', exam.id).order('created_at');
-
-    let html = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-             <h3 style="margin:0;">${exam.title} <small style="font-size:0.875rem; color:var(--secondary-color); font-weight:400;">(${questions?.length || 0} سؤال)</small></h3>
-             <button class="btn btn-sm" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca;" onclick="deleteItem('exams', '${exam.id}')">
-                <i class="fas fa-trash-alt"></i> حذف الامتحان
-             </button>
-        </div>
-        
-        <div style="background:white; padding:1.5rem; border-radius:var(--radius-md); border:1px solid var(--border-color); margin-bottom:2rem; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
-                <h4 style="margin:0; font-weight:700;"><i class="fas fa-plus-circle" style="color:var(--primary-color);"></i> إضافة سؤال جديد</h4>
-                <button class="btn btn-outline btn-sm" onclick="openBulkAddModal('${exam.id}')">
-                    <i class="fas fa-layer-group"></i> إضافة مجموعة
-                </button>
-            </div>
-            
-            <div class="form-group">
-                <textarea id="NewQText" class="form-control" placeholder="اكتب نص السؤال هنا..." rows="3" style="resize:none; padding:1rem;"></textarea>
-                <div style="margin-top:8px;">
-                   <label style="font-size:0.85rem; color:#64748b; margin-bottom:4px; display:block;">صورة للسؤال (اختياري)</label>
-                   <input type="file" id="QImg" accept="image/*" class="form-control" style="font-size:0.9rem; padding:6px;">
-                </div>
-            </div>
-            
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-top:1rem;">
-                <div class="form-group" style="margin:0;">
-                    <input id="OptA" class="form-control" placeholder="الخيار A">
-                    <input type="file" id="OptAImg" accept="image/*" class="form-control" style="margin-top:4px; font-size:0.75rem; padding:4px;">
-                </div>
-                <div class="form-group" style="margin:0;">
-                    <input id="OptB" class="form-control" placeholder="الخيار B">
-                    <input type="file" id="OptBImg" accept="image/*" class="form-control" style="margin-top:4px; font-size:0.75rem; padding:4px;">
-                </div>
-                <div class="form-group" style="margin:0;">
-                    <input id="OptC" class="form-control" placeholder="الخيار C">
-                    <input type="file" id="OptCImg" accept="image/*" class="form-control" style="margin-top:4px; font-size:0.75rem; padding:4px;">
-                </div>
-                <div class="form-group" style="margin:0;">
-                    <input id="OptD" class="form-control" placeholder="الخيار D">
-                    <input type="file" id="OptDImg" accept="image/*" class="form-control" style="margin-top:4px; font-size:0.75rem; padding:4px;">
-                </div>
-            </div>
-            
-            <div style="margin-top:1.5rem; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f1f5f9; padding-top:1rem;">
-                <div style="display:flex; align-items:center; gap:0.75rem;">
-                    <label style="font-size:0.875rem; font-weight:700; color:var(--secondary-color);">الإجابة الصحيحة:</label>
-                    <select id="CorrectOpt" class="form-control" style="width:120px; font-weight:700; border-color:var(--success-color);">
-                        <option value="a">Option A</option>
-                        <option value="b">Option B</option>
-                        <option value="c">Option C</option>
-                        <option value="d">Option D</option>
-                    </select>
-                </div>
-                <div style="display:flex; gap:10px; align-items:center;">
-                     <button class="btn" onclick="resetQuestionForm()" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; font-size:0.85rem; padding:0.5rem 1rem;">
-                        <i class="fas fa-times" style="margin-left:5px;"></i> إلغاء التعديل
-                     </button>
-                     <button class="btn btn-primary" id="addQuestionBtn" onclick="saveQuestion('${exam.id}')" style="font-size:0.85rem; padding:0.5rem 1.5rem;">
-                        <i class="fas fa-save" style="margin-left:5px;"></i> حفظ السؤال
-                     </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="questions-list">
-            ${questions && questions.length > 0 ? questions.map((q, i) => `
-                <div class="question-card" style="border:1px solid #e5e7eb; padding:1rem; border-radius:8px; margin-bottom:1rem; background:#fff;">
-                    <div class="question-card-header" style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
-                        <div class="question-text" style="font-weight:bold;">
-                            س${i + 1}: ${q.question_text || ''}
-                            ${q.question_image ? `<br><img src="${q.question_image}" style="max-height:80px; margin-top:5px; border-radius:4px;">` : ''}
-                        </div>
-                        <div style="display:flex; gap:5px;">
-                            <button class="btn" style="background:#e0f2fe; color:#0369a1; padding:6px 10px; border-radius:8px; font-size:0.8rem;" 
-                                    onclick="editQuestion(${JSON.stringify(q).replace(/"/g, '&quot;')})">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn" style="background:#fff1f2; color:#be123c; padding:6px 10px; border-radius:8px; font-size:0.8rem;" 
-                                    onclick="deleteQuestion('${q.id}', '${exam.id}')" title="حذف السؤال">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="options-grid">
-                        <div class="option-item ${q.correct_answer === 'a' ? 'correct' : ''}">
-                            <span class="option-label">A</span>
-                             ${q.choice_a_image ? `<img src="${q.choice_a_image}" style="max-height:40px; vertical-align:middle;">` : ''} <span>${q.choice_a || ''}</span>
-                        </div>
-                        <div class="option-item ${q.correct_answer === 'b' ? 'correct' : ''}">
-                            <span class="option-label">B</span>
-                             ${q.choice_b_image ? `<img src="${q.choice_b_image}" style="max-height:40px; vertical-align:middle;">` : ''} <span>${q.choice_b || ''}</span>
-                        </div>
-                        <div class="option-item ${q.correct_answer === 'c' ? 'correct' : ''}">
-                            <span class="option-label">C</span>
-                             ${q.choice_c_image ? `<img src="${q.choice_c_image}" style="max-height:40px; vertical-align:middle;">` : ''} <span>${q.choice_c || ''}</span>
-                        </div>
-                        <div class="option-item ${q.correct_answer === 'd' ? 'correct' : ''}">
-                            <span class="option-label">D</span>
-                             ${q.choice_d_image ? `<img src="${q.choice_d_image}" style="max-height:40px; vertical-align:middle;">` : ''} <span>${q.choice_d || ''}</span>
-                        </div>
-                    </div>
-                </div>
-            `).join('') : `
-                <div style="text-align:center; padding:3rem; color:var(--secondary-color); background:white; border-radius:var(--radius-md); border:1px dashed var(--border-color);">
-                    <i class="fas fa-question-circle" style="font-size:3rem; opacity:0.2; margin-bottom:1rem; display:block;"></i>
-                    <p>لا توجد أسئلة في هذا الامتحان بعد</p>
-                </div>
-            `}
-        </div>
-    `;
-    panel.innerHTML = html;
+    // If the "Online Only" filter is active, we MUST reload the table to hide/show students
+    const filterStatus = document.getElementById('filterStatus')?.value;
+    if (filterStatus === 'online') {
+        const lastReload = sessionStorage.getItem('last_online_reload') || 0;
+        const now = Date.now();
+        if (now - lastReload > 5000) { // Throttled reload for "Online Only" view
+            loadStudents();
+            sessionStorage.setItem('last_online_reload', now);
+        }
+    }
 }
 
-window.saveQuestion = async (examId) => {
-    const text = document.getElementById('NewQText').value;
-    const a = document.getElementById('OptA').value;
-    const b = document.getElementById('OptB').value;
-    const c = document.getElementById('OptC').value;
-    const d = document.getElementById('OptD').value;
-    const correct = document.getElementById('CorrectOpt').value;
-
-    const qFile = document.getElementById('QImg').files[0];
-    const aFile = document.getElementById('OptAImg').files[0];
-    const bFile = document.getElementById('OptBImg').files[0];
-    const cFile = document.getElementById('OptCImg').files[0];
-    const dFile = document.getElementById('OptDImg').files[0];
-
-    // Check minimum (text OR image required)
-    const hasQ = text || qFile || (editingQuestionId && existingQuestionImages.q);
-    const hasA = a || aFile || (editingQuestionId && existingQuestionImages.a);
-    const hasB = b || bFile || (editingQuestionId && existingQuestionImages.b);
-
-    if (!hasQ || !hasA || !hasB) return Swal.fire({
-        icon: 'warning',
-        title: 'عذراً',
-        text: 'يرجى إكمال البيانات الأساسية',
-        confirmButtonText: 'حسناً'
-    });
-
-    const btn = document.getElementById('addQuestionBtn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...`;
-    btn.disabled = true;
-
-    try {
-        const upload = async (file) => {
-            if (!file) return null;
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-            const filePath = `${examId}/${fileName}`;
-            const { error } = await supabase.storage.from('exam_attachments').upload(filePath, file);
-            if (error) throw error;
-            const { data } = supabase.storage.from('exam_attachments').getPublicUrl(filePath);
-            return data.publicUrl;
-        };
-
-        const qImgUrl = await upload(qFile);
-        const aImgUrl = await upload(aFile);
-        const bImgUrl = await upload(bFile);
-        const cImgUrl = await upload(cFile);
-        const dImgUrl = await upload(dFile);
-
-        const payload = {
-            exam_id: examId,
-            question_text: text || "",
-            choice_a: a || "", choice_b: b || "", choice_c: c || "", choice_d: d || "",
-            correct_answer: correct
-        };
-
-        // If uploading new image, use it. Else if editing, keep existing. Else null.
-        if (qImgUrl) payload.question_image = qImgUrl;
-        else if (editingQuestionId && !qFile) payload.question_image = existingQuestionImages.q;
-
-        if (aImgUrl) payload.choice_a_image = aImgUrl;
-        else if (editingQuestionId && !aFile) payload.choice_a_image = existingQuestionImages.a;
-
-        if (bImgUrl) payload.choice_b_image = bImgUrl;
-        else if (editingQuestionId && !bFile) payload.choice_b_image = existingQuestionImages.b;
-
-        if (cImgUrl) payload.choice_c_image = cImgUrl;
-        else if (editingQuestionId && !cFile) payload.choice_c_image = existingQuestionImages.c;
-
-        if (dImgUrl) payload.choice_d_image = dImgUrl;
-        else if (editingQuestionId && !dFile) payload.choice_d_image = existingQuestionImages.d;
-
-        let error;
-        if (editingQuestionId) {
-            // UPDATE
-            const { error: err } = await supabase.from('questions').update(payload).eq('id', editingQuestionId);
-            error = err;
-        } else {
-            // INSERT
-            const { error: err } = await supabase.from('questions').insert(payload);
-            error = err;
-        }
-
-        if (error) throw error;
-
-        // Reset and Reload
-        resetQuestionForm();
-        const { data: exam } = await supabase.from('exams').select('*').eq('id', examId).single();
-        renderExamQuestions(exam);
-
-    } catch (err) {
-        console.error(err);
-        Swal.fire('خطأ', 'حدث خطأ: ' + (err.message || err.error_description || err), 'error');
-    } finally {
-        if (btn) {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
-    }
-};
-
-window.editQuestion = (q) => {
-    // Scroll to form input
-    const inputField = document.getElementById('NewQText');
-    inputField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    setTimeout(() => inputField.focus(), 500);
-
-    // Populate Fields
-    document.getElementById('NewQText').value = q.question_text || '';
-    document.getElementById('OptA').value = q.choice_a || '';
-    document.getElementById('OptB').value = q.choice_b || '';
-    document.getElementById('OptC').value = q.choice_c || '';
-    document.getElementById('OptD').value = q.choice_d || '';
-    document.getElementById('CorrectOpt').value = q.correct_answer || 'a';
-
-    // Set Editing State
-    editingQuestionId = q.id;
-    existingQuestionImages = {
-        q: q.question_image,
-        a: q.choice_a_image,
-        b: q.choice_b_image,
-        c: q.choice_c_image,
-        d: q.choice_d_image
-    };
-
-    // UI Feedback
-    const btn = document.getElementById('addQuestionBtn');
-    btn.innerHTML = `<i class="fas fa-edit" style="margin-left:5px;"></i> تعديل السؤال`;
-    btn.classList.remove('btn-primary');
-    btn.classList.add('btn-warning');
-    // Ideally clear file inputs (browser security prevents setting value, but they are empty by default anyway)
-
-    Swal.fire({
-        toast: true, position: 'top-end', icon: 'info', title: 'وضع التعديل', timer: 1500, showConfirmButton: false
-    });
-};
-
-window.resetQuestionForm = () => {
-    document.getElementById('NewQText').value = '';
-    document.getElementById('OptA').value = '';
-    document.getElementById('OptB').value = '';
-    document.getElementById('OptC').value = '';
-    document.getElementById('OptD').value = '';
-    document.getElementById('QImg').value = null; // Reset File Inputs
-    document.getElementById('OptAImg').value = null;
-    document.getElementById('OptBImg').value = null;
-    document.getElementById('OptCImg').value = null;
-    document.getElementById('OptDImg').value = null;
-    document.getElementById('CorrectOpt').value = 'a';
-
-    editingQuestionId = null;
-    existingQuestionImages = {};
-
-    const btn = document.getElementById('addQuestionBtn');
-    if (btn) {
-        btn.innerHTML = `<i class="fas fa-save" style="margin-left:5px;"></i> حفظ السؤال`;
-        btn.classList.remove('btn-warning');
-        btn.classList.add('btn-primary');
-    }
-};
-
-window.deleteQuestion = async (qId, examId) => {
-    const result = await Swal.fire({
-        title: 'هل أنت متأكد؟',
-        text: "لن تتمكن من استعادة هذا السؤال بعد حذفه!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#64748b',
-        confirmButtonText: 'نعم، احذف',
-        cancelButtonText: 'إلغاء'
-    });
-
-    if (result.isConfirmed) {
-        await supabase.from('questions').delete().eq('id', qId);
-        // Also could delete images from storage, but keeping it simple for now (orphan files).
-
-        const { data: exam } = await supabase.from('exams').select('*').eq('id', examId).single();
-        renderExamQuestions(exam);
-
-        Swal.fire({
-            icon: 'success',
-            title: 'تم الحذف!',
-            text: 'تم حذف السؤال بنجاح.',
-            timer: 1500,
-            showConfirmButton: false
-        });
-    }
-};
-
-
 // ==========================================
-// 7. SHARED MODAL LOGIC
-// ==========================================
-
-let activeModalCallback = null;
-
-window.openModal = ({ title, body, onSave }) => {
-    document.getElementById('modalTitle').textContent = title;
-    document.getElementById('modalBody').innerHTML = body;
-
-    const footer = document.getElementById('modalFooter');
-    footer.innerHTML = `
-        <button class="btn btn-outline" onclick="closeModal()">إلغاء</button>
-        <button class="btn btn-primary" id="modalSaveBtn">حفظ</button>
-    `;
-
-    activeModalCallback = onSave;
-    document.getElementById('universalModal').classList.add('open');
-};
-
-function setupModalListeners() {
-    document.getElementById('universalModal').addEventListener('click', (e) => {
-        if (e.target.id === 'modalSaveBtn' && activeModalCallback) {
-            activeModalCallback();
-        }
-    });
-}
-
-window.closeModal = () => {
-    document.getElementById('universalModal').classList.remove('open');
-    activeModalCallback = null;
-};
-
-// ==========================================
-// 8. STUDENTS MANAGEMENT
+// STUDENTS MANAGEMENT (Kept in main file)
 // ==========================================
 
 window.showStudentsView = async () => {
@@ -985,13 +257,17 @@ window.loadStudents = async () => {
         if (s.is_active && !isExp) sStatus = "active";
         else if (s.is_active && isExp) sStatus = "expired";
 
-        const matchesStatus = filterStatus === 'all' || sStatus === filterStatus;
+        const matchesStatus = filterStatus === 'all' ||
+            (filterStatus === 'online' ? onlineUsers.has(s.id) : sStatus === filterStatus);
 
         // Grade Filter
-        const matchesGrade = filterGrade === 'all' || s.grade == filterGrade;
+        const student_year = s.academic_year;
+        const matchesGrade = filterGrade === 'all' || student_year == filterGrade;
 
-        // Stream Filter
-        const matchesStream = filterStream === 'all' || s.stream == filterStream || s.term == filterStream;
+        // Stream/Term Filter
+        const student_department = s.department;
+        const student_term = s.current_term;
+        const matchesStream = filterStream === 'all' || student_department == filterStream || student_term == filterStream;
 
         return matchesSearch && matchesStatus && matchesGrade && matchesStream;
     });
@@ -1014,26 +290,47 @@ window.loadStudents = async () => {
     }
 
     tableBody.innerHTML = filtered.map(s => {
+        // Get student data
+        const student_year = s.academic_year;
+        const student_term = s.current_term;
+        const student_department = s.department;
+
         const roleStr = s.role === 'admin' ? 'آدمن' : 'طالب';
         const roleClass = s.role === 'admin' ? 'badge-info' : 'badge-gray';
 
-        // Translation Mapping
-        const streamMap = {
-            'science_bio': 'علمي علوم',
-            'science_math': 'علمي رياضة',
-            'literature': 'أدبي',
-            'languages': 'اللغات',
-            'scientific_common': 'علمي مشترك',
-            'non_scoring': 'خارج المجموع'
-        };
-        const termMap = {
-            '1': 'الترم الأول',
-            '2': 'الترم الثاني'
+        // Translation Mapping for Secondary School
+        const gradeMap = {
+            'first_year': 'سنة أولى',
+            'second_year': 'سنة تانية',
+            'third_year': 'سنة تالتة',
+            '1': 'سنة أولى',
+            '2': 'سنة تانية',
+            '3': 'سنة تالتة'
         };
 
-        const displayStreamOrTerm = s.grade === '3'
-            ? (streamMap[s.stream] || s.stream || '-')
-            : (termMap[s.term] || s.term || '-');
+        const streamMap = {
+            'science_science': 'علمي علوم',
+            'science_math': 'علمي رياضة',
+            'literary': 'أدبي',
+            'general': 'عام'
+        };
+
+        const termMap = {
+            '1': 'ترم أول',
+            '2': 'ترم ثاني',
+            'first_term': 'ترم أول',
+            'second_term': 'ترم ثاني'
+        };
+
+        // Display logic: Show stream - term (e.g., "علمي علوم - ترم أول")
+        let displayInfo = [];
+
+        // For year 3, show stream
+        if ((student_year === 'third_year' || student_year === '3') && student_department) {
+            displayInfo.push(streamMap[student_department] || student_department);
+        }
+
+        const displayStreamOrTerm = displayInfo.length > 0 ? displayInfo.join(' - ') : '-';
 
         // Status Logic
         const expiry = s.subscription_ends_at ? new Date(s.subscription_ends_at) : null;
@@ -1076,12 +373,19 @@ window.loadStudents = async () => {
                 <div class="user-id">ID: ${s.id.substr(0, 8)}</div>
             </td>
             <td data-label="البريد" style="color:#64748b; font-size:0.85rem;">${s.email || '-'}</td>
-            <td data-label="السنة"><span class="badge badge-info">${s.grade || '-'}</span></td>
-            <td data-label="الشعبة">${displayStreamOrTerm}</td>
+            <td data-label="السنة"><span class="badge badge-info">${gradeMap[student_year] || student_year || '-'}</span></td>
+            <td data-label="الترم/القسم">${displayStreamOrTerm}</td>
             <td data-label="النقاط"><strong>${s.points || 0}</strong></td>
             <td data-label="الدور"><span class="badge ${roleClass}">${roleStr}</span></td>
             <td data-label="الحالة">${statusHtml}</td>
             <td data-label="الانتهاء">${expiryHtml}</td>
+            <td data-label="الحالة الآن">${(() => {
+                const onlineStatus = getOnlineStatus(s);
+                return `<div style="display:flex; align-items:center; gap:6px; justify-content:center;">
+                    <i class="fas ${onlineStatus.icon}" style="color:${onlineStatus.color}; font-size:0.5rem;"></i>
+                    <span style="font-size:0.8rem; color:${onlineStatus.color}; font-weight:600;">${onlineStatus.text}</span>
+                </div>`;
+            })()}</td>
             <td data-label="إجراءات">
                 <div style="display:flex; align-items:center; gap:8px; justify-content: flex-end;">
                     ${(function () {
@@ -1096,6 +400,10 @@ window.loadStudents = async () => {
                 }
             })()}
                     
+                    <a href="student-profile.html?id=${s.id}" target="_blank" class="btn btn-primary btn-sm" style="width:34px; height:34px; display:flex; align-items:center; justify-content:center; padding:0; flex-shrink:0; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd;" title="معاينة البروفايل">
+                        <i class="fas fa-eye" style="font-size:0.85rem;"></i>
+                    </a>
+
                     <button class="btn btn-primary btn-sm" style="width:34px; height:34px; display:flex; align-items:center; justify-content:center; padding:0; flex-shrink:0;" 
                             onclick="openEditStudent('${s.id}')" title="تعديل">
                         <i class="fas fa-pencil-alt" style="font-size:0.85rem;"></i>
@@ -1136,23 +444,26 @@ window.openEditStudent = async (id) => {
             </div>
             <div class="form-group">
                 <label>السنة الدراسية</label>
-                <input id="editGrade" class="form-control" value="${student.grade || ''}">
-            </div>
-             <div class="form-group">
-                <label>الشعبة (Stream)</label>
-                <select id="editStream" class="form-control">
-                    <option value="" ${!student.stream ? 'selected' : ''}>--</option>
-                    <option value="science_bio" ${student.stream === 'science_bio' ? 'selected' : ''}>علمي علوم</option>
-                    <option value="science_math" ${student.stream === 'science_math' ? 'selected' : ''}>علمي رياضة</option>
-                    <option value="literature" ${student.stream === 'literature' ? 'selected' : ''}>أدبي</option>
+                <select id="editGrade" class="form-control">
+                    <option value="first_year" ${student.academic_year === 'first_year' ? 'selected' : ''}>سنة أولى</option>
+                    <option value="second_year" ${student.academic_year === 'second_year' ? 'selected' : ''}>سنة تانية</option>
+                    <option value="third_year" ${student.academic_year === 'third_year' ? 'selected' : ''}>سنة تالتة</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>الترم (Term)</label>
+                <label>الترم الدراسي</label>
                 <select id="editTerm" class="form-control">
-                    <option value="" ${!student.term ? 'selected' : ''}>--</option>
-                    <option value="1" ${student.term === '1' ? 'selected' : ''}>الترم الأول</option>
-                    <option value="2" ${student.term === '2' ? 'selected' : ''}>الترم الثاني</option>
+                    <option value="first_term" ${student.current_term === 'first_term' ? 'selected' : ''}>الترم الأول</option>
+                    <option value="second_term" ${student.current_term === 'second_term' ? 'selected' : ''}>الترم الثاني</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>الشعبة (للسنة التالتة)</label>
+                <select id="editStream" class="form-control">
+                    <option value="" ${!student.department ? 'selected' : ''}>-- بدون شعبة --</option>
+                    <option value="science_science" ${student.department === 'science_science' ? 'selected' : ''}>علمي علوم</option>
+                    <option value="science_math" ${student.department === 'science_math' ? 'selected' : ''}>علمي رياضة</option>
+                    <option value="literary" ${student.department === 'literary' ? 'selected' : ''}>أدبي</option>
                 </select>
             </div>
             <div class="form-group">
@@ -1173,16 +484,23 @@ window.openEditStudent = async (id) => {
             </div>
         `,
         onSave: async () => {
+            const gradeVal = document.getElementById('editGrade').value;
+            const streamVal = document.getElementById('editStream').value || null;
+            const termVal = document.getElementById('editTerm').value || null;
+
+            // gradeVal is already in the correct format (first_year, second_year, etc.)
+            const academic_year = gradeVal;
+
             const updates = {
                 full_name: document.getElementById('editName').value,
                 points: parseInt(document.getElementById('editPoints').value) || 0,
                 role: document.getElementById('editRole').value,
-                grade: document.getElementById('editGrade').value,
-                stream: document.getElementById('editStream').value || null,
-                term: document.getElementById('editTerm').value || null,
+                academic_year: academic_year,
+                current_term: termVal,
+                department: streamVal,
                 is_active: document.getElementById('editIsActive').checked,
                 show_on_leaderboard: document.getElementById('editShowLeaderboard').checked,
-                subscription_ends_at: document.getElementById('editExpiry').value || null,
+                subscription_ends_at: document.getElementById('editExpiry').value ? new Date(document.getElementById('editExpiry').value).toISOString() : null,
             };
 
             const { error } = await supabase.from('profiles').update(updates).eq('id', id);
@@ -1194,13 +512,17 @@ window.openEditStudent = async (id) => {
                     text: error.message
                 });
             } else {
-                // Clean up old data via RPC
-                await supabase.rpc('cleanup_student_data', {
-                    p_user_id: id,
-                    p_grade: updates.grade,
-                    p_term: updates.term || '',
-                    p_stream: updates.stream || ''
-                });
+                // Clean up old data via RPC (optional - won't fail if function doesn't exist)
+                try {
+                    await supabase.rpc('cleanup_student_data', {
+                        p_user_id: id,
+                        p_academic_year: updates.academic_year,
+                        p_current_term: updates.current_term || '',
+                        p_department: updates.department || ''
+                    });
+                } catch (rpcError) {
+                    console.warn('cleanup_student_data RPC not available:', rpcError);
+                }
 
                 Swal.fire({
                     icon: 'success',
@@ -1209,6 +531,11 @@ window.openEditStudent = async (id) => {
                     timer: 1500,
                     showConfirmButton: false
                 });
+
+                // Clear any leaderboard cache to reflect changes immediately
+                clearCacheByPattern('leaderboard_');
+                clearCacheByPattern('squad_leaderboard_');
+
                 closeModal();
                 loadStudents();
             }
@@ -1238,7 +565,8 @@ window.openBulkAddModal = (examId) => {
 ]'></textarea>
                 <small style="color:var(--text-light); display:block; margin-top:0.5rem;">
                     * تأكد أن التنسيق JSON صحيح. <br>
-                    * الحقول المطلوبة: question_text, choice_a, choice_b, choice_c, choice_d, correct_answer
+                    * الحقول المطلوبة: question_text, choice_a, choice_b, correct_answer <br>
+                    * الحقول الاختيارية: choice_c, choice_d (اتركها للأسئلة الصح والغلط)
                 </small>
             </div>
         `,
@@ -1250,9 +578,14 @@ window.openBulkAddModal = (examId) => {
                 const questions = JSON.parse(input);
                 if (!Array.isArray(questions)) throw new Error("يجب أن يكون المدخل مصفوفة [ ]");
 
-                // Add exam_id to each question
+                // Add exam_id and ensure all choice fields exist for DB compatibility
                 const preparedQuestions = questions.map(q => ({
-                    ...q,
+                    question_text: q.question_text || "",
+                    choice_a: q.choice_a || "",
+                    choice_b: q.choice_b || "",
+                    choice_c: q.choice_c || "",
+                    choice_d: q.choice_d || "",
+                    correct_answer: q.correct_answer || "a",
                     exam_id: examId
                 }));
 
@@ -1297,16 +630,21 @@ window.deleteStudent = async (id, name) => {
 
     if (result.isConfirmed) {
         try {
-            const { error } = await supabase.from('profiles').delete().eq('id', id);
+            const { error } = await supabase.rpc('admin_delete_student', { p_student_id: id });
             if (error) throw error;
 
             Swal.fire({
                 icon: 'success',
                 title: 'تم الحذف!',
-                text: 'تم حذف الطالب وحسابه بالكامل.',
+                text: 'تم حذف الطالب وكل بياناته المرتبطة بنجاح.',
                 timer: 2000,
                 showConfirmButton: false
             });
+
+            // Clear cache to reflect deletion in leaderboard
+            clearCacheByPattern('leaderboard_');
+            clearCacheByPattern('squad_leaderboard_');
+
             loadStudents();
         } catch (err) {
             console.error("Delete Fail", err);
@@ -1318,6 +656,7 @@ window.deleteStudent = async (id, name) => {
         }
     }
 };
+
 
 window.toggleStudentStatus = async (id, currentStatus) => {
     const newStatus = !currentStatus;
@@ -1387,6 +726,12 @@ window.toggleStudentStatus = async (id, currentStatus) => {
                         timer: 2000,
                         showConfirmButton: false
                     });
+                    triggerCelebration('main');
+
+                    // Clear any leaderboard cache to reflect changes immediately
+                    clearCacheByPattern('leaderboard_');
+                    clearCacheByPattern('squad_leaderboard_');
+
                     closeModal();
                     loadStudents();
                 }
@@ -1427,6 +772,11 @@ window.toggleStudentStatus = async (id, currentStatus) => {
                     timer: 1500,
                     showConfirmButton: false
                 });
+
+                // Clear any leaderboard cache to reflect changes immediately
+                clearCacheByPattern('leaderboard_');
+                clearCacheByPattern('squad_leaderboard_');
+
                 loadStudents();
             }
         }
@@ -1730,3 +1080,421 @@ window.cancelBroadcast = async (id) => {
     }
 };
 
+// ==========================================
+// 11. SQUADS MANAGEMENT
+// ==========================================
+
+window.showSquadsView = () => {
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('navSquads')?.classList.add('active');
+    document.getElementById('pageTitle').textContent = 'الرئيسية > إدارة الشلل';
+    showView('squadsView');
+    loadSquadSettings(); // Load global configs first
+    loadSquadsAdmin();
+};
+
+async function loadSquadsAdmin() {
+    const tbody = document.getElementById('squadsTableBody');
+    const searchValue = document.getElementById('squadSearch')?.value.toLowerCase() || '';
+    const filterGrade = document.getElementById('filterSquadGrade')?.value || 'all';
+    const filterDept = document.getElementById('filterSquadDept')?.value || 'all';
+
+    tbody.innerHTML = '<tr><td colspan="6"><div class="spinner"></div></td></tr>';
+
+    let query = supabase.from('squads').select(`
+        *,
+        profiles!squads_owner_id_fkey (full_name),
+        squad_members!squad_members_squad_id_fkey (count)
+    `);
+
+    // Fetch all for local filtering (since cross-table complex searches are better handled simply if dataset is small)
+    const { data: squads, error } = await query.order('points', { ascending: false });
+
+    if (error) return Swal.fire('Error', error.message, 'error');
+
+    // Stats Accumulators
+    let totalMembers = 0;
+    let totalPoints = 0;
+
+    const filteredSquads = squads.filter(s => {
+        const matchesSearch = s.name.toLowerCase().includes(searchValue) || s.id.toLowerCase().includes(searchValue);
+        const matchesGrade = filterGrade === 'all' || s.academic_year == filterGrade;
+        const matchesDept = filterDept === 'all' || s.department == filterDept;
+
+        if (matchesSearch && matchesGrade && matchesDept) {
+            totalMembers += s.squad_members?.[0]?.count || 0;
+            totalPoints += s.points || 0;
+            return true;
+        }
+        return false;
+    });
+
+    // Update Stats UI
+    document.getElementById('statsTotalSquads').textContent = filteredSquads.length;
+    document.getElementById('statsAvgPoints').textContent = filteredSquads.length > 0 ? Math.round(totalPoints / filteredSquads.length) : 0;
+    document.getElementById('statsTotalMembers').textContent = totalMembers;
+
+    if (filteredSquads.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:2rem; color:#64748b;">لا يوجد نتائج تطابق بحثك</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = filteredSquads.map(s => {
+        const streamMap = {
+            'science_science': 'علمي علوم',
+            'science_math': 'علمي رياضة',
+            'literary': 'أدبي',
+            'general': 'عام'
+        };
+        const gradeMap = { '1': 'أولى ثانوي', '2': 'تانية ثانوي', '3': 'تالتة ثانوي' };
+
+        return `
+        <tr>
+            <td data-label="الشلة">
+                <div style="font-weight:800; color:var(--primary-color); font-size:1.05rem;">${s.name}</div>
+                <div style="font-size:0.75rem; color:#94a3b8; font-family:monospace;">Code: ${s.id.split('-')[0].toUpperCase()}</div>
+            </td>
+            <td data-label="المستوى / القسم">
+                <div style="font-weight:600;">الفرقة ${gradeMap[s.academic_year] || s.academic_year}</div>
+                <div style="font-size:0.8rem; color:#64748b;">${streamMap[s.department] || s.department || 'عام'}</div>
+            </td>
+            <td data-label="المالك">
+                <div style="font-weight:600; cursor:pointer; color:#0369a1;" onclick="openEditStudent('${s.owner_id}')">
+                   <i class="fas fa-user-circle"></i> ${s.profiles?.full_name || 'غير معروف'}
+                </div>
+            </td>
+            <td data-label="النقاط"><span class="badge badge-info" style="font-size:1rem; padding: 4px 12px;">${s.points || 0}</span></td>
+            <td data-label="الأعضاء">
+                <button class="btn btn-outline btn-sm" style="padding: 4px 10px; border-radius:8px;" onclick="viewSquadMembers('${s.id}', '${s.name}')">
+                    <i class="fas fa-users"></i> ${s.squad_members?.[0]?.count || 0}
+                </button>
+            </td>
+            <td data-label="إجراءات">
+                <div style="display:flex; gap:8px; justify-content: flex-end;">
+                    <a href="squad-profile.html?id=${s.id}" target="_blank" class="btn btn-sm" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; width:34px; height:34px; display:flex; align-items:center; justify-content:center; padding:0;" title="معاينة البروفايل">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <button class="btn btn-sm" style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; width:34px; height:34px; display:flex; align-items:center; justify-content:center; padding:0;" 
+                            onclick="openEditSquadModal(${JSON.stringify(s).replace(/"/g, '&quot;')})" title="تعديل الشلة">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm" style="background:#fef2f2; color:#ef4444; border:1px solid #fee2e2; width:34px; height:34px; display:flex; align-items:center; justify-content:center; padding:0;" 
+                            onclick="deleteSquad('${s.id}')" title="حذف الشلة">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="btn btn-sm" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; width:34px; height:34px; display:flex; align-items:center; justify-content:center; padding:0;" 
+                            onclick="resetSquadPoints('${s.id}')" title="تصفير النقاط">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
+    }).join('');
+}
+
+window.openEditSquadModal = (squad) => {
+    // Labels mapping for Secondary School
+    const gradeLabels = { '1': 'سنة أولى', '2': 'سنة تانية', '3': 'سنة تالتة' };
+    const deptLabels = {
+        'general': 'عام',
+        'science_science': 'علمي علوم',
+        'science_math': 'علمي رياضة',
+        'literary': 'أدبي'
+    };
+
+    const isGradeSelected = (v) => squad.academic_year === v || squad.academic_year === gradeLabels[v];
+    const isDeptSelected = (v) => squad.department === v || squad.department === deptLabels[v];
+
+    openModal({
+        title: 'تعديل بيانات الشلة',
+        body: `
+            <div class="form-group">
+                <label>اسم الشلة</label>
+                <input type="text" id="editSquadName" class="form-control" value="${squad.name}">
+            </div>
+            <div class="form-group">
+                <label>السنة الدراسية</label>
+                <select id="editSquadGrade" class="form-control">
+                    <option value="1" ${isGradeSelected('1') ? 'selected' : ''}>سنة أولى</option>
+                    <option value="2" ${isGradeSelected('2') ? 'selected' : ''}>سنة تانية</option>
+                    <option value="3" ${isGradeSelected('3') ? 'selected' : ''}>سنة تالتة</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>الشعبة</label>
+                <select id="editSquadDept" class="form-control">
+                    <option value="general" ${isDeptSelected('general') ? 'selected' : ''}>عام</option>
+                    <option value="science_science" ${isDeptSelected('science_science') ? 'selected' : ''}>علمي علوم</option>
+                    <option value="science_math" ${isDeptSelected('science_math') ? 'selected' : ''}>علمي رياضة</option>
+                    <option value="literary" ${isDeptSelected('literary') ? 'selected' : ''}>أدبي</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>النقاط الحالية</label>
+                <input type="number" id="editSquadPoints" class="form-control" value="${squad.points || 0}">
+            </div>
+        `,
+        onSave: async () => {
+            const updates = {
+                name: document.getElementById('editSquadName').value,
+                academic_year: document.getElementById('editSquadGrade').value,
+                department: document.getElementById('editSquadDept').value,
+                points: parseInt(document.getElementById('editSquadPoints').value) || 0
+            };
+
+            const { error } = await supabase.from('squads').update(updates).eq('id', squad.id);
+
+            if (error) {
+                Swal.fire('خطأ', error.message, 'error');
+            } else {
+                Swal.fire('تم!', 'تم تحديث بيانات الشلة بنجاح', 'success');
+                closeModal();
+                loadSquadsAdmin();
+            }
+        }
+    });
+};
+
+window.deleteSquad = async (id) => {
+    const result = await Swal.fire({
+        title: 'هل أنت متأكد؟',
+        text: "حذف الشلة سيحذف كل الرسائل والمهام والأعضاء بداخلها!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'نعم، احذف',
+        cancelButtonText: 'إلغاء'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const { error } = await supabase.rpc('admin_delete_squad', { p_squad_id: id });
+            if (error) throw error;
+
+            Swal.fire({
+                icon: 'success',
+                title: 'تم!',
+                text: 'تم حذف الشلة بكل بياناتها بنجاح',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            loadSquadsAdmin();
+        } catch (err) {
+            console.error("Squad Delete Fail", err);
+            Swal.fire({
+                icon: 'error',
+                title: 'خطأ',
+                text: err.message
+            });
+        }
+    }
+};
+
+
+window.viewSquadMembers = async (squadId, squadName) => {
+    openModal({
+        title: `أعضاء شلة: ${squadName}`,
+        body: '<div id="modalMemberList" class="text-center" style="padding:2rem;"><div class="spinner"></div> جاري تحميل الأعضاء...</div>',
+        onSave: () => closeModal()
+    });
+
+    try {
+        const { data: members, error } = await supabase
+            .from('squad_members')
+            .select(`
+                profile_id,
+                profiles!squad_members_profile_id_fkey (full_name, points)
+            `)
+            .eq('squad_id', squadId);
+
+        if (error) throw error;
+
+        const body = document.getElementById('modalMemberList');
+        if (!members || members.length === 0) {
+            body.innerHTML = '<p class="text-center">لا يوجد أعضاء في هذه الشلة!</p>';
+            return;
+        }
+
+        body.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                ${members.map(m => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9;">
+                        <span style="font-weight: 700; color: #1e293b;">${m.profiles?.full_name || 'طالب مجهول'}</span>
+                        <button class="btn btn-sm" style="color: #ef4444; background: #fff1f2; border: 1px solid #fecaca; padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 700;" 
+                                onclick="removeMemberFromSquadAdmin('${squadId}', '${m.profile_id}', '${squadName}')">
+                            <i class="fas fa-user-minus"></i> طرد
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+    } catch (err) {
+        document.getElementById('modalMemberList').innerHTML = `<p style="color:#ef4444;">خطأ: ${err.message}</p>`;
+    }
+};
+
+window.removeMemberFromSquadAdmin = async (squadId, profileId, squadName) => {
+    const result = await Swal.fire({
+        title: 'طرد عضو؟',
+        text: 'هل أنت متأكد من طرد هذا الطالب من الشلة؟',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'نعم، اطرد',
+        cancelButtonText: 'تراجع'
+    });
+
+    if (result.isConfirmed) {
+        const { error } = await supabase.from('squad_members').delete().match({ squad_id: squadId, profile_id: profileId });
+        if (error) Swal.fire('Error', error.message, 'error');
+        else {
+            Swal.fire('تم!', 'تم طرد العضو بنجاح', 'success');
+            viewSquadMembers(squadId, squadName); // Reload list
+            loadSquadsAdmin(); // Update counts in main table
+        }
+    }
+};
+
+window.resetSquadPoints = async (id) => {
+    const result = await Swal.fire({
+        title: 'تصفير نقاط الشلة؟',
+        text: "هذا الإجراء سيعيد نقاط الشلة إلى صفر!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'تصفير الآن',
+        cancelButtonText: 'إلغاء'
+    });
+
+    if (result.isConfirmed) {
+        const { error } = await supabase.from('squads').update({ points: 0 }).eq('id', id);
+        if (error) Swal.fire('Error', error.message, 'error');
+        else {
+            Swal.fire('تم!', 'تم تصفير النقاط بنجاح', 'success');
+            loadSquadsAdmin();
+        }
+    }
+};
+window.showLeaderboardMgmtView = async () => {
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('navLeaderboard')?.classList.add('active');
+
+    document.getElementById('pageTitle').textContent = 'الرئيسية > إدارة الأوائل';
+    showView('leaderboardMgmtView');
+
+    // Load current settings
+    await loadLeaderboardSettings();
+};
+
+async function loadLeaderboardSettings() {
+    try {
+        const { data, error } = await supabase
+            .from('app_configs')
+            .select('value')
+            .eq('key', 'leaderboard_settings')
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (data && data.value) {
+            document.getElementById('settingTopStudents').value = data.value.top_students || 50;
+            document.getElementById('settingTopSquads').value = data.value.top_squads || 10;
+            document.getElementById('settingRefreshInterval').value = data.value.refresh_interval || 10;
+        }
+    } catch (err) {
+        console.error("Error loading settings:", err);
+        // Fallback to defaults already in HTML
+    }
+}
+
+window.saveLeaderboardSettings = async () => {
+    const topStudents = parseInt(document.getElementById('settingTopStudents').value);
+    const topSquads = parseInt(document.getElementById('settingTopSquads').value);
+    const refreshInterval = parseInt(document.getElementById('settingRefreshInterval').value);
+
+    if (isNaN(topStudents) || topStudents < 1 || isNaN(topSquads) || topSquads < 1 || isNaN(refreshInterval) || refreshInterval < 1) {
+        return Swal.fire('خطأ', 'يرجى إدخال أرقام صحيحة', 'error');
+    }
+
+    Swal.fire({
+        title: 'جاري الحفظ...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    try {
+        // Use upsert to save settings
+        const { error } = await supabase
+            .from('app_configs')
+            .upsert({
+                key: 'leaderboard_settings',
+                value: {
+                    top_students: topStudents,
+                    top_squads: topSquads,
+                    refresh_interval: refreshInterval
+                },
+                updated_at: new Date().toISOString()
+            });
+
+        if (error) throw error;
+
+        Swal.fire('تم الحفظ!', 'تم تحديث إعدادات قائمة الأوائل بنجاح.', 'success');
+    } catch (err) {
+        console.error("Save failed:", err);
+        Swal.fire('خطأ', 'حدثت مشكلة أثناء الحفظ: ' + err.message, 'error');
+    }
+};
+
+// --- SQUAD SETTINGS LOGIC ---
+async function loadSquadSettings() {
+    try {
+        const { data, error } = await supabase
+            .from('app_configs')
+            .select('value')
+            .eq('key', 'squad_settings')
+            .maybeSingle();
+
+        if (error) throw error;
+        if (data && data.value) {
+            document.getElementById('settingSquadJoinMins').value = data.value.join_mins || 60;
+            document.getElementById('settingSquadGraceMins').value = data.value.grace_mins || 45;
+            document.getElementById('settingSquadMaxMembers').value = data.value.max_members || 10;
+            document.getElementById('settingSquadThreshold').value = data.value.success_threshold || 80;
+        }
+    } catch (err) {
+        console.error("Error loading squad settings:", err);
+    }
+}
+
+window.saveSquadSettings = async () => {
+    const joinMins = parseInt(document.getElementById('settingSquadJoinMins').value);
+    const graceMins = parseInt(document.getElementById('settingSquadGraceMins').value);
+    const maxMembers = parseInt(document.getElementById('settingSquadMaxMembers').value);
+    const threshold = parseInt(document.getElementById('settingSquadThreshold').value);
+
+    if (isNaN(joinMins) || isNaN(graceMins) || isNaN(maxMembers) || isNaN(threshold)) {
+        return Swal.fire('خطأ', 'يرجى إدخال أرقام صحيحة', 'error');
+    }
+
+    Swal.fire({ title: 'جاري الحفظ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    try {
+        const { error } = await supabase
+            .from('app_configs')
+            .upsert({
+                key: 'squad_settings',
+                value: {
+                    join_mins: joinMins,
+                    grace_mins: graceMins,
+                    max_members: maxMembers,
+                    success_threshold: threshold
+                },
+                updated_at: new Date().toISOString()
+            });
+
+        if (error) throw error;
+        Swal.fire('تم الحفظ!', 'تم تحديث إعدادات التحديات بنجاح.', 'success');
+    } catch (err) {
+        console.error("Save failed:", err);
+        Swal.fire('خطأ', 'حدثت مشكلة أثناء الحفظ: ' + err.message, 'error');
+    }
+};

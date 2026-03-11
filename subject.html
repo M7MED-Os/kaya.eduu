@@ -4,16 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>المادة الدراسية | ثانوية.كوم</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="assets/css/bottom-nav.css">
+    <link rel="stylesheet" href="assets/css/premium-banner.css">
+
     <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="48x48" href="assets/images/favicon-48x48.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
-    <title>المادة الدراسية | ثانوية.كوم</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="assets/css/bottom-nav.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </head>
 
@@ -23,7 +27,7 @@
     <nav class="navbar">
         <div class="container">
             <a href="dashboard.html" class="logo">
-                <img src="assets/images/logo-icon.jpeg" alt="Logo" class="brand-icon">
+                <img src="assets/images/logo-icon.webp" alt="Logo" class="brand-icon">
                 <span class="logo-text">ثانوية<span class="logo-accent">.كوم</span></span>
             </a>
 
@@ -37,8 +41,10 @@
 
             <ul class="nav-links">
                 <li><a href="dashboard.html">الرئيسية</a></li>
+                <li><a href="curriculum.html">المحاضرات</a></li>
+                <li><a href="squad.html">الشلة</a></li>
                 <li><a href="todo.html">المهام</a></li>
-                <li><a href="leaderboard.html">المتصدرين</a></li>
+                <li><a href="leaderboard.html">الأوائل</a></li>
                 <li id="adminNavBtn" style="display: none;">
                     <a href="admin.html" style="color: var(--secondary-color); font-weight: bold;">
                         <i class="fas fa-shield-alt"></i> Admin
@@ -51,19 +57,148 @@
     </nav>
 
     <!-- Page Header -->
-    <header class="page-header" style="padding: 4rem 0 2rem 0;">
+    <header class="page-header">
         <div class="container">
             <h1 id="subjectTitle">جاري التحميل...</h1>
-            <p>اختار الدرس أو الامتحان اللي عاوز تحله</p>
+            <p>اختار المحاضرة اللي عاوز تذاكرها</p>
         </div>
     </header>
 
     <!-- Exams Grid -->
     <section class="section">
         <div class="container">
+            <!-- Premium Banner (for non-premium users) -->
+            <div id="premiumBanner" class="premium-banner" style="display: none;">
+                <div class="premium-banner-icon">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <div class="premium-banner-content">
+                    <p>اشترك عشان يتفتحلك كل المميزات و المحتوى</p>
+                </div>
+                <div class="premium-banner-actions">
+                    <button id="premiumBannerBtn" class="premium-banner-btn">
+                        <i class="fas fa-star"></i> اشترك دلوقتي
+                    </button>
+                    <button id="closePremiumBanner" class="premium-banner-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
             <div id="loading" class="text-center">
                 <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary-color);"></i>
                 <p style="margin-top: 1rem;">بيحمل الامتحانات...</p>
+            </div>
+
+            <!-- Mistakes Bank Card - Reverted Premium Gradient -->
+            <style>
+                .mistakes-premium-card {
+                    position: relative;
+                    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+                    border-radius: 20px;
+                    padding: 1.25rem 1.5rem;
+                    color: #fff;
+                    box-shadow: 0 10px 25px rgba(239, 68, 68, 0.2);
+                    overflow: hidden;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    flex-wrap: wrap;
+                    gap: 1.5rem;
+                }
+
+                .mistakes-card-text {
+                    text-align: right;
+                }
+
+                @media (max-width: 640px) {
+                    .mistakes-premium-card {
+                        flex-direction: column;
+                        text-align: center;
+                        padding: 1.5rem;
+                        gap: 1.5rem;
+                    }
+
+                    .mistakes-card-info {
+                        flex-direction: column !important;
+                        min-width: 100% !important;
+                    }
+
+                    .mistakes-card-text {
+                        text-align: center !important;
+                    }
+
+                    .mistakes-card-actions {
+                        width: 100%;
+                        justify-content: center !important;
+                        min-width: 100% !important;
+                    }
+
+                    .mistakes-card-actions button {
+                        flex: 1;
+                    }
+                }
+            </style>
+            <div id="mistakesBankCard" style="display:none; margin-bottom: 2rem;">
+                <div id="mistakesPremiumCard" class="mistakes-premium-card">
+                    <!-- Decorative Background Element -->
+                    <div
+                        style="position: absolute; top: -20px; left: -20px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; pointer-events: none;">
+                    </div>
+
+                    <div class="mistakes-card-info"
+                        style="display: flex; align-items: center; gap: 1.2rem; flex: 1; min-width: 250px; z-index: 1;">
+                        <div
+                            style="width: 50px; height: 50px; background: rgba(255,255,255,0.2); backdrop-filter: blur(4px); border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <i id="mistakesBankIcon" class="fa-solid fa-circle-question"
+                                style="font-size: 1.5rem; color: #fff;"></i>
+                        </div>
+                        <div class="mistakes-card-text">
+                            <h3 id="mistakesBankTitle"
+                                style="margin: 0; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.01em;">
+                                بنك الأخطاء</h3>
+                            <p id="mistakesCountText"
+                                style="margin: 3px 0 0; font-size: 0.9rem; opacity: 0.9; font-weight: 500;">
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mistakes-card-actions"
+                        style="display: flex; gap: 0.6rem; flex-wrap: wrap; z-index: 1; min-width: 200px; justify-content: flex-end;">
+                        <button id="viewMistakesBtn"
+                            style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 0.55rem 1rem; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem; backdrop-filter: blur(4px); transition: all 0.2s;">
+                            <i class="fas fa-eye"></i> مراجعة
+                        </button>
+                        <button id="practiceMistakesBtn"
+                            style="background: #fff; color: #DC2626; border: none; padding: 0.55rem 1rem; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: all 0.2s;">
+                            <i class="fas fa-play"></i> تدريب
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Mistakes Modal -->
+            <div id="mistakesModalOverlay"
+                style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); z-index: 9999; align-items: center; justify-content: center; padding: 1rem;">
+                <div class="mistakes-modal"
+                    style="background: #fff; width: 100%; max-width: 600px; height: 90vh; border-radius: 28px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); direction: ltr; text-align: left;">
+                    <style>
+                        #mistakesModalContent::-webkit-scrollbar {
+                            display: none;
+                        }
+                    </style>
+                    <div class="modal-content-area" id="mistakesModalContent"
+                        style="flex: 1; overflow-y: auto; padding: 1.5rem; scrollbar-width: none; text-align: left;">
+                        <!-- Content will be injected by JS -->
+                    </div>
+                    <div class="modal-footer"
+                        style="padding: 1rem 1.5rem; background: #fff; border-top: 1px solid #f3f4f6; text-align: center; margin: 0 auto;">
+                        <button id="closeMistakesModalBtn"
+                            style="padding: 0.7rem 2.5rem; border-radius: 12px; border: none; background: #111827; color: #fff; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">
+                            تمام
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div class="grid-3" id="examsGrid">
@@ -73,17 +208,24 @@
             <div id="noExamsMessage" class="text-center" style="display: none; padding: 2rem;">
                 <i class="fas fa-folder-open fa-3x" style="color: #ccc; margin-bottom: 1rem;"></i>
                 <h3>مفيش امتحانات متاحة حالياً للمادة دي</h3>
-                <p>ارجع تاني وقت لاحق أو جرب مادة تانية.</p>
+                <p>ارجع في وقت تاني أو جرب مادة تانية.</p>
                 <a href="dashboard.html" class="btn btn-primary" style="margin-top: 1rem;">الرجوع للرئيسية</a>
             </div>
 
             <!-- Subject Results Section -->
             <div id="subjectResultsSection" style="margin-top: 4rem; display: none;">
-                <h2 class="section-title" style="font-size: 1.8rem;">📊 نتائجي في هذه المادة</h2>
-                <p class="section-subtitle" style="margin-bottom: 2rem;">تابع تقدمك في كل امتحان</p>
+                <h2 class="section-title" style="font-size: 1.8rem;">📊 نتائجي في المادة دي</h2>
+                <p class="section-subtitle" style="margin-bottom: 2rem;">تابع مستواك في كل امتحان</p>
 
                 <div id="subjectResultsContainer">
                     <!-- Results will be injected here -->
+                </div>
+
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <button id="loadMoreResultsBtn" class="btn btn-outline"
+                        style="font-size: 0.85rem; padding: 6px 20px; display: none;">
+                        عرض المزيد <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -110,6 +252,14 @@
                 <i class="fas fa-tasks"></i>
                 <span>المهام</span>
             </a>
+            <a href="squad.html" class="bottom-nav-item">
+                <i class="fas fa-users"></i>
+                <span>الشلة</span>
+            </a>
+            <a href="curriculum.html" class="bottom-nav-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>المحاضرات</span>
+            </a>
             <a href="leaderboard.html" class="bottom-nav-item">
                 <i class="fas fa-trophy"></i>
                 <span>الأوائل</span>
@@ -129,8 +279,9 @@
         </div>
     </nav>
 
-    <script src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/main.js"></script>
     <script type="module" src="assets/js/auth.js"></script>
+    <script type="module" src="assets/js/squad-notifications.js"></script>
     <script type="module" src="assets/js/subject.js"></script>
 
 </body>

@@ -4,15 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الامتحان | ثانوية.كوم</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="manifest" href="manifest.json">
+
     <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="48x48" href="assets/images/favicon-48x48.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
-    <title>الامتحان | ثانوية.كوم</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
@@ -102,6 +104,7 @@
             width: 100%;
             height: 4px;
             background: #e2e8f0;
+            direction: ltr;
         }
 
         .progress-fill {
@@ -140,6 +143,21 @@
             top: 0;
             box-shadow: var(--shadow-sm);
             border: 1px solid #e2e8f0;
+            direction: rtl;
+        }
+
+        .mobile-nav-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            border: none;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
         /* --- Question Card --- */
@@ -151,6 +169,28 @@
             margin-bottom: 2rem;
             display: none;
             border: 1px solid #e2e8f0;
+            direction: rtl;
+            text-align: right;
+        }
+
+        @media (max-width: 768px) {
+            .question-card {
+                padding: 1.5rem;
+            }
+
+            .main-wrapper {
+                padding: 1.5rem 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .question-card {
+                padding: 1.25rem;
+            }
+
+            .flag-btn span {
+                display: none;
+            }
         }
 
         .question-card.active {
@@ -183,6 +223,8 @@
             color: #1e293b;
             margin-bottom: 2rem;
             white-space: pre-wrap;
+            direction: rtl;
+            text-align: right;
         }
 
         /* --- Options --- */
@@ -201,6 +243,8 @@
             border-radius: 14px;
             cursor: pointer;
             transition: all 0.2s ease;
+            direction: rtl;
+            text-align: right;
         }
 
         .option-label:hover {
@@ -269,27 +313,34 @@
             align-items: center;
             width: 100%;
             gap: 1rem;
+            direction: rtl;
         }
 
         /* --- Navigation Grid --- */
         .nav-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
+            gap: 12px;
+            direction: rtl;
         }
 
         .nav-dot {
-            aspect-ratio: 1;
             border: 1px solid #e2e8f0;
-            border-radius: 10px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
+            font-size: 0.75rem;
             cursor: pointer;
             transition: all 0.2s;
             color: #64748b;
             background: #f8fafc;
+            width: 100%;
+            aspect-ratio: 1;
+            min-height: 0;
+            min-width: 0;
+            padding: 0;
         }
 
         .nav-dot.answered {
@@ -314,28 +365,70 @@
 
         /* --- Mobile Navigator Specifics --- */
         .drawer .nav-grid {
-            grid-template-columns: repeat(6, 1fr);
-            gap: 12px;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 10px;
         }
 
         .drawer .nav-dot {
-            font-size: 0.8rem;
-            border-radius: 12px;
+            font-size: 0.65rem;
+            border-radius: 6px;
+            height: 36px;
             aspect-ratio: 1;
         }
 
         /* --- Mobile Drawer Navigation --- */
         .mobile-nav-toggle {
             display: none;
-            background: #f1f5f9;
-            padding: 10px;
-            border-radius: 10px;
+            background: #f8fafc;
+            color: #475569;
+            border-radius: 50%;
             cursor: pointer;
-            border: none;
+            border: 1px solid #e2e8f0;
             align-items: center;
             justify-content: center;
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
+            transition: all 0.2s;
+        }
+
+        .mobile-nav-toggle:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .timer-badge {
+            background: #f8fafc;
+            color: #1e293b;
+            border-radius: 20px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 40px;
+            padding: 0 16px;
+            min-width: 90px;
+            font-size: 1rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .header-finish-btn {
+            height: 40px;
+            border-radius: 20px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 800;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .header-finish-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
         }
 
         .drawer-overlay {
@@ -359,11 +452,29 @@
             background: white;
             z-index: 2001;
             border-radius: 30px 30px 0 0;
-            padding: 2rem 1.5rem;
+            padding: 2.5rem 1.5rem 1.5rem;
             transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             max-height: 80vh;
             overflow-y: auto;
             box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.1);
+            direction: rtl;
+        }
+
+        .drawer-close-btn {
+            /* position: absolute; */
+            /* top: 15px; */
+            /* left: 15px; */
+            background: #f1f5f9;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
         }
 
         .drawer.open {
@@ -406,36 +517,67 @@
                 display: flex;
             }
 
-            .main-wrapper {
-                padding-top: 15px;
-                background: white;
+            .header-finish-btn span {
+                display: none;
             }
 
-            .question-card {
-                padding: 1.5rem;
-                padding-top: 2rem;
-                border: none;
-                border-radius: 0;
-                box-shadow: none;
+            .header-finish-btn {
+                padding: 0;
+                width: 40px;
+                border-radius: 50%;
             }
 
             .timer-badge {
-                padding: 6px 12px;
-                font-size: 0.9rem;
+                min-width: unset;
+                padding: 0 12px;
+                border-radius: 20px;
+                font-size: 0.85rem;
+                height: 36px;
             }
 
-            .header-finish-btn span {
-                display: none;
+            .logo-box {
+                font-size: 1rem;
+            }
+
+            .logo-box img {
+                height: 28px !important;
+            }
+
+            .header-content {
+                gap: 8px;
+            }
+
+            .mobile-nav-toggle {
+                width: 36px;
+                height: 36px;
+            }
+
+            /* Tablet: keep nav dots compact */
+            .drawer .nav-grid {
+                grid-template-columns: repeat(10, 1fr);
+                gap: 8px;
+            }
+
+            .drawer .nav-dot {
+                font-size: 0.6rem;
+                height: 34px;
             }
         }
 
         @media (max-width: 480px) {
-            .footer-content span#qCount {
-                display: none;
+            .drawer .nav-grid {
+                grid-template-columns: repeat(8, 1fr);
+                gap: 8px;
             }
 
-            .nav-grid {
-                grid-template-columns: repeat(4, 1fr);
+            .drawer .nav-dot {
+                font-size: 0.6rem;
+                height: 32px;
+            }
+
+            /* On phones: show only icon in prev/next buttons */
+            .nav-btn-text {
+                display: none;
             }
         }
 
@@ -484,6 +626,8 @@
             padding: 1.25rem;
             margin-bottom: 1rem;
             border-right: 4px solid #cbd5e1;
+            direction: rtl;
+            text-align: right;
         }
 
         .review-question.correct {
@@ -538,6 +682,8 @@
             justify-content: space-between;
             align-items: center;
             font-weight: 600;
+            direction: rtl;
+            text-align: right;
         }
 
         .review-option.correct-answer {
@@ -681,8 +827,15 @@
         }
 
         button#confirmSubmitAnywayBtn:hover {
-            background-color: var(--secondary-dark);
-            color: var(--text-white) !important;
+            background-color: #ef4444 !important;
+            border-color: #ef4444 !important;
+            color: white !important;
+        }
+
+        /* Warning modal: RTL for Arabic text */
+        #warningModal .stat-card {
+            direction: rtl;
+            text-align: center;
         }
     </style>
 </head>
@@ -692,23 +845,24 @@
     <!-- Header -->
     <header class="exam-header">
         <div class="container header-content">
-            <button class="mobile-nav-toggle" onclick="toggleDrawer()">
-                <i class="fas fa-th-large"></i>
-            </button>
             <div class="logo-box">
-                <img src="assets/images/logo-icon.jpeg" alt="Logo" class="brand-icon" style="height:30px">
-                <span id="examTitleMobile">الامتحان</span>
+                <img src="assets/images/logo-icon.webp" alt="Logo" class="brand-icon" style="height:35px">
             </div>
-            <div style="display: flex; align-items: center; gap: 8px; margin-right: auto;">
-                <button id="headerFinishBtn" class="btn btn-secondary header-finish-btn"
-                    style="padding: 8px 14px; border-radius: 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
-                    <i class="fas fa-check-double"></i>
-                    <span>إنهاء</span>
-                </button>
+            <!-- Squad Mode Badge -->
+            <div id="squadModeBadge"
+                style="display: none; background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; border: 1px solid #fde68a; margin-right: 10px;">
+                <i class="fas fa-users"></i> وضع الشلة
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-right: auto;">
+                <!-- mobile-nav-toggle moved to footer -->
                 <div class="timer-badge" id="timerBox">
-                    <i class="fas fa-clock"></i>
                     <span id="timerDisplay">00:00</span>
+                    <i class="fas fa-clock" style="font-size: 0.85rem; opacity: 0.7;"></i>
                 </div>
+                <button id="headerFinishBtn" class="btn header-finish-btn" style="display: none;">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>سلم الامتحان</span>
+                </button>
             </div>
         </div>
         <div class="progress-wrapper">
@@ -722,20 +876,29 @@
             <div class="exam-layout">
                 <!-- Sidebar -->
                 <aside class="nav-sidebar">
-                    <h4 style="margin-bottom: 1.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.5rem;">خريطة
-                        الأسئلة</h4>
+                    <h4
+                        style="text-align: right; margin-bottom: 1.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.5rem;">
+                        خريطة الأسئلة</h4>
                     <div class="nav-grid" id="desktopNavGrid"></div>
 
-                    <div
-                        style="margin-top: 2rem; font-size: 0.85rem; color: #64748b; background: #f8fafc; padding: 1rem; border-radius: 10px;">
-                        <div style="display:flex; align-items:center; gap:8px; margin-bottom: 8px;">
-                            <div style="width:12px; height:12px; background:var(--primary-color); border-radius:3px;">
-                            </div> الحالي
+                    <div class="nav-legend"
+                        style="margin-top: 2rem; font-size: 0.85rem; color: #64748b; background: #f8fafc; padding: 1.25rem; border-radius: 12px; direction: rtl;">
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom: 10px;">
+                            <div style="width:14px; height:14px; background:var(--primary-color); border-radius:4px;">
+                            </div>
+                            <span style="font-weight: 600;">الحالي</span>
                         </div>
-                        <div style="display:flex; align-items:center; gap:8px;">
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom: 10px;">
                             <div
-                                style="width:12px; height:12px; background:#f0fdf4; border:1px solid #86efac; border-radius:3px;">
-                            </div> تم الحل
+                                style="width:14px; height:14px; background:#f0fdf4; border:1px solid #86efac; border-radius:4px;">
+                            </div>
+                            <span style="font-weight: 600;">تم حله</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div
+                                style="width:14px; height:14px; background:#fffbeb; border:1px solid #f59e0b; border-radius:4px;">
+                            </div>
+                            <span style="font-weight: 600;">به علامة</span>
                         </div>
                     </div>
                 </aside>
@@ -748,6 +911,10 @@
                     </div>
 
                     <div id="examView" style="display: none;">
+                        <!-- Lesson Title -->
+                        <div id="lessonTitleBar"
+                            style="display: none; font-size: 1.1rem; font-weight: 800; color: var(--primary-color); margin: 0 auto 2rem; padding: 0.6rem 2rem; background: #f0f9ff; border: 2px solid #e0f2fe; border-radius: 50px; text-align: center; width: fit-content; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                        </div>
                         <div id="questionsContainer"></div>
                     </div>
 
@@ -813,15 +980,24 @@
     <!-- Footer -->
     <footer class="sticky-footer" id="examFooter" style="display: none;">
         <div class="container footer-content">
-            <button id="prevBtn" class="btn btn-outline" style="flex: 1; max-width: 160px; border-radius: 12px;">
-                <i class="fas fa-chevron-right"></i> السابق
+            <button id="prevBtn" class="btn btn-outline"
+                style="flex: 1; max-width: 140px; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <i class="fas fa-chevron-right"></i>
+                <span class="nav-btn-text">السابق</span>
             </button>
-            <button id="nextBtn" class="btn btn-primary" style="flex: 1; max-width: 160px; border-radius: 12px;">
-                التالي <i class="fas fa-chevron-left"></i>
+
+            <button class="mobile-nav-toggle" onclick="toggleDrawer()">
+                <i class="fas fa-th-large"></i>
+            </button>
+
+            <button id="nextBtn" class="btn btn-primary"
+                style="flex: 1; max-width: 140px; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <span class="nav-btn-text">التالي</span>
+                <i class="fas fa-chevron-left"></i>
             </button>
             <button id="submitBtn" class="btn"
-                style="display: none; background: var(--secondary-color); color: white; flex: 1; max-width: 160px; border-radius: 12px;">
-                <i class="fas fa-paper-plane"></i> تسليم
+                style="display: none; background: var(--secondary-color); color: white; flex: 1; max-width: 150px; border-radius: 12px;">
+                <i class="fas fa-paper-plane"></i> <span class="nav-btn-text">سلم الامتحان</span>
             </button>
         </div>
     </footer>
@@ -829,16 +1005,11 @@
     <!-- Mobile Drawer Navigator -->
     <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
     <div class="drawer" id="mobileDrawer">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h3 style="margin: 0;">اختر السؤال</h3>
-            <button onclick="toggleDrawer()" style="background:none; border:none; font-size: 1.5rem; color: #94a3b8;">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="nav-grid" id="mobileNavGrid"></div>
-        <div style="margin-top: 2rem;">
-            <button class="btn btn-primary full-width" onclick="toggleDrawer()"
-                style="border-radius: 12px;">إغلاق</button>
+        <button class="drawer-close-btn" onclick="toggleDrawer()">
+            <i class="fas fa-times"></i>
+        </button>
+        <div style="margin-top: 1rem;">
+            <div class="nav-grid" id="mobileNavGrid"></div>
         </div>
     </div>
 
@@ -851,14 +1022,15 @@
             <div style="font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem;">
                 <i class="fas fa-exclamation-circle"></i>
             </div>
-            <h3 style="margin-bottom: 1rem;">لسه في أسئلة!</h3>
+            <h3 style="margin-bottom: 1rem;">أسئلة لم يتم حلها!</h3>
             <p style="color: #64748b; margin-bottom: 2rem; line-height: 1.6;">
-                إنت لسه مجاوبتش على كل الأسئلة. حابب ترجع تكمل ولا تسلم الامتحان زي ما هو؟
+                لديك أسئلة لم يتم حلها بعد. هل تريد العودة للإكمال أم تسليم الامتحان؟
             </p>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button class="btn btn-primary" id="continueExamBtn" style="border-radius: 12px;">هرجع أكمل</button>
+                <button class="btn btn-primary" id="continueExamBtn" style="border-radius: 12px;">العودة
+                    للامتحان</button>
                 <button class="btn btn-outline" id="confirmSubmitAnywayBtn"
-                    style="border-radius: 12px; color: #ef4444; border-color: #ef4444;">تسليم على أي حال</button>
+                    style="border-radius: 12px; color: #ef4444; border-color: #ef4444;">سلم الامتحان</button>
             </div>
         </div>
     </div>

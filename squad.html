@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>الشلة | ثانوية.كوم</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="assets/css/bottom-nav.css">
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="assets/images/favicon-48x48.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        /* Use global .page-header */
+
+        .squad-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 1.5rem;
+            padding-bottom: 5rem;
+        }
+
+        @media (max-width: 992px) {
+            .squad-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+
+        .squad-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 1.5rem;
+        }
+
+        .squad-card-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #1e293b;
+        }
+
+        /* Shared To-Do List */
+        .todo-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+
+        .todo-item:hover {
+            background: #f1f5f9;
+        }
+
+        .todo-checkbox {
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--primary-color);
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .todo-checkbox:checked {
+            background-color: var(--primary-color);
+        }
+
+        .todo-checkbox:checked::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            color: white;
+            font-size: 12px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .todo-text {
+            flex: 1;
+            font-weight: 600;
+            color: #334155;
+            transition: color 0.2s;
+        }
+
+        .todo-text.done {
+            text-decoration: line-through;
+            color: #94a3b8;
+        }
+
+        /* Progress Bar */
+        .squad-progress-container {
+            margin-bottom: 15px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            height: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .squad-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* Chat System */
+        .chat-box {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #e4f1fe url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png') repeat;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            scroll-behavior: smooth;
+            border: 1px solid #e2e8f0;
+            position: relative;
+        }
+
+        .msg-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            margin-bottom: 8px;
+            width: 100%;
+        }
+
+        .msg-wrapper.sent {
+            flex-direction: row-reverse;
+        }
+
+        .chat-avatar-container {
+            position: relative;
+            flex-shrink: 0;
+            margin-bottom: 4px;
+        }
+
+        .chat-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .msg {
+            max-width: 80%;
+            padding: 8px 12px 10px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            position: relative;
+            line-height: 1.4;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .msg.sent {
+            align-self: flex-end;
+            background: #e1f5fe;
+            /* Light Blue instead of Light Green */
+            color: #1e293b;
+            border-top-right-radius: 2px;
+            border: 1px solid #b3e5fc;
+        }
+
+        .msg.received {
+            align-self: flex-start;
+            background: white;
+            color: #1e293b;
+            border-top-left-radius: 2px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .msg-sender {
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 3px;
+            display: block;
+            color: var(--primary-color);
+            /* Name color matches blue identity */
+        }
+
+        .msg.sent .msg-sender {
+            display: none;
+        }
+
+        .msg-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+            margin-top: 4px;
+            font-size: 0.65rem;
+            color: #64748b;
+        }
+
+        .msg-seen-status {
+            font-size: 0.8rem;
+            display: flex;
+        }
+
+        .msg-seen-status.read {
+            color: var(--primary-color);
+            /* Blue Ticks match primary blue */
+        }
+
+        .msg-seen-status.sent {
+            color: #94a3b8;
+        }
+
+        /* Group Date Divider */
+        .chat-date-divider {
+            align-self: center;
+            background: #d1d7db;
+            color: #54656f;
+            font-size: 0.75rem;
+            padding: 5px 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-transform: uppercase;
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Pomodoro Widget */
+        .pomodoro-box {
+            text-align: center;
+            padding: 2rem;
+            background: #fff5f5;
+            border: 2px dashed #feb2b2;
+            border-radius: 20px;
+        }
+
+        .timer-display {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #e53e3e;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+
+        /* Online Members */
+        .member-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #cbd5e1;
+            /* Gray by default */
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        .status-dot.online {
+            background: #10b981;
+            /* Green when online */
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        .delete-btn {
+            color: #ef4444;
+            cursor: pointer;
+            opacity: 0.3;
+            transition: opacity 0.2s;
+            padding: 5px;
+        }
+
+        .todo-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        /* Placeholder Layouts */
+        #noSquadView,
+        #loadingView,
+        #mainSquadView {
+            display: none;
+        }
+
+        /* Empty State Modern Card */
+        .empty-state-card {
+            background: white;
+            padding: 3.5rem 2rem;
+            border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+            max-width: 500px;
+            margin: 4rem auto;
+            text-align: center;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            animation: fadeInScale 0.5s ease-out;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .empty-state-icon {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            color: var(--primary-color);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            margin: 0 auto 2rem;
+            box-shadow: 0 10px 20px rgba(3, 169, 244, 0.1);
+        }
+
+        .empty-state-card h2 {
+            font-weight: 900;
+            margin-bottom: 1rem;
+            color: #1e293b;
+            font-size: 1.6rem;
+        }
+
+        .empty-state-card p {
+            color: #64748b;
+            margin-bottom: 2.5rem;
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+
+        .empty-state-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .empty-state-btns .btn {
+            width: 100%;
+            justify-content: center;
+            padding: 14px;
+            font-size: 1.05rem;
+            border-radius: 16px;
+        }
+
+        .btn-clear-chat {
+            margin-right: auto;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            border: 1.5px solid #fee2e2;
+            background: transparent;
+            color: #ef4444;
+            display: none;
+            /* Controlled by JS to flex */
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 700;
+        }
+
+        .btn-clear-chat:hover {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .btn-clear-chat i {
+            font-size: 0.85rem;
+        }
+
+        /* Smart Refresh Button Styles */
+        .smart-refresh-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1.5px solid #e2e8f0;
+            background: white;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .smart-refresh-btn:hover:not(.cooldown) {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            background: #f0f9ff;
+        }
+
+        .smart-refresh-btn.cooldown {
+            cursor: wait;
+            border-color: transparent;
+            background: #f8fafc;
+            color: #cbd5e1;
+        }
+
+        .smart-refresh-btn i {
+            font-size: 0.9rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .smart-refresh-btn.cooldown i {
+            animation: none;
+        }
+
+        .cooldown-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: conic-gradient(var(--primary-color) var(--p, 0%), transparent 0);
+            opacity: 0.2;
+            z-index: 1;
+            display: none;
+            border-radius: 50%;
+        }
+
+        .smart-refresh-btn.cooldown .cooldown-overlay {
+            display: block;
+        }
+
+        .refresh-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: auto;
+        }
+
+        /* Updated Squad Stats Design */
+        .squad-stats-badges {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-badge {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .stat-badge:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .rules-help-badge {
+            width: 36px;
+            height: 36px;
+            background: #f59e0b;
+            /* Vibrant Amber */
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 1.1rem;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            position: relative;
+        }
+
+        .rules-help-badge:hover {
+            transform: scale(1.15) rotate(15deg);
+            background: #d97706;
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+        }
+
+        /* Challenge Header Responsive Layout */
+        .challenge-header-flex {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: stretch;
+        }
+
+        .challenge-header-flex .exam-details {
+            flex: 1;
+            background: #fff;
+            padding: 16px;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            min-width: 0;
+            /* Prevent overflow */
+        }
+
+        .challenge-header-flex .status-box {
+            width: 155px;
+            flex-shrink: 0;
+            background: #fff;
+            padding: 16px;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .challenge-header-flex {
+                flex-direction: column;
+            }
+
+            .challenge-header-flex .status-box {
+                width: 100% !important;
+            }
+        }
+
+        .stat-badge i {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 1);
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-3px);
+            }
+        }
+
+        @keyframes fire-glow {
+            0% {
+                box-shadow: 0 0 5px rgba(249, 115, 11, 0.2);
+                border-color: rgba(249, 115, 11, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 25px rgba(249, 115, 11, 0.7);
+                border-color: rgba(249, 115, 11, 0.9);
+            }
+
+            100% {
+                box-shadow: 0 0 5px rgba(249, 115, 11, 0.2);
+                border-color: rgba(249, 115, 11, 0.3);
+            }
+        }
+
+        @keyframes magma-flow {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes ember-pulse {
+            0% {
+                filter: brightness(1) drop-shadow(0 0 2px #f97311);
+            }
+
+            50% {
+                filter: brightness(1.4) drop-shadow(0 0 10px #f97311);
+            }
+
+            100% {
+                filter: brightness(1) drop-shadow(0 0 2px #f97311);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="dashboard.html" class="logo">
+                <img src="assets/images/logo-icon.webp" alt="Logo" class="brand-icon">
+                <span class="logo-text">ثانوية<span class="logo-accent">.كوم</span></span>
+            </a>
+
+            <div class="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+
+            <div id="pwaLogoutBtn" class="pwa-logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="dashboard.html">الرئيسية</a></li>
+                <li><a href="curriculum.html">المحاضرات</a></li>
+                <li><a href="squad.html" class="active">الشلة</a></li>
+                <li><a href="todo.html">المهام</a></li>
+                <li><a href="leaderboard.html">الأوائل</a></li>
+                <li id="adminNavBtn" style="display: none;">
+                    <a href="admin.html" style="color: var(--secondary-color); font-weight: bold;">
+                        <i class="fas fa-shield-alt"></i> Admin
+                    </a>
+                </li>
+                <li><a href="profile.html">البروفايل</a></li>
+                <li><button id="logoutBtn" class="btn btn-outline" style="padding: 0.5rem 1rem;">خروج</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Loading View -->
+    <div id="loadingView" class="container text-center" style="padding: 10rem 0; display: block;">
+        <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary-color);"></i>
+        <p style="margin-top: 1rem;">جاري البحث عن شلتك...</p>
+    </div>
+
+    <!-- No Squad View -->
+    <div id="noSquadView" class="container">
+        <div class="empty-state-card">
+            <div class="empty-state-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <h2>أنت مش في شلة دلوقتي! ☹️</h2>
+            <p>المذاكرة مع الصحاب أمتع بكتير وبتحمسك أكتر. ابدأ دلوقتي!</p>
+            <div class="empty-state-btns">
+                <button class="btn btn-primary" onclick="showCreateSquadModal()">
+                    <i class="fas fa-plus"></i> إنشاء شلة جديدة
+                </button>
+                <button class="btn btn-outline" onclick="showJoinSquadModal()"
+                    style="border-color: #e2e8f0; color: #64748b;">
+                    <i class="fas fa-search"></i> الانضمام لشلة موجودة
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Squad View -->
+    <div id="mainSquadView">
+        <header class="page-header" style="position: relative; padding-bottom: 3rem; overflow: visible;">
+            <div class="container">
+                <div
+                    style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem; position: relative; z-index: 10;">
+
+                    <!-- Avatar Section (Centered Top) -->
+                    <div style="position: relative; width: 110px; height: 110px; margin-bottom: 0.5rem;">
+
+                        <!-- Squad Avatar -->
+                        <img id="squadAvatar"
+                            src="https://ui-avatars.com/api/?name=Squad&background=03A9F4&color=fff&size=128"
+                            alt="صورة الشلة" style="
+                                width: 100%;
+                                height: 100%;
+                                border-radius: 50%;
+                                border: 4px solid rgba(255, 255, 255, 0.9);
+                                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+                                object-fit: cover;
+                                background: white;
+                            ">
+
+                        <!-- Camera Button (Top Right) -->
+                        <button id="changeSquadAvatarBtn" style="
+                            position: absolute;
+                            top: 0;
+                            right: 0;
+                            background: white;
+                            color: #03A9F4;
+                            border: none;
+                            width: 34px;
+                            height: 34px;
+                            border-radius: 50%;
+                            cursor: pointer;
+                            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+                            display: none;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 0.9rem;
+                            transition: all 0.3s ease;
+                            z-index: 11;
+                        " title="تغيير صورة الشلة" onmouseover="this.style.transform='scale(1.15) rotate(10deg)'"
+                            onmouseout="this.style.transform='scale(1) rotate(0)'">
+                            <i class="fas fa-camera"></i>
+                        </button>
+
+                        <!-- Level Badge (Bottom Left) -->
+                        <div id="squadLevelBadge" style="
+                            position: absolute;
+                            bottom: 0;
+                            left: 0;
+                            z-index: 11;
+                            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+                        ">
+                            <!-- Squad level badge will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Identity Section (Name & Dept) -->
+                    <div style="text-align: center;">
+                        <h1 id="squadName" style="
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            margin: 0;
+                            justify-content: center;
+                        ">
+                            <i class="fas fa-question-circle show-guide-icon" onclick="showSquadGuide()"
+                                style="font-size: 0.5em; opacity: 0.7; cursor: pointer;" title="شرح مميزات الشلة"></i>
+                            <span id="squadNameText"
+                                style="font-size: 2rem; color: white; text-shadow: 0 2px 8px rgba(0,0,0,0.1);">اسم
+                                الشلة</span>
+                            <i id="editSquadNameBtn" class="fas fa-pen-to-square" onclick="editSquadName()" style="
+                                    font-size: 0.4em;
+                                    cursor: pointer;
+                                    opacity: 0.8;
+                                    padding: 8px;
+                                    border-radius: 10px;
+                                    transition: all 0.3s;
+                                    display: none;
+                                " title="تعديل الاسم"
+                                onmouseover="this.style.background='rgba(255,255,255,0.35)'; this.style.opacity='1'"
+                                onmouseout="this.style.background='rgba(255,255,255,0.2)'; this.style.opacity='0.8'"></i>
+                        </h1>
+                        <!-- Department Info -->
+                        <p id="squadInfo" style="
+                            font-size: 0.95rem;
+                            opacity: 0.9;
+                            margin-top: 0.5rem;
+                            color: #e0f2fe;
+                            background: rgba(255,255,255,0.1);
+                            padding: 5px 14px;
+                            border-radius: 50px;
+                            display: inline-block;
+                        ">السنة الدراسية - القسم</p>
+
+                        <!-- Squad Bio -->
+                        <div id="squadBioContainer" style="
+                            max-width: 500px;
+                            margin: 1rem auto 0;
+                        ">
+                            <div id="squadBioDisplay" style="
+                                background: rgba(255, 255, 255, 0.15);
+                                backdrop-filter: blur(10px);
+                                border-radius: 12px;
+                                padding: 0.75rem 1rem;
+                                font-size: 0.95rem;
+                                line-height: 1.6;
+                                font-style: italic;
+                                text-align: center;
+                                color: rgba(255,255,255,0.9);
+                                min-height: 45px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">
+                                <span class="bio-text empty">مفيش بايو</span>
+                            </div>
+                        </div>
+
+                        <!-- Consolidated Level Progress (Header) -->
+                        <div id="squadLevelProgressHeader" style="
+                            max-width: 450px;
+                            margin: 1.5rem auto 0;
+                            width: 100%;
+                        ">
+                            <!-- Level progress will be injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Simplified Minimalist Stats -->
+                    <div style="
+                        display: flex;
+                        gap: 12px;
+                        flex-wrap: wrap;
+                        justify-content: center;
+                        margin-top: 0.75rem;
+                    ">
+                        <!-- Points Badge -->
+                        <div style="
+                            background: rgba(255, 255, 255, 0.12);
+                            backdrop-filter: blur(10px);
+                            padding: 6px 14px;
+                            border-radius: 50px;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            border: 1px solid rgba(255, 255, 255, 0.15);
+                            color: white;
+                            transition: all 0.2s ease;
+                            cursor: default;
+                        " onmouseover="this.style.background='rgba(251, 191, 36, 0.25)'; this.style.borderColor='rgba(251, 191, 36, 0.4)'"
+                            onmouseout="this.style.background='rgba(255, 255, 255, 0.12)'; this.style.borderColor='rgba(255, 255, 255, 0.15)'">
+                            <i class="fas fa-fire" style="color: #fbbf24; font-size: 0.9rem;"></i>
+                            <span style="font-size: 0.85rem; opacity: 1;">النقاط:</span>
+                            <span id="squadPoints" style="font-size: 1rem; font-weight: 700;">0</span>
+                        </div>
+
+                        <!-- Members Badge -->
+                        <div style="
+                            background: rgba(255, 255, 255, 0.12);
+                            backdrop-filter: blur(10px);
+                            padding: 6px 14px;
+                            border-radius: 50px;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            border: 1px solid rgba(255, 255, 255, 0.15);
+                            color: white;
+                            transition: all 0.2s ease;
+                            cursor: default;
+                        " onmouseover="this.style.background='rgba(74, 222, 128, 0.25)'; this.style.borderColor='rgba(74, 222, 128, 0.4)'"
+                            onmouseout="this.style.background='rgba(255, 255, 255, 0.12)'; this.style.borderColor='rgba(255, 255, 255, 0.15)'">
+                            <i class="fas fa-users" style="color: #4ade80; font-size: 0.9rem;"></i>
+                            <span style="font-size: 0.85rem; opacity: 1;">الأعضاء:</span>
+                            <span id="squadMemberCount" style="font-size: 1rem; font-weight: 700;">0</span>
+                        </div>
+
+
+                        <!-- Privacy Button -->
+                        <button id="squadPrivacyBtn" onclick="openSquadPrivacyModal()" style="
+                            background: rgba(255, 255, 255, 0.12);
+                            backdrop-filter: blur(10px);
+                            padding: 6px 14px;
+                            border-radius: 50px;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            border: 1px solid rgba(255, 255, 255, 0.15);
+                            color: white;
+                            cursor: pointer;
+                            transition: all 0.2s ease;
+                            display: none; /* Shown only for owner */
+                        " onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'; this.style.transform='translateY(-2px)'"
+                            onmouseout="this.style.background='rgba(255, 255, 255, 0.12)'; this.style.transform='translateY(0)'">
+                            <i class="fas fa-user-shield" style="color: white; font-size: 0.85rem;"></i>
+                            <span style="font-size: 0.85rem; font-weight: 700;">الخصوصية</span>
+                        </button>
+
+                        <!-- Preview Button -->
+                        <a id="previewSquadBtn" href="#" style="
+                            background: rgba(255, 255, 255, 0.12);
+                            backdrop-filter: blur(10px);
+                            padding: 6px 14px;
+                            border-radius: 50px;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            border: 1px solid rgba(255, 255, 255, 0.15);
+                            color: white;
+                            cursor: pointer;
+                            transition: all 0.2s ease;
+                            text-decoration: none;
+                        " onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'; this.style.transform='translateY(-2px)'"
+                            onmouseout="this.style.background='rgba(255, 255, 255, 0.12)'; this.style.transform='translateY(0)'">
+                            <i class="fas fa-eye" style="color: white; font-size: 0.85rem;"></i>
+                            <span style="font-size: 0.85rem; font-weight: 700;">معاينة</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container squad-container">
+
+            <!-- Left Side: Main Tasks & Tools -->
+            <div class="squad-main">
+
+
+                <!-- Shared Tasks -->
+
+                <div class="squad-card">
+                    <div class="squad-card-title">
+                        <i class="fas fa-tasks" style="color: #03A9F4;"></i>
+                        أهداف الشلة اليومية
+                        <div style="margin-right: auto; display: flex; gap: 8px; align-items: center;">
+                            <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem;"
+                                onclick="addSquadTask()">+
+                                هدف</button>
+                        </div>
+                    </div>
+                    <!-- Progress Section -->
+                    <div style="margin-bottom: 1.5rem;">
+                        <div
+                            style="display:flex; justify-content:space-between; font-size: 0.85rem; margin-bottom: 5px;">
+                            <span style="color: #64748b;">إنجاز الشلة انهارده</span>
+                            <span id="squadProgressPercent"
+                                style="font-weight: 800; color: var(--primary-color);">0%</span>
+                        </div>
+                        <div class="squad-progress-container">
+                            <div id="squadProgressBar" class="squad-progress-bar"></div>
+                        </div>
+                    </div>
+                    <div id="squadTaskList">
+                        <!-- Tasks go here -->
+                        <div class="text-center" style="color: #94a3b8; padding: 1rem;">مفيش أهداف لسة.. حط هدف لشلتك!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Squad Challenge Container -->
+                <div id="squadChallengeContainer" class="squad-card">
+                    <!-- Default State: No Active Challenge -->
+                    <div id="defaultChallengeState">
+                        <div class="squad-card-title">
+                            <i class="fas fa-graduation-cap" style="color: #03A9F4;"></i>
+                            امتحان جماعي؟
+                        </div>
+                        <p style="font-size: 0.9rem; margin-bottom: 1rem; color: #64748b;">ابدأ امتحان جماعي مع صحابك
+                            عشان رصيد الشلة يزيد و تنافسو الشلل التانيه</p>
+                        <button class="btn btn-primary" onclick="startSharedExam()">
+                            <i class="fas fa-rocket"></i> ابدأ تحدي جماعي
+                        </button>
+                    </div>
+
+                    <!-- Active Challenge State -->
+                    <div id="activeChallengeState" style="display: none;">
+                        <!-- Challenge content will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Real-time Chat -->
+                <div class="squad-card">
+                    <div class="squad-card-title">
+                        <i class="fas fa-comments" style="color: #10b981;"></i>
+                        <span>شات الشلة (أخر 50 رسالة)</span>
+                        <div style="margin-right: auto; display: flex; gap: 8px; align-items: center;">
+                            <button id="clearChatBtn" class="btn-clear-chat" onclick="window.clearSquadChat()">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>مسح الشات</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chat-box" id="chatBox">
+                        <!-- Messages go here -->
+                        <div class="text-center" style="color: #94a3b8; margin: auto;">ابدأ الكلام مع شلتك..</div>
+                    </div>
+                    <form id="chatForm">
+                        <div class="chat-input-group">
+                            <input type="text" id="chatInput" class="form-control" placeholder="اكتب رسالة..." required>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Side: Status & Pomodoro -->
+            <div class="squad-sidebar">
+
+                <!-- Pomodoro Widget -->
+                <div class="squad-card pomodoro-box">
+                    <div class="squad-card-title" style="justify-content: center;">
+                        <i class="fas fa-clock" style="color: #e53e3e;"></i>
+                        بومودورو الشلة
+                    </div>
+                    <div class="timer-display" id="pomodoroTimer">25:00</div>
+                    <button class="btn btn-danger full-width" id="startPomodoroBtn">ابدأ المذاكرة 🔥</button>
+                    <p style="font-size: 0.75rem; margin-top: 10px; color: #9b2c2c;" id="pomodoroStatus">الكل هيشوف إنك
+                        بدأت تذاكر!</p>
+                </div>
+
+
+
+                <!-- Members Status -->
+                <div class="squad-card">
+                    <div class="squad-card-title">
+                        <i class="fas fa-users" style="color: var(--primary-color);"></i>
+                        أعضاء الشلة
+                    </div>
+                    <div id="memberList">
+                        <!-- Members go here -->
+                    </div>
+                </div>
+
+                <!-- Invite Friends -->
+                <div class="text-center" style="padding: 10px;">
+                    <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">كود الشلة:</p>
+                    <div style="background: #fff; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 8px; font-weight: 800; color: var(--primary-color); cursor: pointer;"
+                        id="squadCode" onclick="copySquadCode()">
+                        SQUAD-XXXX
+                    </div>
+                    <button class="btn btn-outline full-width" style="margin-top: 10px;"
+                        onclick="shareSquadOnWhatsapp()">
+                        <i class="fab fa-whatsapp"></i> نادى على صحابك
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation (Mobile) -->
+    <nav class="bottom-nav">
+        <div class="bottom-nav-container">
+            <a href="dashboard.html" class="bottom-nav-item">
+                <i class="fas fa-home"></i>
+                <span>الرئيسية</span>
+            </a>
+            <a href="todo.html" class="bottom-nav-item">
+                <i class="fas fa-tasks"></i>
+                <span>المهام</span>
+            </a>
+            <a href="squad.html" class="bottom-nav-item active">
+                <i class="fas fa-users"></i>
+                <span>الشلة</span>
+            </a>
+            <a href="curriculum.html" class="bottom-nav-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>المحاضرات</span>
+            </a>
+            <a href="leaderboard.html" class="bottom-nav-item">
+                <i class="fas fa-trophy"></i>
+                <span>الأوائل</span>
+            </a>
+            <a href="profile.html" class="bottom-nav-item">
+                <i class="fas fa-user"></i>
+                <span>البروفايل</span>
+            </a>
+            <a href="admin.html" id="bottomAdminBtn" class="bottom-nav-item admin-link" style="display: none;">
+                <i class="fas fa-shield-alt"></i>
+                <span>Admin</span>
+            </a>
+        </div>
+    </nav>
+
+    <script type="module" src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/auth.js"></script>
+    <!-- Modular Squad System - Refactored for better maintainability -->
+    <script type="module" src="assets/js/squad/index.js"></script>
+
+</body>
+
+</html>

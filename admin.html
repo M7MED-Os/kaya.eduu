@@ -4,27 +4,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المحتوى | ثانوية.كوم</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="manifest" href="manifest.json">
+
     <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="48x48" href="assets/images/favicon-48x48.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
-    <title>إدارة المحتوى | ثانوية.كوم</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
             --sidebar-width: 280px;
             --header-height: 70px;
             --bg-body: #f8fafc;
             --border-color: #e2e8f0;
-            --primary-color: #2563eb;
-            --primary-dark: #1d4ed8;
+            --primary-color: #03A9F4;
+            --primary-dark: #0288D1;
             --secondary-color: #64748b;
             --success-color: #10b981;
             --warning-color: #f59e0b;
@@ -207,6 +210,26 @@
 
         @media (max-width: 640px) {
             .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* --- Responsive Charts Grid --- */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* FIX: Prevent grid blowout by allowing items to shrink below content size */
+        .charts-grid>.chart-section {
+            min-width: 0;
+        }
+
+        /* Stack when main chart gets squeezed (Tablet/Mobile) */
+        @media (max-width: 1000px) {
+            .charts-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -634,16 +657,20 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
-            display: flex;
+            display: none;
+            /* Changed from flex to avoid flashing on load */
             align-items: center;
             justify-content: center;
-            z-index: 1000;
+            z-index: 5001;
+            /* Higher than sidebar mobile (5000) */
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s;
         }
 
         .modal-overlay.open {
+            display: flex;
+            /* Only show when open */
             opacity: 1;
             pointer-events: auto;
         }
@@ -655,10 +682,14 @@
             border-radius: var(--radius-lg);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
             transform: scale(0.95);
-            transition: transform 0.2s;
+            transition: transform 0.2s, max-width 0.3s;
             max-height: 90vh;
             display: flex;
             flex-direction: column;
+        }
+
+        .modal-container.modal-lg {
+            max-width: 950px;
         }
 
         .modal-overlay.open .modal-container {
@@ -705,6 +736,178 @@
 
         .btn-plus:hover {
             background: var(--primary-dark);
+        }
+
+        /* ─── Lesson Management (3-col layout) ─── */
+        .lm-layout {
+            display: grid;
+            grid-template-columns: 230px 280px 1fr;
+            gap: 1.25rem;
+            height: calc(100vh - var(--header-height) - 4rem);
+        }
+
+        @media (max-width: 1200px) {
+            .lm-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+
+        .lm-panel {
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .lm-panel-title {
+            padding: 0.85rem 1rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #64748b;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-color);
+            background: #f9fafb;
+            letter-spacing: 0.03em;
+        }
+
+        .lm-panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .lm-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            background: #f9fafb;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .lm-subject-item,
+        .lm-teacher-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.65rem 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 0.9rem;
+        }
+
+        .lm-subject-item:hover,
+        .lm-teacher-item:hover {
+            background: #f1f5f9;
+        }
+
+        .lm-subject-item.active,
+        .lm-teacher-item.active {
+            background: #eff6ff;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .lm-teacher-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            overflow: hidden;
+            font-size: 1rem;
+            color: #64748b;
+        }
+
+        .lm-teacher-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .lm-teacher-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .lm-teacher-info strong {
+            display: block;
+            font-size: 0.9rem;
+        }
+
+        .lm-teacher-info small {
+            color: #94a3b8;
+            font-size: 0.78rem;
+        }
+
+        .lm-teacher-item.inactive {
+            opacity: 0.5;
+        }
+
+        .lm-teacher-actions {
+            display: none;
+            gap: 4px;
+        }
+
+        .lm-teacher-item:hover .lm-teacher-actions {
+            display: flex;
+        }
+
+        .lm-lecture-item {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.4rem 1rem;
+        }
+
+        .lm-lecture-meta {
+            display: flex;
+            gap: 0.75rem;
+            font-size: 0.78rem;
+            color: #94a3b8;
+        }
+
+        .lm-lecture-title {
+            font-weight: 600;
+            font-size: 0.92rem;
+        }
+
+        .lm-lecture-actions {
+            display: flex;
+            gap: 4px;
+            align-items: flex-start;
+            grid-row: 1 / 3;
+        }
+
+        .lm-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 200px;
+            color: #cbd5e1;
+            gap: 0.75rem;
+        }
+
+        .lm-placeholder i {
+            font-size: 2.5rem;
+        }
+
+        .lm-placeholder p {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0;
         }
 
 
@@ -811,69 +1014,9 @@
                 font-size: 0.9rem;
             }
 
-
             .breadcrumbs {
                 font-size: 1rem;
                 max-width: 220px;
-            }
-
-            /* Charts Responsive */
-            .stats-grid {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            }
-        }
-
-        /* Prevent horizontal scroll globally */
-        .main-content {
-            overflow-x: hidden;
-            max-width: 100%;
-        }
-
-        .charts-grid {
-            max-width: 100%;
-            overflow: hidden;
-        }
-
-        .chart-section {
-            min-width: 0;
-            overflow: hidden;
-        }
-
-        .chart-container {
-            position: relative;
-            width: 100%;
-            min-height: 300px;
-        }
-
-        /* Charts Grid Responsive - Below 1000px stack vertically */
-        @media (max-width: 1000px) {
-            .charts-grid {
-                grid-template-columns: 1fr !important;
-                gap: 1.5rem !important;
-            }
-
-            .chart-section {
-                width: 100% !important;
-                max-width: 100% !important;
-            }
-
-            .chart-container {
-                width: 100% !important;
-                max-width: 100% !important;
-            }
-
-            /* Pie chart container */
-            .chart-section div[style*="width: 200px"] {
-                width: 250px !important;
-                height: 250px !important;
-                margin: 0 auto;
-            }
-        }
-
-        /* Above 1000px - Keep side by side but make responsive */
-        @media (min-width: 1001px) and (max-width: 1553px) {
-            .charts-grid {
-                grid-template-columns: 1.5fr 1fr !important;
             }
         }
 
@@ -940,6 +1083,85 @@
                 width: 100%;
             }
         }
+
+        /* Loading Overlay Styles (Missing previously) */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Toggle Switch Styles */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked+.toggle-slider {
+            background-color: #0ea5e9;
+        }
+
+        .toggle-switch input:checked+.toggle-slider:before {
+            transform: translateX(24px);
+        }
     </style>
 </head>
 
@@ -953,9 +1175,9 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <h2 style="display:flex; align-items:center; gap:8px;">
-                <img src="assets/images/logo-icon.jpeg" alt="Logo" class="brand-icon" style="height:35px">
-                <span class="logo-text" style="font-size:1.5rem; color:#00897B;">ثانوية<span class="logo-accent"
-                        style="color:#FF6F00;">.كوم</span></span>
+                <img src="assets/images/logo-icon.webp" alt="Logo" class="brand-icon" style="height:35px">
+                <span class="logo-text" style="font-size:1.5rem; color:#03A9F4;">ثانوية <span class="logo-accent"
+                        style="color:#00bcd4;">.كوم</span></span>
             </h2>
             <button id="closeSidebar"><i class="fas fa-times"></i></button>
         </div>
@@ -967,41 +1189,53 @@
             <div class="nav-item" id="navBroadcast" onclick="showBroadcastView()">
                 <i class="fas fa-bullhorn"></i> مركز التنبيهات
             </div>
+            <div class="nav-item" id="navSquads" onclick="showSquadsView()">
+                <i class="fas fa-user-group"></i> إدارة الشلل
+            </div>
+            <div class="nav-item" id="navLeaderboard" onclick="showLeaderboardMgmtView()">
+                <i class="fas fa-trophy"></i> إدارة الأوائل
+            </div>
+            <div class="nav-item" id="navFreemium" onclick="showFreemiumSettingsView()">
+                <i class="fas fa-crown"></i> إعدادات الاشتراكات
+            </div>
+            <div class="nav-item" id="navPolls" onclick="showPollsView()">
+                <i class="fas fa-poll"></i> إدارة الاستفتاءات
+            </div>
+            <div class="nav-item" id="navLessons" onclick="showLessonsManagementView()">
+                <i class="fas fa-chalkboard-teacher"></i> إدارة الدروس
+            </div>
 
-            <div class="nav-group-title">الصف الثالث الثانوي</div>
-            <div class="nav-item" onclick="selectContext('3', 'languages')">
-                <i class="fas fa-globe"></i> اللغات (مشترك)
+            <div class="nav-group-title">سنة تالتة ثانوي</div>
+            <div class="nav-item" onclick="selectContext('3', '1')">
+                <i class="fas fa-1"></i> الترم 1
             </div>
-            <div class="nav-item" onclick="selectContext('3', 'scientific_common')">
-                <i class="fas fa-microscope"></i> مواد علمي مشترك
+            <div class="nav-item" onclick="selectContext('3', '2')">
+                <i class="fas fa-2"></i> الترم 2
             </div>
-            <div class="nav-item" onclick="selectContext('3', 'science_bio')">
-                <i class="fas fa-dna"></i> علمي علوم
+            <div class="nav-item" onclick="selectContext('3', 'science_science')">
+                <i class="fas fa-microscope"></i> علمي علوم
             </div>
             <div class="nav-item" onclick="selectContext('3', 'science_math')">
                 <i class="fas fa-calculator"></i> علمي رياضة
             </div>
-            <div class="nav-item" onclick="selectContext('3', 'literature')">
-                <i class="fas fa-book-reader"></i> أدبي
-            </div>
-            <div class="nav-item" onclick="selectContext('3', 'non_scoring')">
-                <i class="fas fa-balance-scale"></i> خارج المجموع
+            <div class="nav-item" onclick="selectContext('3', 'literary')">
+                <i class="fas fa-book-open"></i> أدبي
             </div>
 
-            <div class="nav-group-title">الصف الثاني الثانوي</div>
+            <div class="nav-group-title">سنة تانية ثانوي</div>
             <div class="nav-item" onclick="selectContext('2', '1')">
-                <i class="fas fa-1"></i> الترم الأول
+                <i class="fas fa-1"></i> الترم 1
             </div>
             <div class="nav-item" onclick="selectContext('2', '2')">
-                <i class="fas fa-2"></i> الترم الثاني
+                <i class="fas fa-2"></i> الترم 2
             </div>
 
-            <div class="nav-group-title">الصف الأول الثانوي</div>
+            <div class="nav-group-title">سنة أولى ثانوي</div>
             <div class="nav-item" onclick="selectContext('1', '1')">
-                <i class="fas fa-1"></i> الترم الأول
+                <i class="fas fa-1"></i> الترم 1
             </div>
             <div class="nav-item" onclick="selectContext('1', '2')">
-                <i class="fas fa-2"></i> الترم الثاني
+                <i class="fas fa-2"></i> الترم 2
             </div>
 
             <div class="nav-group-title">حسابي</div>
@@ -1029,12 +1263,348 @@
 
         <div class="main-content">
 
+            <!-- ─── Lessons Management View ─── -->
+            <div id="lessonsManagementView" class="view-section">
+                <div style="margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <h2 style="margin:0;font-weight:800;color:#0f172a;">إدارة الدروس</h2>
+                        <p style="color:#64748b;margin:0.25rem 0 0;">إدارة مدرسي كل مادة ومحاضراتهم</p>
+                    </div>
+                </div>
+                <div class="lm-layout">
+                    <!-- Column 1: Subjects -->
+                    <div class="lm-panel">
+                        <div class="lm-panel-title">المواد الدراسية</div>
+                        <div class="lm-panel-body" id="lm-subjects-list">
+                            <div class="lm-placeholder"><i class="fas fa-book"></i>
+                                <p>جاري التحميل...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Column 2: Teachers -->
+                    <div class="lm-panel">
+                        <div class="lm-panel-body" id="lm-teacher-panel">
+                            <div class="lm-placeholder"><i class="fas fa-user-tie"></i>
+                                <p>اختار مادة عشان تشوف مدرسيها</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Column 3: Lectures -->
+                    <div class="lm-panel">
+                        <div class="lm-panel-body" id="lm-lecture-panel">
+                            <div class="lm-placeholder"><i class="fas fa-list"></i>
+                                <p>اختار مدرس عشان تشوف محاضراته</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 0. Polls Management View -->
+            <div id="pollsView" class="view-section">
+                <div
+                    style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h2 style="margin: 0; font-weight: 800; color: #0f172a;">إدارة الاستفتاءات</h2>
+                        <p style="color: #64748b; margin: 0.5rem 0 0;">قم بإنشاء وتتبع الاستفتاءات الموجهة للطلاب</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openCreatePollModal()">
+                        <i class="fas fa-plus"></i> إضافة استفتاء جديد
+                    </button>
+                </div>
+
+                <div class="card card-admin" style="margin-bottom: 2rem; border-top: 4px solid #03A9F4;">
+                    <h3
+                        style="margin-bottom: 1.5rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-cog" style="color: #03A9F4;"></i> إعدادات تجربة الاستفتاء
+                    </h3>
+
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                        <!-- Welcome Screen -->
+                        <div
+                            style="background: #f8fafc; padding: 1.25rem; border-radius: 16px; border: 1px solid #e2e8f0;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <label style="font-weight: 800; color: #1e293b;">شاشة الترحيب ✨</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="pollWelcomeEnable">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <textarea id="pollWelcomeText" class="form-control" rows="3"
+                                placeholder="اكتب رسالة الترحيب هنا..."
+                                style="font-size: 0.9rem; border-radius: 12px;"></textarea>
+                        </div>
+
+                        <!-- Thank You Screen -->
+                        <div
+                            style="background: #f8fafc; padding: 1.25rem; border-radius: 16px; border: 1px solid #e2e8f0;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <label style="font-weight: 800; color: #1e293b;">شاشة النهاية 🙏</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="pollEndEnable">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <textarea id="pollEndText" class="form-control" rows="3"
+                                placeholder="اكتب رسالة الشكر هنا..."
+                                style="font-size: 0.9rem; border-radius: 12px;"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Save Actions -->
+                    <div style="display: flex; justify-content: center;">
+                        <button class="btn btn-primary" onclick="savePollSettings()"
+                            style="width: auto; min-width: 250px; height: 50px; padding: 0 40px; border-radius: 12px; font-weight: 800; background: #0f172a; border: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                            <i class="fas fa-save" style="margin-left: 8px;"></i> حفظ الإعدادات
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card card-admin">
+                    <div class="responsive-table">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>السؤال</th>
+                                    <th>النوع</th>
+                                    <th>السنة/القسم</th>
+                                    <th>تاريخ النشر</th>
+                                    <th>تاريخ الانتهاء</th>
+                                    <th>الحالة</th>
+                                    <th>النتايج</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pollsTableBody">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- 1. Subject List View -->
             <div id="subjectListView" class="view-section">
                 <!-- Injected via JS -->
                 <div class="empty-state">
                     <i class="fas fa-mouse-pointer"></i>
                     <p>اختر قسماً من القائمة الجانبية للبدء</p>
+                </div>
+            </div>
+
+            <!-- Squads View -->
+            <div id="squadsView" class="view-section">
+                <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="margin: 0; font-weight: 800; color: #0f172a;">إدارة الشلل الجماعية</h2>
+                </div>
+
+                <!-- Squad Stats -->
+                <div class="stats-grid" id="squadStatsGrid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #e0f2fe; color: #0369a1;"><i
+                                class="fas fa-users-rectangle"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statsTotalSquads">0</span>
+                            <span class="stat-label">إجمالي الشلل</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #fef3c7; color: #b45309;"><i class="fas fa-star"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statsAvgPoints">0</span>
+                            <span class="stat-label">متوسط النقاط</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #dcfce7; color: #15803d;"><i
+                                class="fas fa-user-friends"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statsTotalMembers">0</span>
+                            <span class="stat-label">إجمالي الطلاب بالشلل</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Global Challenges Settings -->
+                <div class="card card-admin mb-4"
+                    style="background: #fff; padding: 1.5rem 2.5rem; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04);">
+                    <div
+                        style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2rem;">
+
+                        <!-- Settings Flow -->
+
+                        <!-- Join Window -->
+                        <div
+                            style="background: #f8fafc; padding: 12px 20px; border-radius: 16px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px; min-width: 175px; flex: 1; max-width: 200px;">
+                            <div style="color: #2563eb; font-size: 1.1rem;"><i class="fas fa-user-plus"></i></div>
+                            <div>
+                                <span
+                                    style="display: block; font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase;">وقت
+                                    الانضمام</span>
+                                <div style="display: flex; align-items: baseline; gap: 4px;">
+                                    <input type="number" id="settingSquadJoinMins" value="60" min="5"
+                                        style="width: 45px; border: none; background: transparent; font-weight: 800; font-size: 1.25rem; color: #1e293b; outline: none; padding: 0;">
+                                    <span style="font-size: 0.85rem; color: #64748b; font-weight: 700;">دقيقة</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grace Period -->
+                        <div
+                            style="background: #f8fafc; padding: 12px 20px; border-radius: 16px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px; min-width: 175px; flex: 1; max-width: 200px;">
+                            <div style="color: #10b981; font-size: 1.1rem;"><i class="fas fa-stopwatch"></i></div>
+                            <div>
+                                <span
+                                    style="display: block; font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase;">فترة
+                                    العفو</span>
+                                <div style="display: flex; align-items: baseline; gap: 4px;">
+                                    <input type="number" id="settingSquadGraceMins" value="45" min="0"
+                                        style="width: 45px; border: none; background: transparent; font-weight: 800; font-size: 1.25rem; color: #1e293b; outline: none; padding: 0;">
+                                    <span style="font-size: 0.85rem; color: #64748b; font-weight: 700;">دقيقة</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Max Members -->
+                        <div
+                            style="background: #f8fafc; padding: 12px 20px; border-radius: 16px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px; min-width: 175px; flex: 1; max-width: 200px;">
+                            <div style="color: #f59e0b; font-size: 1.1rem;"><i class="fas fa-users"></i></div>
+                            <div>
+                                <span
+                                    style="display: block; font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase;">أقصى
+                                    أعضاء</span>
+                                <div style="display: flex; align-items: baseline; gap: 4px;">
+                                    <input type="number" id="settingSquadMaxMembers" value="10" min="2" max="50"
+                                        style="width: 45px; border: none; background: transparent; font-weight: 800; font-size: 1.25rem; color: #1e293b; outline: none; padding: 0;">
+                                    <span style="font-size: 0.85rem; color: #64748b; font-weight: 700;">طالب</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Success Threshold -->
+                        <div
+                            style="background: #f8fafc; padding: 12px 20px; border-radius: 16px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px; min-width: 175px; flex: 1; max-width: 200px;">
+                            <div style="color: #ef4444; font-size: 1.1rem;"><i class="fas fa-percent"></i></div>
+                            <div>
+                                <span
+                                    style="display: block; font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase;">نسبة
+                                    النجاح</span>
+                                <div style="display: flex; align-items: baseline; gap: 4px;">
+                                    <input type="number" id="settingSquadThreshold" value="80" min="10" max="100"
+                                        style="width: 45px; border: none; background: transparent; font-weight: 800; font-size: 1.25rem; color: #1e293b; outline: none; padding: 0;">
+                                    <span style="font-size: 0.85rem; color: #64748b; font-weight: 700;">%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="saveSquadSettings()"
+                            style="height: 52px; padding: 0 2rem; border-radius: 16px; font-weight: 800; font-size: 0.95rem; background: #0f172a; border: none; color: #fff; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-right: auto; white-space: nowrap;">
+                            <i class="fas fa-save"></i> حفظ الإعدادات
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Squad Filters -->
+                <div class="filter-bar mb-4">
+                    <div class="filter-group" style="flex: 2;">
+                        <label><i class="fas fa-search"></i> ابحث عن شلة:</label>
+                        <input type="text" id="squadSearch" class="filter-control" placeholder="اسم الشلة أو الكود...">
+                    </div>
+                    <div class="filter-group">
+                        <label>الفرقة:</label>
+                        <select id="filterSquadGrade" class="filter-control">
+                            <option value="all">الكل</option>
+                            <option value="1">الأولى</option>
+                            <option value="2">الثانية</option>
+                            <option value="3">الثالثة</option>
+                            <option value="4">الرابعة</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>القسم:</label>
+                        <select id="filterSquadDept" class="filter-control">
+                            <option value="all">الكل</option>
+                            <option value="general">عام</option>
+                            <option value="pediatric">أطفال</option>
+                            <option value="maternity">نسا</option>
+                            <option value="community">إدارة</option>
+                            <option value="psychiatric">نفسية</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Squads Table -->
+                <div class="table-responsive-wrapper">
+                    <table class="responsive-table">
+                        <thead>
+                            <tr>
+                                <th>الشلة</th>
+                                <th>المستوى / القسم</th>
+                                <th>المالك</th>
+                                <th>النقاط</th>
+                                <th>الأعضاء</th>
+                                <th style="text-align: center;">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="squadsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Leaderboard Management View -->
+            <div id="leaderboardMgmtView" class="view-section">
+                <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="margin: 0; font-weight: 800; color: #0f172a;">إدارة قائمة الأوائل</h2>
+                </div>
+
+                <div class="card card-admin"
+                    style="max-width: 600px; margin: 0 auto; padding: 2rem; background: white; border-radius: 16px; border: 1px solid var(--border-color);">
+                    <p style="color: var(--secondary-color); margin-bottom: 2rem; text-align: center;">تحكم في عدد
+                        الطلاب والشلل الذين يظهرون في قائمة الأوائل العامة.</p>
+
+                    <div class="form-group mb-4">
+                        <label style="font-weight: 700; display: block; margin-bottom: 10px;">عدد الطلاب
+                            الظهرين:</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="number" id="settingTopStudents" class="form-control" value="50" min="1"
+                                max="200" style="flex: 1;">
+                            <span style="color: #64748b;">طالب</span>
+                        </div>
+                        <small style="color: #94a3b8;">العدد الافتراضي: 50</small>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label style="font-weight: 700; display: block; margin-bottom: 10px;">عدد الشلل الظهرة:</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="number" id="settingTopSquads" class="form-control" value="10" min="1" max="50"
+                                style="flex: 1;">
+                            <span style="color: #64748b;">شلة</span>
+                        </div>
+                        <small style="color: #94a3b8;">العدد الافتراضي: 10</small>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label style="font-weight: 700; display: block; margin-bottom: 10px;">مدة تحديث البيانات
+                            تلقائياً:</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="number" id="settingRefreshInterval" class="form-control" value="10" min="1"
+                                max="60" style="flex: 1;">
+                            <span style="color: #64748b;">دقيقة</span>
+                        </div>
+                        <small style="color: #94a3b8;">سيتم تحديث القائمة تلقائياً كل (X) دقائق داخل الصفحة</small>
+                    </div>
+
+                    <div
+                        style="margin-top: 2rem; border-top: 1px solid #f1f5f9; padding-top: 2rem; text-align: center;">
+                        <button class="btn btn-primary" onclick="saveLeaderboardSettings()"
+                            style="padding: 0.8rem 2.5rem; font-weight: 700; border-radius: 12px;">
+                            <i class="fas fa-save" style="margin-left: 8px;"></i> حفظ الإعدادات
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1074,12 +1644,21 @@
                 <!-- Stats Grid -->
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: #eff6ff; color: #2563eb;">
+                        <div class="stat-icon" style="background: #E1F5FE; color: #03A9F4;">
                             <i class="fas fa-users"></i>
                         </div>
                         <div class="stat-info">
                             <span class="stat-value" id="statsTotal">0</span>
                             <span class="stat-label">إجمالي الطلاب</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #dcfce7; color: #16a34a;">
+                            <i class="fas fa-circle" style="font-size: 0.5rem;"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statsOnline">0</span>
+                            <span class="stat-label">المتصلين الآن</span>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -1112,8 +1691,7 @@
                 </div>
 
                 <!-- Analysis Grid -->
-                <div class="charts-grid"
-                    style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <div class="charts-grid">
                     <div class="chart-section">
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -1127,7 +1705,7 @@
                     <div class="chart-section"
                         style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
                         <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1.5rem;">توزيع الطلاب</h3>
-                        <div style="width: 200px; height: 200px;">
+                        <div style="width: 200px; height: 200px; margin: 0 auto;">
                             <canvas id="statusPieChart"></canvas>
                         </div>
                     </div>
@@ -1142,6 +1720,7 @@
                     <div class="filter-group">
                         <select id="filterStatus" class="filter-control">
                             <option value="all">كل الحالات</option>
+                            <option value="online">متصل الآن</option>
                             <option value="active">نشط</option>
                             <option value="pending">معلق</option>
                             <option value="expired">منتهي</option>
@@ -1149,10 +1728,10 @@
                     </div>
                     <div class="filter-group">
                         <select id="filterGrade" class="filter-control">
-                            <option value="all">كل الصفوف</option>
-                            <option value="3">الصف الثالث</option>
-                            <option value="2">الصف الثاني</option>
-                            <option value="1">الصف الأول</option>
+                            <option value="all">كل السنين</option>
+                            <option value="third_year">سنة تالتة ثانوي</option>
+                            <option value="second_year">سنة تانية ثانوي</option>
+                            <option value="first_year">سنة أولى ثانوي</option>
                         </select>
                     </div>
                     <div id="streamFilterGroup" class="filter-group" style="display:none;">
@@ -1176,7 +1755,7 @@
                                 <th style="padding:1rem;">الاسم</th>
                                 <th style="padding:1rem;">البريد الإلكتروني</th>
                                 <th style="padding:1rem;">السنة</th>
-                                <th style="padding:1rem;">الشعبة/الترم</th>
+                                <th style="padding:1rem;">القسم/الترم</th>
                                 <th style="padding:1rem;">النقاط</th>
                                 <th style="padding:1rem;">الدور</th>
                                 <th style="padding:1rem;">الحالة</th>
@@ -1228,9 +1807,9 @@
                                 <label>الفئة المستهدفة</label>
                                 <select id="bcTarget" class="form-control">
                                     <option value="all">جميع الطلاب</option>
-                                    <option value="grade_3">الصف الثالث الثانوي</option>
-                                    <option value="grade_2">الصف الثاني الثانوي</option>
-                                    <option value="grade_1">الصف الأول الثانوي</option>
+                                    <option value="grade_3">سنة تالتة ثانوي</option>
+                                    <option value="grade_2">سنة تانية ثانوي</option>
+                                    <option value="grade_1">سنة أولى ثانوي</option>
                                 </select>
                             </div>
                         </div>
@@ -1320,7 +1899,170 @@
                 </div>
             </div>
 
-        </div>
+            <!-- Freemium Settings View -->
+            <div id="freemiumSettingsView" class="admin-view" style="display: none;">
+                <!-- <div class="view-header">
+                    <h2><i class="fas fa-crown"></i> إعدادات Freemium</h2>
+                    <p style="color: #64748b; font-size: 0.9rem;">تحكم في الميزات المجانية والمدفوعة</p>
+                </div> -->
+
+                <div class="content-wrapper">
+                    <!-- Global Feature Toggles -->
+                    <div class="card card-admin" style="margin-bottom: 2rem; transition: none;">
+                        <div class="card-header">
+                            <h3><i class="fas fa-globe"></i> الميزات العامة</h3>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                                <!-- Squads Toggle -->
+                                <div class="setting-item"
+                                    style="padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <h4 style="margin: 0; font-size: 1rem;">
+                                                <i class="fas fa-users" style="color: #0ea5e9;"></i> نظام الشلة
+                                            </h4>
+                                        </div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="squadsFreemiumToggle">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Tasks Toggle -->
+                                <div class="setting-item"
+                                    style="padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <h4 style="margin: 0; font-size: 1rem;">
+                                                <i class="fas fa-tasks" style="color: #10b981;"></i> نظام المهام
+                                            </h4>
+                                        </div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="tasksFreemiumToggle">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Leaderboard Toggle -->
+                                <div class="setting-item"
+                                    style="padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <h4 style="margin: 0; font-size: 1rem;">
+                                                <i class="fas fa-trophy" style="color: #f59e0b;"></i> لوحة الأوائل
+                                            </h4>
+                                        </div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="leaderboardFreemiumToggle">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Lectures Toggle -->
+                                <div class="setting-item"
+                                    style="padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <h4 style="margin: 0; font-size: 1rem;">
+                                                <i class="fas fa-video" style="color: #6366f1;"></i> نظام المحاضرات
+                                            </h4>
+                                        </div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="curriculumFreemiumToggle">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Mistakes Bank Toggle -->
+                                <div class="setting-item"
+                                    style="padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <h4 style="margin: 0; font-size: 1rem;">
+                                                <i class="fa-solid fa-circle-question" style="color: #f59e0b;"></i> بنك
+                                                الأخطاء
+                                            </h4>
+                                        </div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="mistakesFreemiumToggle">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Stats Toggle -->
+                                <div class="setting-item"
+                                    style="padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <h4 style="margin: 0; font-size: 1rem;">
+                                                <i class="fas fa-chart-bar" style="color: #03A9F4;"></i> الإحصائيات
+                                                والنقاط
+                                            </h4>
+                                            <p style="margin: 4px 0 0; font-size: 0.8rem; color: #64748b;">هل يظهر
+                                                النقاط وعدد الأسئلة والامتحانات لغير المشتركين؟</p>
+                                        </div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="statsFreemiumToggle">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Grade Toggle -->
+                                <div class="setting-item"
+                                    style="padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <h4 style="margin: 0; font-size: 1rem;">
+                                                <i class="fas fa-bullseye" style="color: #f59e0b;"></i> تقدير الطالب
+                                                (Grade)
+                                            </h4>
+                                            <p style="margin: 4px 0 0; font-size: 0.8rem; color: #64748b;">هل يظهر
+                                                التقدير (A, B, %) للوحة التحكم لغير المشتركين؟</p>
+                                        </div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="gradeFreemiumToggle">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Subject Stats Toggle -->
+                                <div class="setting-item"
+                                    style="padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <h4 style="margin: 0; font-size: 1rem;">
+                                                <i class="fas fa-book-open" style="color: #10b981;"></i> إحصائيات المواد
+                                            </h4>
+                                            <p style="margin: 4px 0 0; font-size: 0.8rem; color: #64748b;">هل يظهر
+                                                تفاصيل المواد والتقديرات لغير المشتركين؟</p>
+                                        </div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="subjectStatsFreemiumToggle">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
+                                    <button class="btn btn-primary" id="saveFreemiumSettingsBtn"
+                                        onclick="saveFreemiumSettings()">
+                                        <i class="fas fa-save"></i> حفظ الإعدادات
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
     </main>
 
     <!-- Universal Modal -->
@@ -1340,9 +2082,10 @@
         </div>
     </div>
 
-    <script src="assets/js/main.js"></script>
+    <script type="module" src="assets/js/main.js"></script>
     <script type="module" src="assets/js/auth.js"></script>
     <script type="module" src="assets/js/admin.js"></script>
+    <script type="module" src="assets/js/admin/admin-lessons.js"></script>
 </body>
 
 </html>

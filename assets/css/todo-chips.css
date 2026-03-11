@@ -1,0 +1,25 @@
+/* Quick Add Chips */
+.quick-add-chip {
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: var(--todo-text-main);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 600;
+}
+
+.quick-add-chip:hover {
+    background: var(--todo-primary);
+    color: white;
+    border-color: var(--todo-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.quick-add-chip:active {
+    transform: scale(0.95);
+}
