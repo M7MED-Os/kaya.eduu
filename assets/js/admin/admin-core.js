@@ -67,17 +67,23 @@ export const triggerCelebration = (type = 'main') => {
 export function getContextLabel(grade, val) {
     const grades = {
         '1': 'سنة أولى',
+        '1_1': 'سنة أولى (ترم 1)',
+        '1_2': 'سنة أولى (ترم 2)',
         '2': 'سنة تانية',
+        '2_1': 'سنة تانية (ترم 1)',
+        '2_2': 'سنة تانية (ترم 2)',
         '3': 'سنة تالتة'
     };
     const vals = {
-        '1': 'الترم 1',
-        '2': 'الترم 2',
-        'science_science': 'علمي علوم',
-        'science_math': 'علمي رياضة',
-        'literary': 'أدبي'
+        'general': 'مواد أساسية/مشتركة',
+        'science_gen': 'مواد علمي',
+        'science_math': 'مواد علمي رياضة',
+        'science_science': 'مواد علمي علوم',
+        'science_all': 'مواد علمي مشترك',
+        'non_graded': 'مواد خارج المجموع',
+        'literary': 'مواد أدبي'
     };
-    return `${grades[grade] || grade} - ${vals[val] || val}`;
+    return `${grades[grade] || grade} | ${vals[val] || val}`;
 }
 
 // ==========================================

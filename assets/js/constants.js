@@ -13,15 +13,18 @@ export const ACADEMIC_YEARS = {
 // Terms (unified - text only)
 export const TERMS = {
     "first_term": "الترم الأول",
-    "second_term": "الترم الثاني"
+    "second_term": "الترم الثاني",
+    "full_year": "سنة كاملة"
 };
 
 // Departments / Tracks (unified - text only)
 export const DEPARTMENTS = {
     "general": "عام",
+    "science_gen": "علمي",
+    "literary": "أدبي",
     "science_science": "علمي علوم",
     "science_math": "علمي رياضة",
-    "literary": "أدبي"
+    "science_all": "علمي (مشترك)"
 };
 
 // ========================================
@@ -29,7 +32,7 @@ export const DEPARTMENTS = {
 // ========================================
 
 export const APP_CONFIG = {
-    CACHE_VERSION: 'v1.002', // Incremented for Phase 2 cleanup
+    CACHE_VERSION: 'v1.005', // Incremented for Phase 2 cleanup
     CACHE_TIME_PROFILE: 1, // 1 minute
     CACHE_TIME_STATS: 1,  // 1 minute for better sync
     CACHE_TIME_SUBJECTS: 1440, // 24 hours (static content)

@@ -1205,37 +1205,70 @@
                 <i class="fas fa-chalkboard-teacher"></i> إدارة الدروس
             </div>
 
-            <div class="nav-group-title">سنة تالتة ثانوي</div>
-            <div class="nav-item" onclick="selectContext('3', '1')">
-                <i class="fas fa-1"></i> الترم 1
+            <!-- Grade 3 -->
+            <div class="nav-group-title">سنة تالتة ثانوي (سنة كاملة)</div>
+            <div class="nav-item" onclick="selectContext('3', 'general')">
+                <i class="fas fa-users"></i> مواد مشتركة (عام)
             </div>
-            <div class="nav-item" onclick="selectContext('3', '2')">
-                <i class="fas fa-2"></i> الترم 2
+            <div class="nav-item" onclick="selectContext('3', 'science_all')">
+                <i class="fas fa-flask"></i> مواد علمي مشترك
             </div>
             <div class="nav-item" onclick="selectContext('3', 'science_science')">
-                <i class="fas fa-microscope"></i> علمي علوم
+                <i class="fas fa-microscope"></i> مواد علمي علوم
             </div>
             <div class="nav-item" onclick="selectContext('3', 'science_math')">
-                <i class="fas fa-calculator"></i> علمي رياضة
+                <i class="fas fa-calculator"></i> مواد علمي رياضة
             </div>
             <div class="nav-item" onclick="selectContext('3', 'literary')">
-                <i class="fas fa-book-open"></i> أدبي
+                <i class="fas fa-book-open"></i> مواد أدبي
+            </div>
+            <div class="nav-item" onclick="selectContext('3', 'non_graded')">
+                <i class="fas fa-asterisk"></i> مواد خارج المجموع
             </div>
 
-            <div class="nav-group-title">سنة تانية ثانوي</div>
-            <div class="nav-item" onclick="selectContext('2', '1')">
-                <i class="fas fa-1"></i> الترم 1
+            <!-- Grade 2 Term 1 -->
+            <div class="nav-group-title">سنة تانية - ترم 1</div>
+            <div class="nav-item" onclick="selectContext('2_1', 'general')">
+                <i class="fas fa-users"></i> مواد مشتركة
             </div>
-            <div class="nav-item" onclick="selectContext('2', '2')">
-                <i class="fas fa-2"></i> الترم 2
+            <div class="nav-item" onclick="selectContext('2_1', 'science_gen')">
+                <i class="fas fa-flask"></i> مواد علمي
+            </div>
+            <div class="nav-item" onclick="selectContext('2_1', 'literary')">
+                <i class="fas fa-book"></i> مواد أدبي
+            </div>
+            <div class="nav-item" onclick="selectContext('2_1', 'non_graded')">
+                <i class="fas fa-asterisk"></i> مواد خارج المجموع
             </div>
 
+            <!-- Grade 2 Term 2 -->
+            <div class="nav-group-title">سنة تانية - ترم 2</div>
+            <div class="nav-item" onclick="selectContext('2_2', 'general')">
+                <i class="fas fa-users"></i> مواد مشتركة
+            </div>
+            <div class="nav-item" onclick="selectContext('2_2', 'science_gen')">
+                <i class="fas fa-flask"></i> مواد علمي
+            </div>
+            <div class="nav-item" onclick="selectContext('2_2', 'literary')">
+                <i class="fas fa-book"></i> مواد أدبي
+            </div>
+            <div class="nav-item" onclick="selectContext('2_2', 'non_graded')">
+                <i class="fas fa-asterisk"></i> مواد خارج المجموع
+            </div>
+
+            <!-- Grade 1 -->
             <div class="nav-group-title">سنة أولى ثانوي</div>
-            <div class="nav-item" onclick="selectContext('1', '1')">
-                <i class="fas fa-1"></i> الترم 1
+            <div class="nav-item" onclick="selectContext('1_1', 'general')">
+                <i class="fas fa-1"></i> ترم 1 (أساسي)
             </div>
-            <div class="nav-item" onclick="selectContext('1', '2')">
-                <i class="fas fa-2"></i> الترم 2
+            <div class="nav-item" onclick="selectContext('1_1', 'non_graded')">
+                <i class="fas fa-asterisk"></i> ترم 1 (خارج المجموع)
+            </div>
+            <div class="nav-item" onclick="selectContext('1_2', 'general')">
+                <i class="fas fa-2"></i> ترم 2 (أساسي)
+            </div>
+            <div class="nav-item" onclick="selectContext('1_2', 'non_graded')">
+                <i class="fas fa-asterisk"></i> ترم 2 (خارج المجموع)
             </div>
 
             <div class="nav-group-title">حسابي</div>
@@ -1729,14 +1762,21 @@
                     <div class="filter-group">
                         <select id="filterGrade" class="filter-control">
                             <option value="all">كل السنين</option>
-                            <option value="third_year">سنة تالتة ثانوي</option>
-                            <option value="second_year">سنة تانية ثانوي</option>
                             <option value="first_year">سنة أولى ثانوي</option>
+                            <option value="second_year">سنة تانية ثانوي</option>
+                            <option value="third_year">سنة تالتة ثانوي</option>
                         </select>
                     </div>
                     <div id="streamFilterGroup" class="filter-group" style="display:none;">
                         <select id="filterStream" class="filter-control">
                             <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    <div id="termFilterGroup" class="filter-group" style="display:none;">
+                        <select id="filterTerm" class="filter-control">
+                            <option value="all">كل الأترام</option>
+                            <option value="first_term">الترم الأول</option>
+                            <option value="second_term">الترم الثاني</option>
                         </select>
                     </div>
                     <div class="filter-group">

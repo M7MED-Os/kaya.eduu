@@ -1,4 +1,4 @@
-const CACHE_NAME = 'thanawya-v1.32';
+const CACHE_NAME = 'thanawya-v1.42';
 const STATIC_ASSETS = [
     './',
     './index.html',

@@ -102,9 +102,16 @@ async function fetchFilteredSubjects(profile) {
     if (error) throw error;
 
     const filtered = allSubjects.filter(s => {
-        const isShared = (!s.department || s.department === '' || s.department === 'general') && (s.current_term === current_term);
-        const isDept = department && (s.department === department) && (!s.current_term || s.current_term === current_term);
-        return isShared || isDept;
+        // 1. Check Track (Department)
+        // Subject is visible if it's "general"/"science_all" (for science) OR matches user's department
+        const isScienceTrack = (department === 'science_science' || department === 'science_math');
+        const trackMatches = (!s.department || s.department === '' || s.department === 'general' || s.department === department || (isScienceTrack && s.department === 'science_all'));
+        
+        // 2. Check Term
+        // Subject is visible if it's "full_year" OR matches user's current_term
+        const termMatches = (s.current_term === 'full_year' || s.current_term === current_term);
+        
+        return trackMatches && termMatches;
     });
 
     // Sort: Dept subjects first, then Shared subjects

@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     showStudentsView();
 
     // Setup student-specific filters (kept in main file)
-    const filterControls = ['studentSearch', 'filterStatus', 'filterGrade', 'filterStream', 'filterSort'];
+    const filterControls = ['studentSearch', 'filterStatus', 'filterGrade', 'filterStream', 'filterTerm', 'filterSort'];
     filterControls.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -65,25 +65,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function updateStreamFilter() {
         const grade = document.getElementById('filterGrade').value;
-        const group = document.getElementById('streamFilterGroup');
-        const select = document.getElementById('filterStream');
+        const streamGroup = document.getElementById('streamFilterGroup');
+        const streamSelect = document.getElementById('filterStream');
+        const termGroup = document.getElementById('termFilterGroup');
 
-        if (grade === 'all' || grade === 'first_year' || grade === 'second_year' || grade === '1' || grade === '2') {
-            group.style.display = 'none';
-            return;
-        }
+        // Reset
+        streamGroup.style.display = 'none';
+        termGroup.style.display = 'none';
 
-        group.style.display = 'block';
-        let options = '<option value="all">كل الشعب</option>';
+        if (grade === 'all') return;
 
-        if (grade === 'third_year' || grade === '3') {
-            options += `
+        if (grade === 'first_year' || grade === '1') {
+            termGroup.style.display = 'block';
+        } else if (grade === 'second_year' || grade === '2') {
+            termGroup.style.display = 'block';
+            streamGroup.style.display = 'block';
+            streamSelect.innerHTML = `
+                <option value="all">كل الشعب</option>
+                <option value="science_gen">علمي</option>
+                <option value="literary">أدبي</option>
+            `;
+        } else if (grade === 'third_year' || grade === '3') {
+            streamGroup.style.display = 'block';
+            streamSelect.innerHTML = `
+                <option value="all">كل الشعب</option>
                 <option value="science_science">علمي علوم</option>
                 <option value="science_math">علمي رياضة</option>
                 <option value="literary">أدبي</option>
             `;
         }
-        select.innerHTML = options;
     }
 
     // Initialize presence tracking for admin
@@ -230,6 +240,7 @@ window.loadStudents = async () => {
     const filterStatus = document.getElementById('filterStatus').value;
     const filterGrade = document.getElementById('filterGrade').value;
     const filterStream = document.getElementById('filterStream')?.value || 'all';
+    const filterTerm = document.getElementById('filterTerm')?.value || 'all';
     const filterSort = document.getElementById('filterSort').value;
 
     let { data: students, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
@@ -264,12 +275,15 @@ window.loadStudents = async () => {
         const student_year = s.academic_year;
         const matchesGrade = filterGrade === 'all' || student_year == filterGrade;
 
-        // Stream/Term Filter
+        // Stream Filter
         const student_department = s.department;
-        const student_term = s.current_term;
-        const matchesStream = filterStream === 'all' || student_department == filterStream || student_term == filterStream;
+        const matchesStream = filterStream === 'all' || student_department == filterStream;
 
-        return matchesSearch && matchesStatus && matchesGrade && matchesStream;
+        // Term Filter
+        const student_term = s.current_term;
+        const matchesTerm = filterTerm === 'all' || student_term == filterTerm;
+
+        return matchesSearch && matchesStatus && matchesGrade && matchesStream && matchesTerm;
     });
 
     // 3. Apply Sorting
@@ -309,6 +323,7 @@ window.loadStudents = async () => {
         };
 
         const streamMap = {
+            'science_gen': 'علمي',
             'science_science': 'علمي علوم',
             'science_math': 'علمي رياضة',
             'literary': 'أدبي',
@@ -319,18 +334,20 @@ window.loadStudents = async () => {
             '1': 'ترم أول',
             '2': 'ترم ثاني',
             'first_term': 'ترم أول',
-            'second_term': 'ترم ثاني'
+            'second_term': 'ترم ثاني',
+            'full_year': 'سنة كاملة'
         };
 
-        // Display logic: Show stream - term (e.g., "علمي علوم - ترم أول")
-        let displayInfo = [];
-
-        // For year 3, show stream
-        if ((student_year === 'third_year' || student_year === '3') && student_department) {
-            displayInfo.push(streamMap[student_department] || student_department);
+        // Display logic: Show stream - term
+        let displayParts = [];
+        if (student_department && streamMap[student_department]) {
+            displayParts.push(streamMap[student_department]);
+        }
+        if (student_term && termMap[student_term]) {
+            displayParts.push(termMap[student_term]);
         }
 
-        const displayStreamOrTerm = displayInfo.length > 0 ? displayInfo.join(' - ') : '-';
+        const displayStreamOrTerm = displayParts.length > 0 ? displayParts.join(' - ') : '-';
 
         // Status Logic
         const expiry = s.subscription_ends_at ? new Date(s.subscription_ends_at) : null;
@@ -453,17 +470,21 @@ window.openEditStudent = async (id) => {
             <div class="form-group">
                 <label>الترم الدراسي</label>
                 <select id="editTerm" class="form-control">
+                    <option value="" ${!student.current_term ? 'selected' : ''}>-- بدون تحديد --</option>
                     <option value="first_term" ${student.current_term === 'first_term' ? 'selected' : ''}>الترم الأول</option>
                     <option value="second_term" ${student.current_term === 'second_term' ? 'selected' : ''}>الترم الثاني</option>
+                    <option value="full_year" ${student.current_term === 'full_year' ? 'selected' : ''}>سنة كاملة</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>الشعبة (للسنة التالتة)</label>
+                <label>الشعبة / القسم</label>
                 <select id="editStream" class="form-control">
                     <option value="" ${!student.department ? 'selected' : ''}>-- بدون شعبة --</option>
-                    <option value="science_science" ${student.department === 'science_science' ? 'selected' : ''}>علمي علوم</option>
-                    <option value="science_math" ${student.department === 'science_math' ? 'selected' : ''}>علمي رياضة</option>
+                    <option value="general" ${student.department === 'general' ? 'selected' : ''}>عام (أولى ثانوي)</option>
+                    <option value="science_gen" ${student.department === 'science_gen' ? 'selected' : ''}>علمي (تانية ثانوي)</option>
                     <option value="literary" ${student.department === 'literary' ? 'selected' : ''}>أدبي</option>
+                    <option value="science_science" ${student.department === 'science_science' ? 'selected' : ''}>علمي علوم (تالتة ثانوي)</option>
+                    <option value="science_math" ${student.department === 'science_math' ? 'selected' : ''}>علمي رياضة (تالتة ثانوي)</option>
                 </select>
             </div>
             <div class="form-group">

@@ -477,35 +477,48 @@ if (registerForm) {
         academicYearSelect.addEventListener("change", () => {
             const academicYear = academicYearSelect.value;
             const departmentSelect = document.getElementById("department");
+            const currentTermSelect = document.getElementById("currentTerm");
 
             // Reset Department Options
             departmentSelect.innerHTML = '<option value="" disabled selected>اختر الشعبة</option>';
 
-            // Show term for all years
-            if (academicYear) {
+            if (academicYear === "first_year") {
+                // Grade 1: Show Term only
                 termGroup.style.display = "block";
-
-                // Show department/track only for third year (تالتة ثانوي)
-                if (academicYear === "third_year") {
-                    departmentGroup.style.display = "block";
-
-                    // Third year secondary school tracks
-                    const thirdYearTracks = [
-                        { value: "science_science", label: "علمي علوم" },
-                        { value: "science_math", label: "علمي رياضة" },
-                        { value: "literary", label: "أدبي" }
-                    ];
-
-                    thirdYearTracks.forEach(track => {
-                        const option = document.createElement('option');
-                        option.value = track.value;
-                        option.textContent = track.label;
-                        departmentSelect.appendChild(option);
-                    });
-                } else {
-                    // First and second year: hide department field (will default to "general")
-                    departmentGroup.style.display = "none";
-                }
+                departmentGroup.style.display = "none";
+            } 
+            else if (academicYear === "second_year") {
+                // Grade 2: Show Term + Track (علمي/أدبي)
+                termGroup.style.display = "block";
+                departmentGroup.style.display = "block";
+                
+                const secondYearTracks = [
+                    { value: "science_gen", label: "علمي" },
+                    { value: "literary", label: "أدبي" }
+                ];
+                secondYearTracks.forEach(track => {
+                    const option = document.createElement('option');
+                    option.value = track.value;
+                    option.textContent = track.label;
+                    departmentSelect.appendChild(option);
+                });
+            } 
+            else if (academicYear === "third_year") {
+                // Grade 3: Show Track only (No Term)
+                termGroup.style.display = "none";
+                departmentGroup.style.display = "block";
+                
+                const thirdYearTracks = [
+                    { value: "science_science", label: "علمي علوم" },
+                    { value: "science_math", label: "علمي رياضة" },
+                    { value: "literary", label: "أدبي" }
+                ];
+                thirdYearTracks.forEach(track => {
+                    const option = document.createElement('option');
+                    option.value = track.value;
+                    option.textContent = track.label;
+                    departmentSelect.appendChild(option);
+                });
             } else {
                 termGroup.style.display = "none";
                 departmentGroup.style.display = "none";
@@ -527,11 +540,13 @@ if (registerForm) {
         const email = email_input.value.trim();
         const password = password_input.value;
         const academic_year = academicYear_input.value;
-        const current_term = currentTerm_input.value;
-        // Set department: "general" for first/second year, selected track for third year
-        const department = (academic_year === "first_year" || academic_year === "second_year")
-            ? "general"
-            : department_input.value;
+        
+        // Handle defaults for hidden fields
+        let current_term = currentTerm_input.value;
+        if (academic_year === "third_year") current_term = "full_year";
+
+        let department = department_input.value;
+        if (academic_year === "first_year") department = "general";
 
         let isValid = true;
 
@@ -562,15 +577,17 @@ if (registerForm) {
             showInputError(academicYear_input, academicYearValidation.error);
             isValid = false;
         } else {
-            // Validate Term (Required for all years)
-            const termValidation = validateSelect(current_term, 'الترم');
-            if (!termValidation.isValid) {
-                showInputError(currentTerm_input, termValidation.error);
-                isValid = false;
+            // Validate Term (Only for Grade 1 and 2)
+            if (academic_year === "first_year" || academic_year === "second_year") {
+                const termValidation = validateSelect(current_term, 'الترم');
+                if (!termValidation.isValid) {
+                    showInputError(currentTerm_input, termValidation.error);
+                    isValid = false;
+                }
             }
 
-            // Validate Department (Required for Year 3 only)
-            if (academic_year === "third_year") {
+            // Validate Department (Track) (Only for Grade 2 and 3)
+            if (academic_year === "second_year" || academic_year === "third_year") {
                 const departmentValidation = validateSelect(department, 'الشعبة');
                 if (!departmentValidation.isValid) {
                     showInputError(department_input, departmentValidation.error);
@@ -1272,23 +1289,26 @@ async function renderSubjects(userMetadata) {
 
     let sharedSubjects = [];
     let departmentSubjects = [];
+    let nonGradedSubjects = [];
 
     allSubjects.forEach(s => {
-        // Must match academic year (subjects table now uses 'academic_year' column)
+        // Must match academic year
         if (s.academic_year !== academic_year) return;
 
-        // 1. Shared Subjects Logic:
-        // Must match Student's Term AND Have NO Department
-        if (s.current_term === current_term && (!s.department || s.department === '' || s.department === 'general')) {
-            sharedSubjects.push(s);
-        }
+        // Smart Filtering Logic:
+        // 1. Track (Department): Visible if shared ("general"/"science_all") OR matches student's department
+        const isScienceTrack = (department === 'science_science' || department === 'science_math');
+        const trackMatches = (!s.department || s.department === '' || s.department === 'general' || s.department === department || (isScienceTrack && s.department === 'science_all'));
+        
+        // 2. Term: Visible if "full_year" OR matches student's current_term
+        const termMatches = (s.current_term === 'full_year' || s.current_term === current_term);
 
-        // 2. Department Subjects Logic (Only if student has a department)
-        // Must match Student's Department
-        if (department && s.department === department) {
-            // If subject has a term defined, it MUST match Student's Term.
-            // If subject has NO term (i.e. term-agnostic department subject), show it.
-            if (!s.current_term || s.current_term === current_term) {
+        if (trackMatches && termMatches) {
+            if (s.is_non_graded) {
+                nonGradedSubjects.push(s);
+            } else if (!s.department || s.department === '' || s.department === 'general') {
+                sharedSubjects.push(s);
+            } else {
                 departmentSubjects.push(s);
             }
         }
@@ -1296,19 +1316,29 @@ async function renderSubjects(userMetadata) {
 
     // Render sections
     let hasSubjects = false;
-    const isJuniorYear = (academic_year === 'first_year' || academic_year === 'second_year');
+    const isGrade1 = (academic_year === 'first_year');
 
-    // Section 1: Shared Subjects (FIRST)
+    // Section 1: Shared/Basic Subjects
     if (sharedSubjects.length > 0) {
-        renderSection(isJuniorYear ? null : "المواد المشتركة", sharedSubjects, grid);
+        // G1: "المواد" | G2/G3: "المواد المشتركة"
+        const title = isGrade1 ? "المواد" : "المواد المشتركة";
+        renderSection(title, sharedSubjects, grid);
         hasSubjects = true;
     }
 
-    // Section 2: Department/Track Subjects (SECOND)
-    if (departmentSubjects.length > 0) {
-        // Use DEPARTMENTS map from constants.js for correct secondary school track names
-        const deptName = DEPARTMENTS[department] || department;
-        renderSection(isJuniorYear ? null : `مواد ${deptName}`, departmentSubjects, grid);
+    // Section 2: Department/Track Subjects (Grade 2 & 3 only)
+    if (departmentSubjects.length > 0 && !isGrade1) {
+        // Use DEPARTMENTS map for track name (e.g., "علمي علوم")
+        const trackTitle = DEPARTMENTS[department] || "التخصص";
+        renderSection(`مواد ${trackTitle}`, departmentSubjects, grid);
+        hasSubjects = true;
+    }
+
+    // Section 3: Non-Graded Subjects (Last)
+    if (nonGradedSubjects.length > 0) {
+        // G1: "المواد الغير مضافه" | G2/G3: "مواد غير مضافه"
+        const nonGradedTitle = isGrade1 ? "المواد الغير مضافه" : "مواد غير مضافه";
+        renderSection(nonGradedTitle, nonGradedSubjects, grid);
         hasSubjects = true;
     }
 

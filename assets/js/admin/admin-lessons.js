@@ -44,6 +44,7 @@ async function loadSubjectsList() {
         .from('subjects')
         .select('id, name_ar, academic_year, current_term, icon')
         .eq('is_active', true)
+        .order('academic_year', { ascending: false })
         .order('order_index');
 
     if (error) {
@@ -56,19 +57,49 @@ async function loadSubjectsList() {
         return;
     }
 
-    container.innerHTML = subjects.map(s => `
-        <div class="lm-subject-item" onclick="window.lmSelectSubject('${s.id}', '${escHtml(s.name_ar)}')" id="lm-subj-${s.id}">
-            <i class="fas ${s.icon || 'fa-book'}" style="color:var(--primary-color);width:20px;text-align:center;"></i>
-            <span>${escHtml(s.name_ar)}</span>
-            <small style="color:#94a3b8;">${academicYearLabel(s.academic_year)} — ${termLabel(s.current_term)}</small>
-        </div>
-    `).join('');
+    const yearNames = {
+        'third_year': 'تالته ثانوي',
+        'second_year': 'تانيه ثانوي',
+        'first_year': 'أولى ثانوي'
+    };
+
+    let html = '';
+    // Grade 3 (Full Year)
+    const g3 = subjects.filter(s => s.academic_year === 'third_year');
+    if (g3.length > 0) {
+        html += `<div class="lm-group-title" style="padding:8px 15px; background:#f1f5f9; font-weight:800; color:#475569; font-size:0.75rem; border-bottom:1px solid #e2e8f0; margin-top:5px;">سنة تالتة ثانوي</div>`;
+        g3.forEach(s => html += renderSubjectItem(s));
+    }
+
+    // Grade 2 & 1 (Terms)
+    for (const year of ['second_year', 'first_year']) {
+        for (const term of ['first_term', 'second_term']) {
+            const yearSubjects = subjects.filter(s => s.academic_year === year && s.current_term === term);
+            if (yearSubjects.length > 0) {
+                const termLabelStr = term === 'first_term' ? 'ترم اول' : 'ترم تاني';
+                html += `<div class="lm-group-title" style="padding:8px 15px; background:#f1f5f9; font-weight:800; color:#475569; font-size:0.75rem; border-bottom:1px solid #e2e8f0; margin-top:5px;">${yearNames[year]} - ${termLabelStr}</div>`;
+                yearSubjects.forEach(s => html += renderSubjectItem(s));
+            }
+        }
+    }
+
+    container.innerHTML = html;
 
     // Reset teachers panel
     const teacherPanel = document.getElementById('lm-teacher-panel');
     const lecturePanel = document.getElementById('lm-lecture-panel');
     if (teacherPanel) teacherPanel.innerHTML = '<div class="lm-placeholder"><i class="fas fa-user-tie"></i><p>اختار مادة عشان تشوف مدرسيها</p></div>';
     if (lecturePanel) lecturePanel.innerHTML = '<div class="lm-placeholder"><i class="fas fa-list"></i><p>اختار مدرس عشان تشوف محاضراته</p></div>';
+}
+
+function renderSubjectItem(s) {
+    return `
+        <div class="lm-subject-item" onclick="window.lmSelectSubject('${s.id}', '${escHtml(s.name_ar)}')" id="lm-subj-${s.id}">
+            <i class="fas ${s.icon || 'fa-book'}" style="color:var(--primary-color);width:20px;text-align:center;"></i>
+            <span>${escHtml(s.name_ar)}</span>
+            <small style="color:#94a3b8;">${academicYearLabel(s.academic_year)} — ${termLabel(s.current_term)}</small>
+        </div>
+    `;
 }
 
 // ─── Select Subject → Load Teachers ──────────────────────────
